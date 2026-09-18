@@ -28,6 +28,7 @@ import { PlayerType } from '/@/shared/types/types';
 
 const localSettings = isElectron() ? window.api.localSettings : null;
 const mpvPlayer = isElectron() ? window.api.mpvPlayer : null;
+const bundledMpv = isElectron() && window.api.utils.isWindows();
 
 export const MpvSettings = memo(() => {
     const { t } = useTranslation();
@@ -113,6 +114,7 @@ export const MpvSettings = memo(() => {
                         variant="subtle"
                     />
                     <TextInput
+                        disabled={bundledMpv}
                         onChange={(e) => {
                             setMpvPath(e.currentTarget.value);
 
@@ -122,6 +124,7 @@ export const MpvSettings = memo(() => {
                         }}
                         onClick={() => handleSetMpvPath()}
                         rightSection={
+                            !bundledMpv &&
                             mpvPath && (
                                 <ActionIcon
                                     icon="x"
@@ -130,17 +133,17 @@ export const MpvSettings = memo(() => {
                                 />
                             )
                         }
-                        value={mpvPath}
+                        value={bundledMpv ? t('setting.mpvBundled') : mpvPath}
                         width={200}
                     />
                 </Group>
             ),
-            description: t('setting.mpvExecutablePath', {
+            description: t(bundledMpv ? 'setting.mpvBundled' : 'setting.mpvExecutablePath', {
                 context: 'description',
             }),
             isHidden: settings.type !== PlayerType.LOCAL,
-            note: 'Restart required',
-            title: t('setting.mpvExecutablePath'),
+            note: bundledMpv ? undefined : 'Restart required',
+            title: bundledMpv ? 'MPV' : t('setting.mpvExecutablePath'),
         },
         {
             control: (

@@ -7,4 +7,5 @@ out
 release
 .idea
 .scratch
+assets/mpv/x64/
 tsconfig.*.tsbuildinfo

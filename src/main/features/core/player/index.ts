@@ -3,6 +3,7 @@ import { access, rm } from 'fs/promises';
 import uniq from 'lodash/uniq';
 import MpvAPI from 'node-mpv';
 import { pid } from 'node:process';
+import path from 'path';
 import process from 'process';
 
 import { getMainWindow, sendToastToRenderer } from '../../../index';
@@ -11,6 +12,7 @@ import { store } from '../settings';
 
 import { isMacOS, isWindows } from '/@/main/env';
 import { PlayerData } from '/@/shared/types/domain-types';
+import { MpvQueueIdentity } from '/@/shared/types/mpv';
 
 declare module 'node-mpv';
 
@@ -37,6 +39,31 @@ const socketPath = isWindows() ? `\\\\.\\pipe\\mpvserver-${pid}` : `/tmp/node-mp
 let suppressRendererPlaybackEvents = false;
 // Bumped on quit so late events from a dying instance are ignored after a new one starts.
 let playbackEventGeneration = 0;
+let queueRevision = 0;
+let queueIdentity: MpvQueueIdentity = {};
+let queueOperation = Promise.resolve();
+let cancelQueueLoad: (() => void) | undefined;
+
+const invalidateQueue = () => {
+    queueRevision += 1;
+    cancelQueueLoad?.();
+    return queueRevision;
+};
+
+// Keep replace/remove/append transactions together. A newer replacement cancels pending work.
+const updateMpvQueue = (
+    operation: (mpv: MpvAPI, isCurrent: () => boolean) => Promise<void>,
+    replace = false,
+) => {
+    const revision = replace ? invalidateQueue() : queueRevision;
+    const instance = mpvInstance;
+    const isCurrent = () => instance === mpvInstance && revision === queueRevision;
+    const result = queueOperation.then(async () => {
+        if (instance && isCurrent()) await operation(instance, isCurrent);
+    });
+    queueOperation = result.catch(() => {});
+    return result;
+};
 
 const sendRendererPlaybackEvent = (channel: string, ...args: unknown[]) => {
     if (suppressRendererPlaybackEvents) {
@@ -125,6 +152,18 @@ const DEFAULT_MPV_PARAMETERS = (extraParameters?: string[]) => {
 };
 
 const resolveMpvBinaryPath = async (binaryPath?: string) => {
+    if (isWindows() && process.arch === 'x64') {
+        const bundledPath = path.join(
+            app.isPackaged ? process.resourcesPath : app.getAppPath(),
+            'assets',
+            'mpv',
+            process.arch,
+            'mpv.exe',
+        );
+        await access(bundledPath);
+        return bundledPath;
+    }
+
     if (binaryPath) {
         return binaryPath;
     }
@@ -181,9 +220,9 @@ const createMpv = async (data: {
         log.info('mpv initialized', { binary: resolvedBinaryPath ?? 'bundled/default' });
     } catch (error: any) {
         log.error('mpv failed to start', error);
-    } finally {
-        await mpv.setMultipleProperties(properties || {});
+        throw error;
     }
+    await mpv.setMultipleProperties(properties || {});
 
     let previousPlaylistPos: number | undefined;
     const eventGeneration = playbackEventGeneration;
@@ -197,27 +236,51 @@ const createMpv = async (data: {
         sendRendererPlaybackEvent(channel, ...args);
     };
 
+    let pendingEnd: undefined | { identity: MpvQueueIdentity; revision: number };
+    const finishTrackIfIdle = (position: number) => {
+        if (position !== -1 || !pendingEnd) return;
+        const ended = pendingEnd;
+        pendingEnd = undefined;
+        if (ended.revision === queueRevision && ended.identity === queueIdentity) {
+            sendIfCurrent('renderer-player-track-ended', ended.identity);
+        }
+    };
+
     mpv.on('status', (status) => {
         if (status.property === 'playlist-pos') {
             const currentPos = typeof status.value === 'number' ? status.value : undefined;
 
             // mpv uses playlist-pos = -1 when nothing is playing (ended, cleared, load failure, etc).
             if (currentPos === -1) {
-                if (previousPlaylistPos === 0) {
-                    sendIfCurrent('renderer-player-track-ended');
-                }
-                mpv?.pause();
+                finishTrackIfIdle(currentPos);
                 previousPlaylistPos = currentPos;
                 return;
             }
 
             // In our 2-item queue model, playlist-pos should normally be 0.
             // When mpv auto-advances to the next track it becomes > 0 (typically 1).
-            if (typeof currentPos === 'number' && currentPos > 0) {
-                sendIfCurrent('renderer-player-auto-next');
+            if (
+                typeof currentPos === 'number' &&
+                currentPos > 0 &&
+                currentPos !== previousPlaylistPos
+            ) {
+                pendingEnd = undefined;
+                sendIfCurrent('renderer-player-auto-next', queueIdentity);
             }
 
             previousPlaylistPos = currentPos;
+        }
+    });
+
+    // A position of -1 also follows stop/replace commands. Only an actual EOF may advance the UI.
+    (mpv as any).socket.on('message', async (message: { event?: string; reason?: string }) => {
+        if (message.event !== 'end-file' || message.reason !== 'eof') return;
+        pendingEnd = { identity: queueIdentity, revision: queueRevision };
+        try {
+            const position = await mpv.getProperty('playlist-pos');
+            finishTrackIfIdle(position);
+        } catch {
+            // The old process may already be exiting after a restart.
         }
     });
 
@@ -254,7 +317,7 @@ export const getMpvInstance = () => {
 const QUIT_TIMEOUT_MS = 3000;
 
 const killMpvProcess = (mpv: MpvAPI) => {
-    const mpvProcess = (mpv as any).process || (mpv as any).mpvProcess;
+    const mpvProcess = (mpv as any).mpvPlayer || (mpv as any).process || (mpv as any).mpvProcess;
     if (mpvProcess && typeof mpvProcess.kill === 'function') {
         try {
             mpvProcess.kill('SIGTERM');
@@ -265,6 +328,7 @@ const killMpvProcess = (mpv: MpvAPI) => {
 };
 
 const quit = async (instance?: MpvAPI | null) => {
+    invalidateQueue();
     const mpv = instance || getMpvInstance();
     if (mpv) {
         suppressRendererPlaybackEvents = true;
@@ -336,14 +400,8 @@ ipcMain.handle(
             });
 
             // Clean up previous mpv instance
-            suppressRendererPlaybackEvents = true;
-            playbackEventGeneration += 1;
-            getMpvInstance()?.stop();
-            getMpvInstance()
-                ?.quit()
-                .catch((error) => {
-                    mpvLog({ action: 'Failed to quit existing MPV' }, error);
-                });
+            await mpvCreatePromise;
+            await quit();
             mpvInstance = null;
 
             mpvCreatePromise = createMpv(data);
@@ -365,6 +423,11 @@ ipcMain.handle(
     'player-initialize',
     async (_event, data: { extraParameters?: string[]; properties?: Record<string, any> }) => {
         try {
+            if (mpvCreatePromise) {
+                await mpvCreatePromise;
+                return;
+            }
+            if (mpvInstance?.isRunning()) return;
             mpvLog({
                 action: `Attempting to initialize mpv with parameters: ${JSON.stringify(data)}`,
                 level: 'debug',
@@ -434,10 +497,15 @@ ipcMain.on('player-pause', async () => {
 
 // Stops the player
 ipcMain.on('player-stop', async () => {
+    invalidateQueue();
+    const generation = playbackEventGeneration;
+    suppressRendererPlaybackEvents = true;
     try {
         await getMpvInstance()?.stop();
     } catch (err: any | NodeMpvError) {
         mpvLog({ action: 'Failed to stop mpv playback' }, err);
+    } finally {
+        if (generation === playbackEventGeneration) suppressRendererPlaybackEvents = false;
     }
 });
 
@@ -478,86 +546,93 @@ ipcMain.on('player-seek-to', async (_event, time: number) => {
 });
 
 // Sets the queue in position 0 and 1 to the given data. Used when manually starting a song or using the next/prev buttons
-ipcMain.on('player-set-queue', async (_event, current?: string, next?: string, pause?: boolean) => {
-    if (!current && !next) {
+ipcMain.on(
+    'player-set-queue',
+    async (
+        _event,
+        current?: string,
+        next?: string,
+        pause?: boolean,
+        identity: MpvQueueIdentity = {},
+    ) => {
         try {
-            await getMpvInstance()?.clearPlaylist();
-            await getMpvInstance()?.pause();
-            return;
+            await updateMpvQueue(async (mpv, isCurrent) => {
+                const generation = playbackEventGeneration;
+                suppressRendererPlaybackEvents = true;
+                queueIdentity = identity;
+                try {
+                    if (!current) {
+                        await mpv.stop();
+                        await mpv.clearPlaylist();
+                        return;
+                    }
+                    const cancelled = new Promise<void>((resolve) => {
+                        cancelQueueLoad = resolve;
+                    });
+                    try {
+                        await Promise.race([mpv.load(current, 'replace'), cancelled]);
+                    } finally {
+                        cancelQueueLoad = undefined;
+                    }
+                    if (!isCurrent()) return;
+                    if (next) await mpv.load(next, 'append');
+                    if (!isCurrent()) return;
+                    if (pause) await mpv.pause();
+                    else if (pause === false) await mpv.play();
+                } catch (error) {
+                    if (isCurrent()) {
+                        await mpv.stop();
+                        getMainWindow()?.webContents.send(
+                            'renderer-player-error',
+                            'Unable to load the selected track',
+                        );
+                    }
+                    throw error;
+                } finally {
+                    if (generation === playbackEventGeneration)
+                        suppressRendererPlaybackEvents = false;
+                }
+            }, true);
         } catch (err: any | NodeMpvError) {
-            mpvLog({ action: `Failed to clear play queue` }, err);
+            mpvLog({ action: `Failed to set play queue` }, err);
         }
-    }
-
-    // When pause is requested (e.g. preload after reload while UI is STOPPED/PAUSED), mpv still
-    // briefly resumes on load. Suppress those events so they do not overwrite renderer status.
-    const shouldSuppressLoadEvents = pause === true;
-    if (shouldSuppressLoadEvents) {
-        suppressRendererPlaybackEvents = true;
-    }
-
-    try {
-        if (current) {
-            try {
-                await getMpvInstance()?.load(current, 'replace');
-            } catch (error: any | NodeMpvError) {
-                mpvLog({ action: `Failed to load current song` }, error);
-                await getMpvInstance()?.play();
-            }
-
-            if (next) {
-                await getMpvInstance()?.load(next, 'append');
-            }
-        }
-
-        if (pause) {
-            await getMpvInstance()?.pause();
-        } else if (pause === false) {
-            // Only force play if pause is explicitly false
-            await getMpvInstance()?.play();
-        }
-    } catch (err: any | NodeMpvError) {
-        mpvLog({ action: `Failed to set play queue` }, err);
-    } finally {
-        if (shouldSuppressLoadEvents) {
-            suppressRendererPlaybackEvents = false;
-        }
-    }
-});
+    },
+);
 
 // Replaces the queue in position 1 to the given data
-ipcMain.on('player-set-queue-next', async (_event, url?: string) => {
+ipcMain.on('player-set-queue-next', async (_event, url?: string, nextId?: string) => {
     try {
-        const size = await getMpvInstance()?.getPlaylistSize();
-
-        if (size && size > 1) {
-            await getMpvInstance()?.playlistRemove(1);
-        }
-
-        if (url) {
-            getMpvInstance()?.load(url, 'append');
-        }
+        await updateMpvQueue(async (mpv, isCurrent) => {
+            // If MPV already advanced, position 1 is playing. Let auto-next normalize it first.
+            if ((await mpv.getProperty('playlist-pos')) !== 0 || !isCurrent()) return;
+            const size = await mpv.getPlaylistSize();
+            if (!isCurrent()) return;
+            if (size > 1) await mpv.playlistRemove(1);
+            if (url && isCurrent()) await mpv.load(url, 'append');
+            if (isCurrent()) queueIdentity = { ...queueIdentity, nextId: url ? nextId : undefined };
+        });
     } catch (err: any | NodeMpvError) {
         mpvLog({ action: `Failed to set play queue` }, err);
     }
 });
 
 // Sets the next song in the queue when reaching the end of the queue
-ipcMain.on('player-auto-next', async (_event, url?: string) => {
+ipcMain.on('player-auto-next', async (_event, url?: string, nextId?: string) => {
     // Always keep the current song as position 0 in the mpv queue
     // This allows us to easily set update the next song in the queue without
     // disturbing the currently playing song
 
     try {
-        await getMpvInstance()
-            ?.playlistRemove(0)
-            .catch(() => {
-                getMpvInstance()?.pause();
-            });
-
-        if (url) {
-            await getMpvInstance()?.load(url, 'append');
-        }
+        await updateMpvQueue(async (mpv, isCurrent) => {
+            if ((await mpv.getProperty('playlist-pos')) !== 1 || !isCurrent()) return;
+            await mpv.playlistRemove(0);
+            if (isCurrent())
+                queueIdentity = {
+                    currentId: queueIdentity.nextId,
+                    nextId: url ? nextId : undefined,
+                };
+            if (url && isCurrent()) await mpv.load(url, 'append');
+        });
     } catch (err: any | NodeMpvError) {
         mpvLog({ action: `Failed to load next song` }, err);
     }
@@ -781,7 +856,10 @@ const cleanupMpv = async (force = false) => {
         } catch (err: any | NodeMpvError) {
             mpvLog({ action: `Failed to cleanup mpv` }, err);
             // Force kill as fallback
-            const mpvProcess = (instance as any).process || (instance as any).mpvProcess;
+            const mpvProcess =
+                (instance as any).mpvPlayer ||
+                (instance as any).process ||
+                (instance as any).mpvProcess;
             if (mpvProcess && typeof mpvProcess.kill === 'function') {
                 try {
                     mpvProcess.kill('SIGKILL');
@@ -832,7 +910,10 @@ process.on('exit', () => {
     const instance = getMpvInstance();
     if (instance) {
         // Try to access and kill the process directly
-        const mpvProcess = (instance as any).process || (instance as any).mpvProcess;
+        const mpvProcess =
+            (instance as any).mpvPlayer ||
+            (instance as any).process ||
+            (instance as any).mpvProcess;
         if (mpvProcess && typeof mpvProcess.kill === 'function') {
             try {
                 mpvProcess.kill('SIGKILL');

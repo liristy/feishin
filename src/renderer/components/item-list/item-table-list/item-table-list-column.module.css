@@ -101,13 +101,7 @@
 }
 
 .container.alternate-row-odd {
-    @mixin dark {
-        background-color: darken(var(--theme-colors-background), 30%);
-    }
-
-    @mixin light {
-        background-color: darken(var(--theme-colors-background), 2%);
-    }
+    background-color: color-mix(in srgb, var(--theme-colors-background), var(--theme-colors-foreground) 2%);
 }
 
 .container.data-row.row-hover-highlight-enabled[data-row-hovered='true'] {
@@ -118,19 +112,10 @@
 }
 
 .container.data-row.row-selected {
-    @mixin dark {
-        background-color: lighten(var(--theme-colors-surface), 5%);
-        box-shadow:
-            1px 0 0 0 lighten(var(--theme-colors-surface), 5%),
-            -1px 0 0 0 lighten(var(--theme-colors-surface), 5%);
-    }
-
-    @mixin light {
-        background-color: darken(var(--theme-colors-surface), 5%);
-        box-shadow:
-            1px 0 0 0 darken(var(--theme-colors-surface), 5%),
-            -1px 0 0 0 darken(var(--theme-colors-surface), 5%);
-    }
+    background-color: color-mix(in srgb, var(--theme-colors-background), var(--theme-colors-primary-filled) 16%);
+    box-shadow:
+        1px 0 0 0 color-mix(in srgb, var(--theme-colors-background), var(--theme-colors-primary-filled) 16%),
+        -1px 0 0 0 color-mix(in srgb, var(--theme-colors-background), var(--theme-colors-primary-filled) 16%);
 }
 
 .container.data-row.row-selected.with-vertical-border,

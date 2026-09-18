@@ -1,0 +1,56 @@
+@font-face {
+    font-family: 'Feishin PingFang';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../../../assets/fonts/PingFangSC-Regular.ttf') format('truetype');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Feishin PingFang';
+    font-style: normal;
+    font-weight: 500;
+    src: url('../../../assets/fonts/PingFangSC-Medium.ttf') format('truetype');
+    font-display: swap;
+}
+
+:root {
+    --mantine-font-size-xs: 14px !important;
+    --mantine-font-size-sm: 16px !important;
+    --mantine-font-size-md: 17px !important;
+}
+
+button,
+input,
+textarea,
+select,
+[role='button'],
+[role='menuitem'],
+[role='tab'],
+[role='option'] {
+    font-size: 16px !important;
+}
+
+[data-row-index] {
+    font-size: 19px !important;
+}
+
+[data-row-index] :where(div, span, p, a) {
+    font-size: inherit !important;
+    line-height: 1.35 !important;
+}
+
+[data-row-index] [class*='artist'],
+[data-row-index] [class*='artist'] * {
+    font-size: 16px !important;
+}
+
+[class*='lyric'],
+[class*='lyric'] * {
+    --mantine-font-size-xs: 0.75rem !important;
+    --mantine-font-size-sm: 0.875rem !important;
+    --mantine-font-size-md: 1rem !important;
+
+    font-family: var(--theme-content-font-family) !important;
+    font-weight: normal !important;
+}

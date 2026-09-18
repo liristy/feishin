@@ -6,6 +6,13 @@
     justify-content: center;
     isolation: isolate;
 
+    :global(.lyric-line),
+    :global(.lyric-line) *,
+    :global(.karaoke-line),
+    :global(.karaoke-line) * {
+        font-weight: 700 !important;
+    }
+
     @media screen and (orientation: portrait) {
         padding: 2rem 2rem 1rem;
     }

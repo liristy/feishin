@@ -242,7 +242,7 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                     collapsed: false,
                     expanded: [],
                     image: false,
-                    leftWidth: '400px',
+                    leftWidth: '260px',
                     rightExpanded: false,
                     rightHeight: '320px',
                     rightWidth: '600px',

@@ -1,9 +1,11 @@
 .windows-button-group {
     display: flex;
+    gap: 2px;
+    align-items: center;
     width: 130px;
-    height: 100%;
-    -webkit-app-region: no-drag;
-    background-color: var(--theme-colors-background);
+    height: 65px;
+    padding: 0 6px;
+    -webkit-app-region: drag;
 }
 
 .windows-button {
@@ -11,22 +13,29 @@
     flex: 1;
     align-items: center;
     justify-content: center;
+    height: 32px;
+    padding: 0;
+    color: var(--theme-colors-foreground-muted);
+    background: transparent;
+    border: 0;
+    border-radius: var(--theme-radius-sm);
+    transition: background-color 120ms ease, color 120ms ease;
     -webkit-app-region: no-drag;
-    width: 50px;
-    height: 65px;
-
-    img {
-        width: 35%;
-        height: 50%;
-    }
 
     &:hover {
-        background: rgb(125 125 125 / 30%);
+        color: var(--theme-colors-foreground);
+        background: color-mix(in srgb, var(--theme-colors-foreground) 10%, transparent);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-colors-primary);
+        outline-offset: -2px;
     }
 }
 
 .windows-button.exit-button {
     &:hover {
+        color: white;
         background: var(--theme-colors-state-error);
     }
 }

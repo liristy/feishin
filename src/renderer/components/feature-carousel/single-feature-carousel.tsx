@@ -2,16 +2,15 @@ import type { MouseEvent } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { generatePath, Link } from 'react-router';
 
 import styles from './feature-carousel.module.css';
 
 import { ItemImage, useItemImageUrl } from '/@/renderer/components/item-image/item-image';
 import { usePlayer } from '/@/renderer/features/player/context/player-context';
-import { BackgroundOverlay } from '/@/renderer/features/shared/components/library-background-overlay';
-import { calculateTitleSize } from '/@/renderer/features/shared/components/library-header';
 import { PlayButtonGroup } from '/@/renderer/features/shared/components/play-button-group';
-import { useContainerQuery, useFastAverageColor } from '/@/renderer/hooks';
+import { useContainerQuery } from '/@/renderer/hooks';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useCurrentServer } from '/@/renderer/store';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
@@ -65,16 +64,11 @@ interface SingleFeatureCarouselProps {
 // const CAROUSEL_AUTOPLAY_INTERVAL = 10000;
 
 const CarouselItem = ({ album }: CarouselItemProps) => {
+    const { t } = useTranslation();
     const imageUrl = useItemImageUrl({
         id: album.imageId || undefined,
         itemType: LibraryItem.ALBUM,
         type: 'itemCard',
-    });
-
-    const { background: backgroundColor } = useFastAverageColor({
-        algorithm: 'dominant',
-        src: imageUrl || null,
-        srcLoaded: true,
     });
 
     const server = useCurrentServer();
@@ -103,7 +97,6 @@ const CarouselItem = ({ album }: CarouselItemProps) => {
                     }}
                 />
             )}
-            <BackgroundOverlay backgroundColor={backgroundColor} opacity={0.7} />
             <Link
                 className={styles.carouselLink}
                 state={{ item: album }}
@@ -127,19 +120,19 @@ const CarouselItem = ({ album }: CarouselItemProps) => {
                             thumbHash={album.thumbHash}
                             type="itemCard"
                         />
-                        <div className={styles.playButtonOverlay}>
-                            <PlayButtonGroup onPlay={handlePlay} />
-                        </div>
                     </div>
 
                     <div className={styles.metadataSection}>
                         <Stack gap="sm">
+                            <Text className={styles.eyebrow} size="xs">
+                                {t('page.home.featuredAlbum')}
+                            </Text>
                             <TextTitle
                                 className={styles.title}
-                                fw={900}
+                                fw={750}
                                 lh={1.1}
                                 order={1}
-                                style={{ fontSize: calculateTitleSize(album.name) }}
+                                style={{ fontSize: 'clamp(1.75rem, 3.5cqw, 3rem)' }}
                                 ta="left"
                             >
                                 {album.name}
@@ -172,11 +165,15 @@ const CarouselItem = ({ album }: CarouselItemProps) => {
                     </div>
                 </div>
             </Link>
+            <div className={styles.heroActions}>
+                <PlayButtonGroup onPlay={handlePlay} />
+            </div>
         </div>
     );
 };
 
 export const SingleFeatureCarousel = ({ data, onNearEnd }: SingleFeatureCarouselProps) => {
+    const { t } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
     const directionRef = useRef<{ isNext: boolean }>({ isNext: true });
     const { ref: containerRef } = useContainerQuery({
@@ -320,6 +317,7 @@ export const SingleFeatureCarousel = ({ data, onNearEnd }: SingleFeatureCarousel
             {data.length > 1 && (
                 <>
                     <ActionIcon
+                        aria-label={t('common.back')}
                         className={styles.navArrowLeft}
                         icon="arrowLeftS"
                         iconProps={{ size: 'xl' }}
@@ -335,6 +333,7 @@ export const SingleFeatureCarousel = ({ data, onNearEnd }: SingleFeatureCarousel
                         variant="subtle"
                     />
                     <ActionIcon
+                        aria-label={t('common.forward')}
                         className={styles.navArrowRight}
                         icon="arrowRightS"
                         iconProps={{ size: 'xl' }}

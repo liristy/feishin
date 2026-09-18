@@ -3,7 +3,6 @@ import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import i18n from '/@/i18n/i18n';
-import { StylesSettings } from '/@/renderer/features/settings/components/advanced/styles-settings';
 import { SettingsOptions } from '/@/renderer/features/settings/components/settings-option';
 import {
     SettingOption,
@@ -399,12 +398,7 @@ export const ThemeSettings = memo(() => {
 
     return (
         <SettingsSection
-            extra={
-                <>
-                    <CustomThemesManager />
-                    <StylesSettings />
-                </>
-            }
+            extra={<CustomThemesManager />}
             options={themeOptions}
             title={t('page.setting.theme')}
         />

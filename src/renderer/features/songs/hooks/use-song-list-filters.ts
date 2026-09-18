@@ -5,6 +5,7 @@ import { useSearchTermFilter } from '/@/renderer/features/shared/hooks/use-searc
 import { useSortByFilter } from '/@/renderer/features/shared/hooks/use-sort-by-filter';
 import { useSortOrderFilter } from '/@/renderer/features/shared/hooks/use-sort-order-filter';
 import { FILTER_KEYS } from '/@/renderer/features/shared/utils';
+import { useCurrentServer } from '/@/renderer/store';
 import {
     parseArrayParam,
     parseBooleanParam,
@@ -15,15 +16,24 @@ import {
     setSearchParam,
 } from '/@/renderer/utils/query-params';
 import { runInUrlTransition } from '/@/renderer/utils/url-transition';
-import { SongListSort, SortOrder } from '/@/shared/types/domain-types';
+import { ServerType, SongListSort, SortOrder } from '/@/shared/types/domain-types';
 import { ItemListKey } from '/@/shared/types/types';
 
 export const useSongListFilters = (listKey?: ItemListKey) => {
     const resolvedListKey = listKey ?? ItemListKey.SONG;
+    const server = useCurrentServer();
+    const defaultToFavoriteDate =
+        resolvedListKey === ItemListKey.FAVORITE_SONG && server.type === ServerType.NAVIDROME;
 
-    const { sortBy } = useSortByFilter<SongListSort>(SongListSort.NAME, resolvedListKey);
+    const { sortBy } = useSortByFilter<SongListSort>(
+        defaultToFavoriteDate ? SongListSort.FAVORITED : SongListSort.NAME,
+        resolvedListKey,
+    );
 
-    const { sortOrder } = useSortOrderFilter(SortOrder.ASC, resolvedListKey);
+    const { sortOrder } = useSortOrderFilter(
+        defaultToFavoriteDate ? SortOrder.DESC : SortOrder.ASC,
+        resolvedListKey,
+    );
 
     const { searchTerm, setSearchTerm } = useSearchTermFilter('');
 

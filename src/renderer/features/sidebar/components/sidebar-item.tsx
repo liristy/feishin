@@ -22,6 +22,7 @@ export const SidebarItem = ({ children, className, to, ...props }: SidebarItemPr
 
     return (
         <Button
+            aria-current={isActive ? 'page' : undefined}
             className={clsx(
                 {
                     [styles.active]: isActive,
@@ -34,6 +35,7 @@ export const SidebarItem = ({ children, className, to, ...props }: SidebarItemPr
             classNames={{
                 inner: styles.inner,
                 label: styles.label,
+                root: styles.root,
             }}
             component={Link}
             draggable={false}

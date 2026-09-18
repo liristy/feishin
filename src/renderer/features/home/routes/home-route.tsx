@@ -20,10 +20,10 @@ import {
     useHomeFeature,
     useHomeFeatureStyle,
     useHomeItems,
-    useWindowSettings,
 } from '/@/renderer/store';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 import { Stack } from '/@/shared/components/stack/stack';
+import { TextTitle } from '/@/shared/components/text-title/text-title';
 import {
     AlbumListSort,
     LibraryItem,
@@ -31,13 +31,11 @@ import {
     SongListSort,
     SortOrder,
 } from '/@/shared/types/domain-types';
-import { Platform } from '/@/shared/types/types';
 
 const HomeRoute = () => {
     const { t } = useTranslation();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const server = useCurrentServer();
-    const { windowBarStyle } = useWindowSettings();
     const homeFeature = useHomeFeature();
     const homeFeatureStyle = useHomeFeatureStyle();
     const homeItems = useHomeItems();
@@ -114,10 +112,13 @@ const HomeRoute = () => {
                     <Stack
                         gap="2xl"
                         mb="5rem"
-                        pt={windowBarStyle === Platform.WEB ? '5rem' : '3rem'}
-                        px="2rem"
+                        pt="xl"
+                        px={{ base: 'md', sm: 'xl' }}
                         ref={containerQuery.ref}
                     >
+                        <TextTitle fw={700} fz="xl" order={1}>
+                            {t('page.home.title')}
+                        </TextTitle>
                         {homeFeature && homeFeatureStyle === HomeFeatureStyle.SINGLE && (
                             <AlbumInfiniteSingleFeatureCarousel />
                         )}

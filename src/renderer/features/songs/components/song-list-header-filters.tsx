@@ -24,7 +24,7 @@ import { Divider } from '/@/shared/components/divider/divider';
 import { Flex } from '/@/shared/components/flex/flex';
 import { Group } from '/@/shared/components/group/group';
 import { Icon } from '/@/shared/components/icon/icon';
-import { LibraryItem, SongListSort, SortOrder } from '/@/shared/types/domain-types';
+import { LibraryItem } from '/@/shared/types/domain-types';
 import { ItemListKey } from '/@/shared/types/types';
 
 export const SongListHeaderFilters = ({ toggleGenreTarget }: { toggleGenreTarget?: boolean }) => {
@@ -32,9 +32,8 @@ export const SongListHeaderFilters = ({ toggleGenreTarget }: { toggleGenreTarget
     const target = useGenreTarget();
     const { setGenreBehavior } = useSettingsStoreActions();
     const albumFilters = useAlbumListFilters();
-    const songFilters = useSongListFilters();
-
     const { pageKey } = useListContext();
+    const songFilters = useSongListFilters(pageKey as ItemListKey);
 
     const handleToggleGenreTarget = useCallback(() => {
         // Clear all filter query states
@@ -80,13 +79,13 @@ export const SongListHeaderFilters = ({ toggleGenreTarget }: { toggleGenreTarget
                     </>
                 )}
                 <ListSortByDropdown
-                    defaultSortByValue={SongListSort.NAME}
+                    defaultSortByValue={songFilters.query.sortBy}
                     itemType={LibraryItem.SONG}
                     listKey={pageKey as ItemListKey}
                 />
                 <Divider orientation="vertical" />
                 <ListSortOrderToggleButton
-                    defaultSortOrder={SortOrder.ASC}
+                    defaultSortOrder={songFilters.query.sortOrder}
                     listKey={pageKey as ItemListKey}
                 />
                 <ListFiltersModal isActive={hasActiveFilters} itemType={LibraryItem.SONG} />

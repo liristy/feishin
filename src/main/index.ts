@@ -44,22 +44,15 @@ import {
 } from '/@/main/utils/window-bounds';
 import { PlayerRepeat, PlayerStatus, PlayerType, TitleTheme } from '/@/shared/types/types';
 
-const ALPHA_UPDATER_CONFIG: {
-    bucket: string;
-    channel: string;
-    endpoint: string;
-    provider: 's3';
-} = {
-    bucket: '',
-    channel: 'alpha',
-    endpoint: 'https://feishin-nightly-bucket.jeffvli.org',
-    provider: 's3',
-};
-
 const GITHUB_UPDATER_CONFIG = {
-    owner: 'jeffvli',
+    owner: 'liristy',
     provider: 'github' as const,
     repo: 'feishin',
+};
+
+const ALPHA_UPDATER_CONFIG = {
+    ...GITHUB_UPDATER_CONFIG,
+    channel: 'alpha',
 };
 
 type UpdaterInstance = AppImageUpdater | MacUpdater | NsisUpdater | typeof autoUpdater;
@@ -244,6 +237,7 @@ function configureAndGetUpdater(): UpdaterInstance {
         return createAlphaUpdaterInstance();
     }
 
+    autoUpdater.setFeedURL(GITHUB_UPDATER_CONFIG);
     autoUpdater.logger = autoUpdaterLogInterface;
     autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.autoRunAppAfterInstall = true;
@@ -267,6 +261,7 @@ function configureAndGetUpdater(): UpdaterInstance {
  * Used when checking multiple channels or when the winning channel is beta/latest.
  */
 function configureAutoUpdaterForChannel(channel: 'beta' | 'latest'): void {
+    autoUpdater.setFeedURL(GITHUB_UPDATER_CONFIG);
     autoUpdater.logger = autoUpdaterLogInterface;
     autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.autoRunAppAfterInstall = true;

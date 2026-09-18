@@ -350,6 +350,8 @@
         "theme": "主题",
         "playbackStyle_description": "选择音频播放器的播放风格",
         "mpvExecutablePath": "MPV 可执行文件路径",
+        "mpvBundled": "内置 MPV",
+        "mpvBundled_description": "使用程序自带的 MPV，无需单独安装或设置路径。",
         "hotkey_rate2": "评为 2 星",
         "playButtonBehavior_description": "设置将歌曲添加到播放队列时播放按钮的默认行为",
         "minimumScrobblePercentage_description": "歌曲被记录为已播放所需的最小播放百分比",
@@ -704,6 +706,7 @@
         "releaseDate": "发布日期",
         "communityRating": "社区评分",
         "path": "路径",
+        "dateFavorited": "收藏时间",
         "favorited": "已收藏",
         "albumArtist": "$t(entity.albumArtist, {\"count\": 1})",
         "releaseYear": "发布年份",
@@ -833,6 +836,7 @@
             "logout": "退出登录"
         },
         "home": {
+            "featuredAlbum": "精选专辑",
             "mostPlayed": "最多播放",
             "newlyAdded": "最近添加的发布",
             "explore": "从您的媒体库中搜索",

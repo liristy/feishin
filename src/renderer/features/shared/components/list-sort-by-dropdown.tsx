@@ -560,7 +560,7 @@ const SONG_LIST_FILTERS: Partial<
         },
         {
             defaultOrder: SortOrder.DESC,
-            name: i18n.t('filter.isFavorited'),
+            name: i18n.t('filter.dateFavorited'),
             value: SongListSort.FAVORITED,
         },
         {

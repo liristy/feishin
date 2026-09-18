@@ -2,6 +2,7 @@ appId: org.jeffvli.feishin
 productName: Feishin
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 electronVersion: 43.4.1
+beforePack: scripts/prepare-mpv.cjs
 directories:
     buildResources: assets
 files:
@@ -71,7 +72,7 @@ npmRebuild: false
 afterAllArtifactBuild: scripts/after-all-artifact-build.mjs
 publish:
     provider: github
-    owner: jeffvli
+    owner: liristy
     repo: feishin
     channel: latest
     releaseType: draft

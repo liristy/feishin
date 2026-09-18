@@ -1245,13 +1245,13 @@ export const sidebarItems: SidebarItemType[] = [
 ];
 
 const defaultHomeItemOrder: HomeItem[] = [
-    HomeItem.GENRES,
-    HomeItem.RANDOM,
     HomeItem.RECENTLY_ADDED,
-    HomeItem.RECENTLY_RELEASED,
     HomeItem.RECENTLY_PLAYED,
+    HomeItem.RANDOM,
+    HomeItem.RECENTLY_RELEASED,
     HomeItem.MOST_PLAYED,
     HomeItem.PLAYLISTS,
+    HomeItem.GENRES,
 ];
 
 const homeItems = defaultHomeItemOrder.map((id) => ({
@@ -1331,7 +1331,7 @@ const initialState: SettingsState = {
         type: FontType.BUILT_IN,
     },
     general: {
-        accent: 'rgb(53, 116, 252)',
+        accent: 'rgb(48, 207, 155)',
         albumBackground: false,
         albumBackgroundBlur: 6,
         albumGroupImageSize: 0,
@@ -1409,7 +1409,7 @@ const initialState: SettingsState = {
         showVisualizerInSidebar: true,
         sidebarCollapsedNavigation: true,
         sidebarCollapseShared: false,
-        sidebarImageEnabled: true,
+        sidebarImageEnabled: false,
         sidebarItems,
         sidebarPanelOrder: ['queue', 'lyrics', 'visualizer'],
         sidebarPlaylistFolders: false,
@@ -2130,7 +2130,7 @@ const initialState: SettingsState = {
         transcode: {
             enabled: false,
         },
-        type: PlayerType.WEB,
+        type: utils?.isWindows() ? PlayerType.LOCAL : PlayerType.WEB,
         webAudio: true,
     },
     queryBuilder: {

@@ -16,6 +16,10 @@
     border-radius: var(--theme-radius-md);
 }
 
+.row-sortable {
+    cursor: grab;
+}
+
 .row-hover {
     .metadata,
     .compact-name {
@@ -142,7 +146,7 @@
 
 .image-container {
     flex-shrink: 0;
-    width: 3rem;
-    min-width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    min-width: 2.5rem;
+    height: 2.5rem;
 }

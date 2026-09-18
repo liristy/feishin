@@ -32,6 +32,7 @@ import {
     useCurrentServer,
     useCurrentServerId,
     usePermissions,
+    useSettingsStoreActions,
     useSidebarPlaylistListFilterRegex,
     useSidebarPlaylistMode,
     useSidebarPlaylistSorting,
@@ -279,6 +280,7 @@ export const PlaylistRowButton = memo(
                     [styles.rowCompact]: isCompact,
                     [styles.rowDraggedOver]: isDraggedOver && !isSmartPlaylist,
                     [styles.rowHover]: isHovered,
+                    [styles.rowSortable]: sidebarPlaylistSorting,
                 })}
                 initial={false}
                 onContextMenu={(e: MouseEvent<HTMLAnchorElement>) => {
@@ -387,6 +389,7 @@ export const SidebarPlaylistList = () => {
     const { t } = useTranslation();
     const server = useCurrentServer();
     const sidebarPlaylistSorting = useSidebarPlaylistSorting();
+    const { setSettings } = useSettingsStoreActions();
     const filterRegex = useSidebarPlaylistListFilterRegex();
 
     const playlistsQuery = useQuery(
@@ -572,6 +575,27 @@ export const SidebarPlaylistList = () => {
                         </Text>
                     </Group>
                     <Group gap="xs" wrap="nowrap">
+                        <ActionIcon
+                            aria-label={t('setting.sidebarPlaylistSorting')}
+                            aria-pressed={sidebarPlaylistSorting}
+                            icon="sort"
+                            iconProps={{ size: 'lg' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSettings({
+                                    general: { sidebarPlaylistSorting: !sidebarPlaylistSorting },
+                                });
+                            }}
+                            size="xs"
+                            tooltip={{
+                                label: t('setting.sidebarPlaylistSorting', {
+                                    context: 'description',
+                                }),
+                                multiline: true,
+                                w: 240,
+                            }}
+                            variant={sidebarPlaylistSorting ? 'light' : 'subtle'}
+                        />
                         <ActionIcon
                             icon="add"
                             iconProps={{

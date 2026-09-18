@@ -203,6 +203,7 @@
             }
         },
         "home": {
+            "featuredAlbum": "精選專輯",
             "explore": "探索你的媒體庫",
             "recentlyPlayed": "最近播放",
             "title": "$t(common.home)",
@@ -1195,6 +1196,7 @@
         "songCount": "曲目數",
         "album": "$t(entity.album, {\"count\": 1})",
         "albumArtist": "$t(entity.albumArtist, {\"count\": 1})",
+        "dateFavorited": "收藏時間",
         "favorited": "已收藏",
         "recentlyAdded": "最近新增",
         "releaseYear": "發行年份",

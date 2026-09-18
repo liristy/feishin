@@ -7,7 +7,7 @@ import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/notifications/styles.css';
 import isElectron from 'is-electron';
-import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, memo, Suspense, useEffect, useMemo, useState } from 'react';
 
 import i18n from '/@/i18n/i18n';
 import { WebAudioContext } from '/@/renderer/features/player/context/webaudio-context';
@@ -17,15 +17,9 @@ import { useFullscreenToggle } from '/@/renderer/hooks/use-fullscreen-toggle';
 import { useNativeMenuSync } from '/@/renderer/hooks/use-native-menu-sync';
 import { useSyncSettingsToMain } from '/@/renderer/hooks/use-sync-settings-to-main';
 import { AppRouter } from '/@/renderer/router/app-router';
-import {
-    useCssSettings,
-    useHotkeySettings,
-    useLanguage,
-    useSettingsStoreActions,
-} from '/@/renderer/store';
+import { useHotkeySettings, useLanguage } from '/@/renderer/store';
 import { initCustomThemes } from '/@/renderer/store/custom-themes.store';
 import { useAppTheme } from '/@/renderer/themes/use-app-theme';
-import { sanitizeCss } from '/@/renderer/utils/sanitize';
 import { WebAudio } from '/@/shared/types/types';
 import '/@/shared/styles/global.css';
 import { PlayerProvider } from '/@/renderer/features/player/context/player-context';
@@ -39,7 +33,6 @@ const UpdateAvailableDialog = lazy(() =>
 );
 
 const ipc = isElectron() ? window.api.ipc : null;
-const utils = isElectron() ? window.api.utils : null;
 
 export const App = () => {
     // Custom themes must be loaded (and registered into the shared theme
@@ -115,8 +108,6 @@ const AppEffects = () => (
     <>
         <SyncSettingsEffect />
         <UpdateCheckEffect />
-        <CustomCssFileEffect />
-        <CssSettingsEffect />
         <GlobalShortcutsEffect />
         <LanguageEffect />
         <NativeMenuSyncEffect />
@@ -134,104 +125,6 @@ const SyncSettingsEffect = () => {
 
 const UpdateCheckEffect = () => {
     useCheckForUpdates();
-
-    return null;
-};
-
-const CssSettingsEffect = () => {
-    const { content, enabled } = useCssSettings();
-    const cssRef = useRef<HTMLStyleElement | null>(null);
-
-    useEffect(() => {
-        if (!enabled || !content) {
-            if (cssRef.current) {
-                cssRef.current.textContent = '';
-            }
-
-            return;
-        }
-
-        // Yes, CSS is sanitized here as well. Prevent a user from changing the
-        // localStorage to bypass sanitizing.
-        const sanitized = sanitizeCss(content);
-        if (!cssRef.current) {
-            cssRef.current = document.createElement('style');
-            document.body.appendChild(cssRef.current);
-        }
-
-        cssRef.current.textContent = sanitized;
-
-        return () => {
-            if (cssRef.current) {
-                cssRef.current.textContent = '';
-            }
-        };
-    }, [content, enabled]);
-
-    return null;
-};
-
-const CustomCssFileEffect = () => {
-    const { setSettings } = useSettingsStoreActions();
-    const { content } = useCssSettings();
-    const latestContentRef = useRef(content);
-
-    useEffect(() => {
-        latestContentRef.current = content;
-    }, [content]);
-
-    useEffect(() => {
-        if (!isElectron() || !utils) return;
-
-        let disposed = false;
-
-        const applyContent = (rawContent: string | undefined) => {
-            const sanitized = sanitizeCss(`<style>${rawContent ?? ''}`);
-            if (sanitized !== latestContentRef.current) {
-                setSettings({
-                    css: {
-                        content: sanitized,
-                    },
-                });
-            }
-        };
-
-        const loadCustomCss = async () => {
-            try {
-                const result = await utils.getCustomCss();
-
-                if (disposed || !result) return;
-
-                if (!result.exists && latestContentRef.current) {
-                    await utils.saveCustomCss(latestContentRef.current);
-                    return;
-                }
-
-                applyContent(result.content);
-            } catch (error) {
-                console.error('Failed to load custom css', error);
-            }
-        };
-
-        const handleCustomCssUpdated = (data: { content?: string; exists?: boolean }) => {
-            if (disposed) return;
-            if (data?.exists === false) {
-                applyContent('');
-                return;
-            }
-
-            applyContent(data?.content);
-        };
-
-        const removeCustomCssUpdatedListener =
-            utils.customCssUpdatedListener(handleCustomCssUpdated);
-        loadCustomCss();
-
-        return () => {
-            disposed = true;
-            removeCustomCssUpdatedListener();
-        };
-    }, [setSettings]);
 
     return null;
 };

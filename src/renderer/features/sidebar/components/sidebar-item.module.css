@@ -10,9 +10,11 @@
 }
 
 .root {
+    height: 38px;
     padding-right: var(--theme-spacing-md);
     padding-left: var(--theme-spacing-md);
-    cursor: default;
+    margin-bottom: 3px;
+    border-radius: var(--theme-radius-md);
 }
 
 .inner {
@@ -31,12 +33,18 @@
 }
 
 .link {
+    position: relative;
     display: flex;
     width: 100%;
     font-size: var(--theme-font-size-md);
-    color: var(--theme-colors-foreground);
+    color: var(--theme-colors-foreground-muted);
     border: 1px transparent solid;
-    transition: color 0.2s ease-in-out;
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+
+    &:hover {
+        color: var(--theme-colors-foreground);
+        background: color-mix(in srgb, var(--theme-colors-foreground) 5%, transparent);
+    }
 
     &:focus-visible {
         border: 1px solid var(--theme-colors-primary-filled);
@@ -45,6 +53,19 @@
 
 .link.active {
     color: var(--theme-colors-primary-filled);
+    background: color-mix(in srgb, var(--theme-colors-primary-filled) 12%, transparent);
+
+    &::after {
+        position: absolute;
+        top: 50%;
+        right: var(--theme-spacing-md);
+        width: 5px;
+        height: 5px;
+        content: '';
+        background: currentcolor;
+        border-radius: 50%;
+        transform: translateY(-50%);
+    }
 }
 
 .link.disabled {

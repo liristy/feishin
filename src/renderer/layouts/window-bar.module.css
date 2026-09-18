@@ -10,7 +10,7 @@
     width: 100%;
     height: 100%;
     background: var(--theme-colors-background);
-    border-bottom: 1px solid alpha(var(--theme-colors-border), 0.5);
+    border-bottom: 1px solid color-mix(in srgb, var(--theme-colors-foreground) 4%, transparent);
     -webkit-app-region: drag;
 }
 

@@ -1,7 +1,7 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--mantine-spacing-xs);
+    gap: var(--theme-spacing-xs);
     width: 100%;
     height: 100%;
     max-height: calc(100vh - 90px);
@@ -15,7 +15,7 @@
 .scroll-area {
     flex: 1;
     min-height: 0;
-    padding: 0 var(--theme-spacing-md) var(--theme-spacing-md) var(--theme-spacing-md);
+    padding: 0 var(--theme-spacing-sm) var(--theme-spacing-md);
 }
 
 @keyframes fade-in {
@@ -67,11 +67,28 @@
 .accordion-control {
     height: auto;
     min-height: 2.5rem;
+    margin-top: var(--theme-spacing-sm);
     border-radius: var(--theme-radius-md);
 
     &:hover {
         background: var(--theme-colors-background);
     }
+}
+
+.section-label {
+    font-size: var(--theme-font-size-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+}
+
+.primary-navigation {
+    padding-bottom: var(--theme-spacing-sm);
+}
+
+.footer {
+    flex-shrink: 0;
+    padding: var(--theme-spacing-sm) var(--theme-spacing-md);
+    border-top: 1px solid color-mix(in srgb, var(--theme-colors-foreground) 5%, transparent);
 }
 
 .accordion-content {

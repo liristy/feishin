@@ -7,8 +7,14 @@
     padding: var(--theme-spacing-md);
     overflow: hidden;
     user-select: none;
-    background-color: var(--theme-colors-surface);
+    background-color: transparent;
     border-radius: var(--theme-radius-md);
+    transition: background-color 0.2s ease;
+
+    &:hover,
+    &:focus-within {
+        background-color: color-mix(in srgb, var(--theme-colors-foreground) 4%, transparent);
+    }
 }
 
 .container.selected {
@@ -28,7 +34,7 @@
     overflow: hidden;
     color: inherit;
     text-decoration: none;
-    border-radius: var(--theme-radius-md);
+    border-radius: var(--theme-radius-lg);
 
     &::before {
         position: absolute;
@@ -47,7 +53,7 @@
     &:hover {
         @mixin dark {
             &::before {
-                opacity: 0.7;
+                opacity: 0.35;
             }
         }
 
@@ -140,6 +146,7 @@
 
 .detail-container {
     display: flex;
+    flex-shrink: 0;
     flex-direction: column;
     gap: var(--theme-spacing-xs);
     width: 100%;
@@ -156,6 +163,7 @@
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.5;
     white-space: nowrap;
 
     a {

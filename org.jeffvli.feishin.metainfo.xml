@@ -5,7 +5,7 @@
   <summary>Jellyfin, Navidrome, and OpenSubsonic Compatible Music Player</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
-  <content_rating type="oars-1.1"/>
+  <content_rating type="oars-1.1"></content_rating>
   <description>
     <p>A modern, cross-platform music player for Jellyfin, Navidrome, and OpenSubsonic servers.</p>
     <p>Features</p>
@@ -47,6 +47,7 @@
     <category>Music</category>
   </categories>
   <releases>
+    <release date="2026-09-18" type="stable" version="1.15.2"></release>
     <release date="2025-10-13" type="stable" version="0.21.2"></release>
     <release date="2025-10-13" type="stable" version="0.21.1"></release>
     <release date="2025-10-13" type="stable" version="0.21.0"></release>

@@ -2,10 +2,10 @@ import type { ImagePlaceholderPriority } from '/@/shared/utils/image-hash';
 
 import { t } from 'i18next';
 import isElectron from 'is-electron';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import i18n, { languages } from '/@/i18n/i18n';
+import { languages } from '/@/i18n/i18n';
 import { ImageResolutionSettings } from '/@/renderer/features/settings/components/general/art-resolution-settings';
 import {
     ArtistReleaseTypeSettings,
@@ -22,25 +22,16 @@ import {
     HomeFeatureStyle,
     SideQueueLayout,
     SideQueueType,
-    useFontSettings,
     useGeneralSettings,
     useSettingsStoreActions,
 } from '/@/renderer/store/settings.store';
-import { type Font, FONT_OPTIONS } from '/@/renderer/types/fonts';
-import { FileInput } from '/@/shared/components/file-input/file-input';
 import { NumberInput } from '/@/shared/components/number-input/number-input';
 import { SegmentedControl } from '/@/shared/components/segmented-control/segmented-control';
 import { Select } from '/@/shared/components/select/select';
 import { Slider } from '/@/shared/components/slider/slider';
 import { Switch } from '/@/shared/components/switch/switch';
-import { toast } from '/@/shared/components/toast/toast';
-import { FontType } from '/@/shared/types/types';
 
 const localSettings = isElectron() ? window.api.localSettings : null;
-const ipc = isElectron() ? window.api.ipc : null;
-const utils = isElectron() ? window.api.utils : null;
-// Electron 32+ removed file.path, use this which is exposed in preload to get real path
-const getPathForFile = isElectron() ? window.api.getPathForFile : null;
 
 const HOME_FEATURE_STYLE_OPTIONS = [
     {
@@ -114,114 +105,10 @@ const IMAGE_PLACEHOLDER_PRIORITY_OPTIONS = [
     },
 ];
 
-const FONT_TYPES: Font[] = [
-    {
-        label: i18n.t('setting.fontType', {
-            context: 'optionBuiltIn',
-        }),
-        value: FontType.BUILT_IN,
-    },
-];
-
-if (window.queryLocalFonts) {
-    FONT_TYPES.push({
-        label: i18n.t('setting.fontType', { context: 'optionSystem' }),
-        value: FontType.SYSTEM,
-    });
-}
-
-if (isElectron()) {
-    FONT_TYPES.push({
-        label: i18n.t('setting.fontType', { context: 'optionCustom' }),
-        value: FontType.CUSTOM,
-    });
-}
-
 export const ApplicationSettings = memo(() => {
     const { t } = useTranslation();
     const settings = useGeneralSettings();
-    const fontSettings = useFontSettings();
     const { setSettings } = useSettingsStoreActions();
-    const [localFonts, setLocalFonts] = useState<Font[]>([]);
-
-    // const fontList = useMemo(() => {
-    //     if (fontSettings.custom) {
-    //         return fontSettings.custom.split(/(\\|\/)/g).pop()!;
-    //     }
-    //     return '';
-    // }, [fontSettings.custom]);
-
-    const onFontError = useCallback(
-        (file: string) => {
-            toast.error({
-                message: `${file} is not a valid font file`,
-            });
-
-            setSettings({
-                font: {
-                    ...fontSettings,
-                    custom: null,
-                },
-            });
-        },
-        [fontSettings, setSettings],
-    );
-
-    useEffect(() => {
-        if (localSettings) {
-            localSettings.fontError(onFontError);
-
-            return () => {
-                ipc?.removeAllListeners('custom-font-error');
-            };
-        }
-
-        return () => {};
-    }, [onFontError]);
-
-    useEffect(() => {
-        const getFonts = async () => {
-            if (
-                fontSettings.type === FontType.SYSTEM &&
-                localFonts.length === 0 &&
-                window.queryLocalFonts
-            ) {
-                try {
-                    // WARNING (Oct 17 2023): while this query is valid for chromium-based
-                    // browsers, it is still experimental, and so Typescript will complain
-                    const status = await navigator.permissions.query({
-                        name: 'local-fonts' as any,
-                    });
-
-                    if (status.state === 'denied') {
-                        throw new Error(t('error.localFontAccessDenied'));
-                    }
-
-                    const data = await window.queryLocalFonts();
-                    setLocalFonts(
-                        data.map((font) => ({
-                            label: font.fullName,
-                            value: font.postscriptName,
-                        })),
-                    );
-                } catch (error) {
-                    console.error('Failed to get local fonts', error);
-                    toast.error({
-                        message: t('error.systemFontError'),
-                    });
-
-                    setSettings({
-                        font: {
-                            ...fontSettings,
-                            type: FontType.BUILT_IN,
-                        },
-                    });
-                }
-            }
-        };
-        getFonts();
-    }, [fontSettings, localFonts, setSettings, t]);
-
     const handleChangeLanguage = (e: null | string) => {
         if (!e) return;
         setSettings({
@@ -249,100 +136,6 @@ export const ApplicationSettings = memo(() => {
             }),
             isHidden: false,
             title: t('setting.language'),
-        },
-        {
-            control: (
-                <Select
-                    data={FONT_TYPES}
-                    onChange={(e) => {
-                        if (!e) return;
-                        setSettings({
-                            font: {
-                                ...fontSettings,
-                                type: e as FontType,
-                            },
-                        });
-                    }}
-                    value={fontSettings.type}
-                />
-            ),
-            description: t('setting.fontType', {
-                context: 'description',
-            }),
-            isHidden: FONT_TYPES.length === 1,
-            title: t('setting.fontType'),
-        },
-        {
-            control: (
-                <Select
-                    data={FONT_OPTIONS}
-                    onChange={(e) => {
-                        if (!e) return;
-                        setSettings({
-                            font: {
-                                ...fontSettings,
-                                builtIn: e,
-                            },
-                        });
-                    }}
-                    searchable
-                    value={fontSettings.builtIn}
-                />
-            ),
-            description: t('setting.font', { context: 'description' }),
-            isHidden: localFonts && fontSettings.type !== FontType.BUILT_IN,
-            title: t('setting.font'),
-        },
-        {
-            control: (
-                <Select
-                    data={localFonts}
-                    onChange={(e) => {
-                        if (!e) return;
-                        setSettings({
-                            font: {
-                                ...fontSettings,
-                                system: e,
-                            },
-                        });
-                    }}
-                    searchable
-                    value={fontSettings.system}
-                    w={300}
-                />
-            ),
-            description: t('setting.font', { context: 'description' }),
-            isHidden: !localFonts || fontSettings.type !== FontType.SYSTEM,
-            title: t('setting.font'),
-        },
-        {
-            control: (
-                <FileInput
-                    accept=".ttc,.ttf,.otf,.woff,.woff2"
-                    clearable
-                    defaultValue={
-                        fontSettings.custom
-                            ? new File([], fontSettings.custom.split(utils?.separator || '').pop()!)
-                            : null
-                    }
-                    onChange={async (e) => {
-                        const custom = e ? getPathForFile?.(e) || null : null;
-                        await localSettings?.setSync('local_font_path', custom);
-                        setSettings({
-                            font: {
-                                ...fontSettings,
-                                custom,
-                            },
-                        });
-                    }}
-                    w={300}
-                />
-            ),
-            description: t('setting.customFontPath', {
-                context: 'description',
-            }),
-            isHidden: !isElectron() || fontSettings.type !== FontType.CUSTOM,
-            title: t('setting.customFontPath'),
         },
         {
             control: (

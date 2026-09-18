@@ -161,7 +161,7 @@
 
 .image {
     object-fit: var(--theme-image-fit);
-    border-radius: 5px;
+    border-radius: var(--theme-radius-lg);
 }
 
 .title {

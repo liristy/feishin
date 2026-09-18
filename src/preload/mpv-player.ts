@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron';
 
 import { PlayerData } from '/@/shared/types/domain-types';
+import { MpvQueueIdentity } from '/@/shared/types/mpv';
 
 const initialize = (data: { extraParameters?: string[]; properties?: Record<string, any> }) => {
     return ipcRenderer.invoke('player-initialize', data);
@@ -26,8 +27,8 @@ const setProperties = (data: Record<string, any>) => {
     ipcRenderer.send('player-set-properties', data);
 };
 
-const autoNext = (url?: string) => {
-    ipcRenderer.send('player-auto-next', url);
+const autoNext = (url?: string, nextId?: string) => {
+    ipcRenderer.send('player-auto-next', url, nextId);
 };
 
 const currentTime = () => {
@@ -62,12 +63,17 @@ const seekTo = (seconds: number) => {
     ipcRenderer.send('player-seek-to', seconds);
 };
 
-const setQueue = (current?: string, next?: string, pause?: boolean) => {
-    ipcRenderer.send('player-set-queue', current, next, pause);
+const setQueue = (
+    current?: string,
+    next?: string,
+    pause?: boolean,
+    identity?: MpvQueueIdentity,
+) => {
+    ipcRenderer.send('player-set-queue', current, next, pause, identity);
 };
 
-const setQueueNext = (url?: string) => {
-    ipcRenderer.send('player-set-queue-next', url);
+const setQueueNext = (url?: string, nextId?: string) => {
+    ipcRenderer.send('player-set-queue-next', url, nextId);
 };
 
 const stop = () => {
@@ -102,11 +108,11 @@ const getAudioDevices = async () => {
     return ipcRenderer.invoke('player-get-audio-devices');
 };
 
-const rendererTrackEnded = (cb: () => void) => {
-    ipcRenderer.on('renderer-player-track-ended', () => cb());
+const rendererTrackEnded = (cb: (identity: MpvQueueIdentity) => void) => {
+    ipcRenderer.on('renderer-player-track-ended', (_, identity) => cb(identity));
 };
 
-const rendererAutoNext = (cb: (data: PlayerData) => void) => {
+const rendererAutoNext = (cb: (data: MpvQueueIdentity) => void) => {
     ipcRenderer.on('renderer-player-auto-next', (_, data) => cb(data));
 };
 

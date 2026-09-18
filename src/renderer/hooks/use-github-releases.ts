@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-export const GITHUB_RELEASES_URL = 'https://api.github.com/repos/jeffvli/feishin/releases';
+export const GITHUB_RELEASES_URL = 'https://api.github.com/repos/liristy/feishin/releases';
 export const RELEASES_TO_FETCH = 30;
 
 export interface GitHubRelease {
@@ -28,7 +28,7 @@ export const useGithubReleasesList = (perPage = RELEASES_TO_FETCH) => {
             });
             return response.data;
         },
-        queryKey: ['github-releases-list', perPage],
+        queryKey: ['github-releases-list', GITHUB_RELEASES_URL, perPage],
         retry: 2,
     });
 };
@@ -42,7 +42,7 @@ export const useGithubLatestRelease = (options?: {
             const response = await axios.get<GitHubRelease>(`${GITHUB_RELEASES_URL}/latest`);
             return response.data;
         },
-        queryKey: ['github-latest-release'],
+        queryKey: ['github-latest-release', GITHUB_RELEASES_URL],
         retry: 2,
         ...options,
     });

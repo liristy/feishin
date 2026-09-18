@@ -274,6 +274,7 @@
         "dateAdded": "Date added",
         "disc": "Disc",
         "duration": "Duration",
+        "dateFavorited": "Date favorited",
         "favorited": "Favorited",
         "fromYear": "From year",
         "genre": "$t(entity.genre, {\"count\": 1})",
@@ -653,6 +654,7 @@
             "title": "Commands"
         },
         "home": {
+            "featuredAlbum": "Featured album",
             "explore": "Explore from your library",
             "genres": "$t(entity.genre, {\"count\": 2})",
             "mostPlayed": "Most Played",
@@ -1083,6 +1085,8 @@
         "minimumScrobbleSeconds": "Minimum scrobble (seconds)",
         "mpvExecutablePath_description": "Sets the path to the mpv executable. If left empty, the default path will be used",
         "mpvExecutablePath": "mpv executable path",
+        "mpvBundled": "Built-in MPV",
+        "mpvBundled_description": "Uses the MPV included with the application. No separate installation is required.",
         "mpvExtraParameters": "mpv extra parameters",
         "mpvExtraParameters_description": "Extra arguments to pass to mpv",
         "mpvExtraParameters_help": "One per line",

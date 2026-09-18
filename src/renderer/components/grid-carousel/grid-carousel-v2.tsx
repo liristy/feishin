@@ -272,7 +272,7 @@ function BaseGridCarousel(props: GridCarouselProps) {
                         {typeof title === 'string' ? (
                             <Group gap="xs" justify="space-between" w="100%">
                                 <Group gap="xs">
-                                    <TextTitle fw={700} isNoSelect order={3}>
+                                    <TextTitle fw={700} fz="xl" isNoSelect order={3}>
                                         {title}
                                     </TextTitle>
                                     {enableRefresh && onRefresh && (

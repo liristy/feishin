@@ -2,7 +2,7 @@
     position: absolute;
     max-width: 100%;
     height: 100%;
-    border-radius: 5px;
+    border-radius: var(--theme-radius-xl);
     filter: drop-shadow(rgb(0 0 0 / 35%) 0 5px 15px);
 }
 

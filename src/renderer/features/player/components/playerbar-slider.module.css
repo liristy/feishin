@@ -1,5 +1,5 @@
 .bar {
-    background-color: var(--theme-colors-foreground);
+    background-color: var(--theme-colors-primary-filled);
     transition: background-color 0.2s ease-in-out;
 }
 

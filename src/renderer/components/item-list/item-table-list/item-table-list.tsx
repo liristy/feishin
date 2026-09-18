@@ -121,9 +121,9 @@ const hasRequiredStateItemProperties = (
 };
 
 export enum TableItemSize {
-    COMPACT = 40,
-    DEFAULT = 66,
-    LARGE = 88,
+    COMPACT = 56,
+    DEFAULT = 88,
+    LARGE = 112,
 }
 
 const ItemTableScrollShadowLeft = memo(function ItemTableScrollShadowLeft({
@@ -1105,7 +1105,12 @@ const ItemTableListStickyUI = memo(
 
         const groupRowHeight = useMemo(() => {
             if (stickyGroupIndex === null || !groups) {
-                const height = size === 'compact' ? 40 : size === 'large' ? 88 : 64;
+                const height =
+                    size === 'compact'
+                        ? TableItemSize.COMPACT
+                        : size === 'large'
+                          ? TableItemSize.LARGE
+                          : TableItemSize.DEFAULT;
                 return typeof rowHeight === 'number' ? rowHeight : height;
             }
 

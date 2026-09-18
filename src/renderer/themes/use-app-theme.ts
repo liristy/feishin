@@ -7,14 +7,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCustomThemes } from '/@/renderer/store/custom-themes.store';
 import {
     useAccent,
-    useFontSettings,
     useNativeAspectRatio,
     useThemeSettings,
 } from '/@/renderer/store/settings.store';
 import { createMantineTheme } from '/@/renderer/themes/mantine-theme';
 import { getAppTheme } from '/@/shared/themes/app-theme';
 import { AppTheme, AppThemeConfiguration } from '/@/shared/themes/app-theme-types';
-import { FontType } from '/@/shared/types/types';
 
 export const THEME_DATA = [
     { label: 'Default Dark', type: 'dark', value: AppTheme.DEFAULT_DARK },
@@ -54,11 +52,9 @@ export const THEME_DATA = [
 export const useAppTheme = (overrideTheme?: AppTheme) => {
     const accent = useAccent();
     const nativeImageAspect = useNativeAspectRatio();
-    const { builtIn, custom, system, type } = useFontSettings();
     // Not read directly, but its identity changes whenever the custom
     // themes folder is reloaded, which is what we want to react to below.
     const customThemes = useCustomThemes();
-    const textStyleRef = useRef<HTMLStyleElement | null>(null);
     const themeInlineStylesRef = useRef<HTMLStyleElement | null>(null);
     const getCurrentTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
     const [isDarkTheme, setIsDarkTheme] = useState(getCurrentTheme());
@@ -110,53 +106,11 @@ export const useAppTheme = (overrideTheme?: AppTheme) => {
     }, []);
 
     useEffect(() => {
-        if (type === FontType.SYSTEM && system) {
-            const root = document.documentElement;
-            root.style.setProperty(
-                '--theme-content-font-family',
-                'dynamic-font, "Noto Sans JP", "Noto Sans Hebrew", sans-serif',
-            );
-
-            if (!textStyleRef.current) {
-                textStyleRef.current = document.createElement('style');
-                document.body.appendChild(textStyleRef.current);
-            }
-
-            textStyleRef.current.textContent = `
-            @font-face {
-                font-family: "dynamic-font";
-                src: local("${system}");
-            }`;
-        } else if (type === FontType.CUSTOM && custom) {
-            const root = document.documentElement;
-            root.style.setProperty(
-                '--theme-content-font-family',
-                'dynamic-font, "Noto Sans JP", "Noto Sans Hebrew", sans-serif',
-            );
-
-            if (!textStyleRef.current) {
-                textStyleRef.current = document.createElement('style');
-                document.body.appendChild(textStyleRef.current);
-            }
-
-            // Note: we change the url to bust caches when changing the path
-            // The url provided here does NOT matter, validation is done
-            // on the main process. Any feishin:/ url will fetch the same
-            // item, which the renderer will check via magic number to be
-            // some font item
-            textStyleRef.current.textContent = `
-            @font-face {
-                font-family: "dynamic-font";
-                src: url("feishin:${custom}");
-            }`;
-        } else {
-            const root = document.documentElement;
-            root.style.setProperty(
-                '--theme-content-font-family',
-                `${builtIn}, "Noto Sans JP", "Noto Sans Hebrew", sans-serif`,
-            );
-        }
-    }, [builtIn, custom, system, type]);
+        document.documentElement.style.setProperty(
+            '--theme-content-font-family',
+            '"Feishin PingFang", sans-serif',
+        );
+    }, []);
 
     const appTheme: AppThemeConfiguration = useMemo(() => {
         const themeProperties = getAppTheme(selectedTheme);

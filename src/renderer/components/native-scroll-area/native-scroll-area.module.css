@@ -6,18 +6,11 @@
     position: absolute;
     top: 0;
     left: 0;
-    z-index: -1;
+    z-index: 1;
     width: calc(100% - 130px);
     height: 65px;
+    pointer-events: none;
     -webkit-app-region: drag;
-
-    button {
-        -webkit-app-region: no-drag;
-    }
-
-    input {
-        -webkit-app-region: no-drag;
-    }
 }
 
 .scroll-area :global(.os-scrollbar) {

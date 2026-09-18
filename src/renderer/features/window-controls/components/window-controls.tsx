@@ -1,9 +1,11 @@
 import clsx from 'clsx';
 import isElectron from 'is-electron';
 import { useState } from 'react';
-import { RiCheckboxBlankLine, RiCloseLine, RiSubtractLine } from 'react-icons/ri';
+import { useTranslation } from 'react-i18next';
 
 import styles from './window-controls.module.css';
+
+import { Icon } from '/@/shared/components/icon/icon';
 
 const browser = isElectron() ? window.api.browser : null;
 
@@ -16,6 +18,7 @@ const maximize = () => browser?.maximize();
 const unmaximize = () => browser?.unmaximize();
 
 export const WindowControls = () => {
+    const { t } = useTranslation();
     const [max, setMax] = useState(false);
 
     const handleMinimize = () => minimize();
@@ -36,27 +39,30 @@ export const WindowControls = () => {
             {isElectron() && (
                 <>
                     <div className={styles.windowsButtonGroup}>
-                        <div
+                        <button
+                            aria-label={t('common.minimize')}
                             className={styles.windowsButton}
                             onClick={handleMinimize}
-                            role="button"
+                            type="button"
                         >
-                            <RiSubtractLine size={19} />
-                        </div>
-                        <div
+                            <Icon icon="minus" size={16} />
+                        </button>
+                        <button
+                            aria-label={t('common.maximize')}
                             className={styles.windowsButton}
                             onClick={handleMaximize}
-                            role="button"
+                            type="button"
                         >
-                            <RiCheckboxBlankLine size={13} />
-                        </div>
-                        <div
+                            <Icon icon="square" size={12} />
+                        </button>
+                        <button
+                            aria-label={t('common.close')}
                             className={clsx(styles.windowsButton, styles.exitButton)}
                             onClick={handleClose}
-                            role="button"
+                            type="button"
                         >
-                            <RiCloseLine size={19} />
-                        </div>
+                            <Icon icon="x" size={16} />
+                        </button>
                     </div>
                 </>
             )}

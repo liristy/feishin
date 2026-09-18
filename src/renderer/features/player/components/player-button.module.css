@@ -37,13 +37,13 @@
 }
 
 .main {
-    background: var(--theme-colors-foreground) !important;
+    background: var(--theme-colors-primary-filled) !important;
     border-radius: 50%;
 
     svg {
         display: flex;
-        color: var(--theme-colors-background);
-        fill: var(--theme-colors-background);
+        color: var(--theme-colors-primary-contrast);
+        fill: var(--theme-colors-primary-contrast);
     }
 }
 

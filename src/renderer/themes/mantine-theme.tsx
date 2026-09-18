@@ -110,8 +110,8 @@ const mantineTheme: MantineThemeOverride = createTheme({
     primaryShade: { dark: 5, light: 9 },
     radius: {
         lg: rem('12px'),
-        md: rem('5px'),
-        sm: rem('3px'),
+        md: rem('10px'),
+        sm: rem('8px'),
         xl: rem('16px'),
         xs: rem('3px'),
     },
