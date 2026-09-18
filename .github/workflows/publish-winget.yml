@@ -11,6 +11,7 @@ on:
 
 jobs:
   publish:
+    if: github.repository == 'jeffvli/feishin'
     runs-on: windows-latest
     steps:
       - uses: vedantmgoyal9/winget-releaser@main
