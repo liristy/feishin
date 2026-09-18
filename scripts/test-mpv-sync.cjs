@@ -49,7 +49,7 @@ class FakeMpv extends EventEmitter {
         return this.list.length;
     }
     async getProperty() {
-        return this.pos;
+        return process.env.MPV_STRING_POSITION ? String(this.pos) : this.pos;
     }
     isRunning() {
         return true;

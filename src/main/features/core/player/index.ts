@@ -277,7 +277,7 @@ const createMpv = async (data: {
         if (message.event !== 'end-file' || message.reason !== 'eof') return;
         pendingEnd = { identity: queueIdentity, revision: queueRevision };
         try {
-            const position = await mpv.getProperty('playlist-pos');
+            const position = Number(await mpv.getProperty('playlist-pos'));
             finishTrackIfIdle(position);
         } catch {
             // The old process may already be exiting after a restart.
@@ -604,7 +604,7 @@ ipcMain.on('player-set-queue-next', async (_event, url?: string, nextId?: string
     try {
         await updateMpvQueue(async (mpv, isCurrent) => {
             // If MPV already advanced, position 1 is playing. Let auto-next normalize it first.
-            if ((await mpv.getProperty('playlist-pos')) !== 0 || !isCurrent()) return;
+            if (Number(await mpv.getProperty('playlist-pos')) !== 0 || !isCurrent()) return;
             const size = await mpv.getPlaylistSize();
             if (!isCurrent()) return;
             if (size > 1) await mpv.playlistRemove(1);
@@ -624,7 +624,7 @@ ipcMain.on('player-auto-next', async (_event, url?: string, nextId?: string) => 
 
     try {
         await updateMpvQueue(async (mpv, isCurrent) => {
-            if ((await mpv.getProperty('playlist-pos')) !== 1 || !isCurrent()) return;
+            if (Number(await mpv.getProperty('playlist-pos')) !== 1 || !isCurrent()) return;
             await mpv.playlistRemove(0);
             if (isCurrent())
                 queueIdentity = {
