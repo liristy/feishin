@@ -2,6 +2,7 @@ import { GENRE_TABLE_COLUMNS } from '/@/renderer/components/item-list/item-table
 import { ListConfigMenu } from '/@/renderer/features/shared/components/list-config-menu';
 import { ListDisplayTypeToggleButton } from '/@/renderer/features/shared/components/list-display-type-toggle-button';
 import { ListRefreshButton } from '/@/renderer/features/shared/components/list-refresh-button';
+import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { ListSortByDropdown } from '/@/renderer/features/shared/components/list-sort-by-dropdown';
 import { ListSortOrderToggleButton } from '/@/renderer/features/shared/components/list-sort-order-toggle-button';
 import { Divider } from '/@/shared/components/divider/divider';
@@ -27,6 +28,7 @@ export const GenreListHeaderFilters = () => {
                 <ListRefreshButton listKey={ItemListKey.GENRE} />
             </Group>
             <Group gap="sm" wrap="nowrap">
+                <ListSearchInput />
                 <ListDisplayTypeToggleButton listKey={ItemListKey.GENRE} />
                 <ListConfigMenu
                     listKey={ItemListKey.GENRE}

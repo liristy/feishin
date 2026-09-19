@@ -17,7 +17,6 @@ import {
     LibraryHeaderMenu,
 } from '/@/renderer/features/shared/components/library-header';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
-import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { getPlaylistLeafName } from '/@/renderer/features/sidebar/components/playlist-folder-tree';
 import { AppRoute } from '/@/renderer/router/routes';
 import {
@@ -168,7 +167,7 @@ export const PlaylistDetailSongListHeader = ({
     return (
         <Stack gap={0}>
             {collapsed ? (
-                <PageHeader>
+                <PageHeader withTopSpacing>
                     <LibraryHeaderBar ignoreMaxWidth>
                         <LibraryHeaderBar.PlayButton
                             itemType={LibraryItem.PLAYLIST}
@@ -191,7 +190,6 @@ export const PlaylistDetailSongListHeader = ({
                             {itemCount}
                         </LibraryHeaderBar.Badge>
                     </LibraryHeaderBar>
-                    <ListSearchInput />
                 </PageHeader>
             ) : (
                 <LibraryHeader
@@ -214,7 +212,6 @@ export const PlaylistDetailSongListHeader = ({
                     }}
                     onImageFileDrop={canUploadPlaylistImage ? handlePlaylistImageUpload : undefined}
                     title={playlistDisplayName}
-                    topRight={<ListSearchInput />}
                 >
                     <Stack gap="md" w="100%">
                         {playlistDescription ? (

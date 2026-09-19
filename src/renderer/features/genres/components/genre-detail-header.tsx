@@ -7,11 +7,9 @@ import { AlbumListHeaderFilters } from '/@/renderer/features/albums/components/a
 import { useAlbumListFilters } from '/@/renderer/features/albums/hooks/use-album-list-filters';
 import { FilterBar } from '/@/renderer/features/shared/components/filter-bar';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
-import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { SongListHeaderFilters } from '/@/renderer/features/songs/components/song-list-header-filters';
 import { useSongListFilters } from '/@/renderer/features/songs/hooks/use-song-list-filters';
 import { GenreTarget, useGenreTarget } from '/@/renderer/store';
-import { Group } from '/@/shared/components/group/group';
 import { Stack } from '/@/shared/components/stack/stack';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
@@ -37,9 +35,6 @@ export const GenreDetailHeader = ({ title }: GenreDetailHeaderProps) => {
                         {itemCount}
                     </LibraryHeaderBar.Badge>
                 </LibraryHeaderBar>
-                <Group>
-                    <ListSearchInput />
-                </Group>
             </PageHeader>
             <FilterBar>
                 {genreTarget === GenreTarget.ALBUM ? (

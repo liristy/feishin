@@ -1,5 +1,6 @@
 import { closeAllModals, openModal } from '@mantine/modals';
 import { useQueryClient } from '@tanstack/react-query';
+import { clear, delMany, keys } from 'idb-keyval';
 import isElectron from 'is-electron';
 import { memo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +12,7 @@ import {
 import { Button } from '/@/shared/components/button/button';
 import { ConfirmModal } from '/@/shared/components/modal/modal';
 import { toast } from '/@/shared/components/toast/toast';
+import { offlineDataStore } from '/@/shared/utils/offline-cache';
 
 const browser = isElectron() ? window.api.browser : null;
 
@@ -25,6 +27,14 @@ export const CacheSettings = memo(() => {
 
             try {
                 queryClient.clear();
+                if (full) await clear(offlineDataStore);
+                else
+                    await delMany(
+                        (await keys(offlineDataStore)).filter((key) =>
+                            String(key).startsWith('api:'),
+                        ),
+                        offlineDataStore,
+                    );
 
                 if (full && browser) {
                     await browser.clearCache();

@@ -5,6 +5,29 @@
     z-index: 20;
 }
 
+.top-right.pad-right {
+    margin-right: 140px;
+}
+
+.library-header.is-draggable {
+    &::before {
+        position: absolute;
+        inset: 0 0 auto;
+        height: 65px;
+        content: '';
+        -webkit-app-region: drag;
+    }
+
+    :is(a, button, input, textarea, select, [role='button'], .top-right) {
+        -webkit-app-region: no-drag;
+    }
+}
+
+/* Electron combines drag regions even when window controls are painted above them. */
+.library-header.is-draggable.pad-right::before {
+    right: 140px;
+}
+
 .library-header {
     position: relative;
     display: grid;
@@ -66,7 +89,11 @@
 
     &.compact {
         min-height: unset;
-        padding: var(--theme-spacing-md) var(--theme-spacing-xs);
+        padding: calc(var(--theme-spacing-md) + 24px) var(--theme-spacing-xs) var(--theme-spacing-md);
+
+        .top-right {
+            top: calc(var(--theme-spacing-lg) + 24px);
+        }
 
         :global(.item-image-placeholder) {
             width: 250px !important;
@@ -81,7 +108,7 @@
         @container (min-width: $mantine-breakpoint-sm) {
             grid-template-columns: 200px minmax(0, 1fr);
             min-height: unset;
-            padding: var(--theme-spacing-md) var(--theme-spacing-sm);
+            padding: calc(var(--theme-spacing-md) + 24px) var(--theme-spacing-sm) var(--theme-spacing-md);
 
             .image {
                 width: 200px !important;
@@ -96,7 +123,7 @@
 
         @container (min-width: $mantine-breakpoint-lg) {
             grid-template-columns: 200px minmax(0, 1fr);
-            padding: var(--theme-spacing-md) var(--theme-spacing-md);
+            padding: calc(var(--theme-spacing-md) + 24px) var(--theme-spacing-md) var(--theme-spacing-md);
 
             .image {
                 width: 200px !important;

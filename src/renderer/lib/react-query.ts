@@ -9,6 +9,7 @@ import type {
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 
 import { toast } from '/@/shared/components/toast/toast';
+import { isOffline } from '/@/shared/utils/offline-cache';
 
 const queryCache = new QueryCache({
     onError: (error: any, query) => {
@@ -21,12 +22,17 @@ const queryCache = new QueryCache({
 
 const queryConfig: DefaultOptions = {
     mutations: {
-        retry: process.env.NODE_ENV === 'production' ? 3 : false,
+        networkMode: 'always',
+        retry: (failureCount) =>
+            !isOffline() && process.env.NODE_ENV === 'production' && failureCount < 3,
     },
     queries: {
         gcTime: 1000 * 20, // 20 seconds
+        networkMode: 'always',
+        refetchOnReconnect: true,
         refetchOnWindowFocus: false,
-        retry: process.env.NODE_ENV === 'production',
+        retry: (failureCount) =>
+            !isOffline() && process.env.NODE_ENV === 'production' && failureCount < 2,
         staleTime: 1000 * 10, // 10 seconds
         throwOnError: (error: any) => {
             return error?.response?.status >= 500;

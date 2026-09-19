@@ -16,6 +16,14 @@
     opacity: 1;
 }
 
+.container.with-top-spacing {
+    height: 89px;
+
+    .title-wrapper {
+        padding-top: 24px;
+    }
+}
+
 .container.visible {
     visibility: visible;
     pointer-events: auto;

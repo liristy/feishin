@@ -23,6 +23,7 @@ export interface PageHeaderProps extends Omit<
     position?: string;
     scrollContainerRef?: RefObject<HTMLDivElement | null>;
     target?: RefObject<HTMLElement | null>;
+    withTopSpacing?: boolean;
 }
 
 const variants: Variants = {
@@ -46,6 +47,7 @@ const BasePageHeader = ({
     position,
     scrollContainerRef,
     target,
+    withTopSpacing,
     ...props
 }: PageHeaderProps) => {
     const ref = useRef(null);
@@ -100,7 +102,7 @@ const BasePageHeader = ({
     return (
         <>
             <Flex
-                className={styles.container}
+                className={clsx(styles.container, withTopSpacing && styles.withTopSpacing)}
                 data-visible="false"
                 ref={ref}
                 style={{ height, position: position as CSSProperties['position'] }}

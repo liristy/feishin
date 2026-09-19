@@ -9,12 +9,10 @@ import { artistsQueries } from '/@/renderer/features/artists/api/artists-api';
 import { useGenreList } from '/@/renderer/features/genres/api/genres-api';
 import { FilterBar } from '/@/renderer/features/shared/components/filter-bar';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
-import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { SongListHeaderFilters } from '/@/renderer/features/songs/components/song-list-header-filters';
 import { useSongListFilters } from '/@/renderer/features/songs/hooks/use-song-list-filters';
 import { useCurrentServerId } from '/@/renderer/store';
 import { Flex } from '/@/shared/components/flex/flex';
-import { Group } from '/@/shared/components/group/group';
 import { Stack } from '/@/shared/components/stack/stack';
 import { LibraryItem } from '/@/shared/types/domain-types';
 import { ItemListKey } from '/@/shared/types/types';
@@ -27,16 +25,13 @@ interface SongListHeaderProps {
 export const SongListHeader = ({ title }: SongListHeaderProps) => {
     return (
         <Stack gap={0}>
-            <PageHeader>
+            <PageHeader withTopSpacing>
                 <Flex justify="space-between" w="100%">
                     <LibraryHeaderBar ignoreMaxWidth>
                         <PlayButton />
                         <PageTitle title={title} />
                         <SongListHeaderBadge />
                     </LibraryHeaderBar>
-                    <Group>
-                        <ListSearchInput />
-                    </Group>
                 </Flex>
             </PageHeader>
             <FilterBar>

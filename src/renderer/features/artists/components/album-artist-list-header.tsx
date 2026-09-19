@@ -7,8 +7,6 @@ import { AlbumArtistListHeaderFilters } from '/@/renderer/features/artists/compo
 import { useAlbumArtistListFilters } from '/@/renderer/features/artists/hooks/use-album-artist-list-filters';
 import { FilterBar } from '/@/renderer/features/shared/components/filter-bar';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
-import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
-import { Group } from '/@/shared/components/group/group';
 import { Stack } from '/@/shared/components/stack/stack';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
@@ -23,15 +21,12 @@ export const AlbumArtistListHeader = ({ title }: AlbumArtistListHeaderProps) => 
 
     return (
         <Stack gap={0}>
-            <PageHeader>
+            <PageHeader withTopSpacing>
                 <LibraryHeaderBar ignoreMaxWidth>
                     <PlayButton />
                     <LibraryHeaderBar.Title>{pageTitle}</LibraryHeaderBar.Title>
                     <AlbumArtistListHeaderBadge />
                 </LibraryHeaderBar>
-                <Group>
-                    <ListSearchInput />
-                </Group>
             </PageHeader>
             <FilterBar>
                 <AlbumArtistListHeaderFilters />

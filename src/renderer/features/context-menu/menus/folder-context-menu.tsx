@@ -27,7 +27,7 @@ export const FolderContextMenu = ({ items, type }: FolderContextMenuProps) => {
             <ContextMenu.Divider />
             <AddToPlaylistAction items={ids} itemType={LibraryItem.FOLDER} />
             <ContextMenu.Divider />
-            <DownloadAction ids={ids} />
+            <DownloadAction ids={ids} itemType={LibraryItem.FOLDER} />
             <ShareAction ids={ids} itemType={LibraryItem.FOLDER} />
         </ContextMenu.Content>
     );

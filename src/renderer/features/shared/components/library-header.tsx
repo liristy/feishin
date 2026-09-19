@@ -20,7 +20,8 @@ import { usePlayButtonClick } from '/@/renderer/features/shared/hooks/use-play-b
 import { useIsMutatingCreateFavorite } from '/@/renderer/features/shared/mutations/create-favorite-mutation';
 import { useIsMutatingDeleteFavorite } from '/@/renderer/features/shared/mutations/delete-favorite-mutation';
 import { useIsMutatingRating } from '/@/renderer/features/shared/mutations/set-rating-mutation';
-import { useGeneralSettings } from '/@/renderer/store';
+import { useShouldPadTitlebar } from '/@/renderer/hooks';
+import { useGeneralSettings, useWindowBarStyle } from '/@/renderer/store';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
 import { Button } from '/@/shared/components/button/button';
 import { Center } from '/@/shared/components/center/center';
@@ -32,7 +33,7 @@ import { Rating } from '/@/shared/components/rating/rating';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 import { Text } from '/@/shared/components/text/text';
 import { ExplicitStatus, LibraryItem } from '/@/shared/types/domain-types';
-import { Play } from '/@/shared/types/types';
+import { Platform, Play } from '/@/shared/types/types';
 
 interface LibraryHeaderProps {
     children?: ReactNode;
@@ -75,6 +76,8 @@ export const LibraryHeader = forwardRef(
     ) => {
         const { t } = useTranslation();
         const { blurExplicitImages } = useGeneralSettings();
+        const padRight = useShouldPadTitlebar();
+        const windowBarStyle = useWindowBarStyle();
 
         const itemTypeString = (): string => {
             switch (item.type) {
@@ -161,10 +164,16 @@ export const LibraryHeader = forwardRef(
                     styles.libraryHeader,
                     containerClassName,
                     compact && styles.compact,
+                    padRight && styles.padRight,
+                    windowBarStyle === Platform.WEB && styles.isDraggable,
                 )}
                 ref={ref}
             >
-                {topRight && <div className={styles.topRight}>{topRight}</div>}
+                {topRight && (
+                    <div className={clsx(styles.topRight, padRight && styles.padRight)}>
+                        {topRight}
+                    </div>
+                )}
                 {onImageFileDrop ? (
                     <DragDropZone
                         accept="image/*"

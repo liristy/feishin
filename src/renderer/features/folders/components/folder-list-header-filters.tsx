@@ -8,6 +8,7 @@ import {
     SONG_DISPLAY_TYPES,
 } from '/@/renderer/features/shared/components/list-config-menu';
 import { ListRefreshButton } from '/@/renderer/features/shared/components/list-refresh-button';
+import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { ListSortByDropdown } from '/@/renderer/features/shared/components/list-sort-by-dropdown';
 import { ListSortOrderToggleButton } from '/@/renderer/features/shared/components/list-sort-order-toggle-button';
 import { useContainerQuery } from '/@/renderer/hooks';
@@ -242,6 +243,7 @@ export const FolderListHeaderFilters = () => {
                     <ListRefreshButton listKey={ItemListKey.SONG} />
                 </Group>
                 <Group gap="sm" wrap="nowrap">
+                    <ListSearchInput />
                     <ListConfigMenu
                         displayTypes={[
                             { hidden: true, value: ListDisplayType.GRID },

@@ -3,6 +3,7 @@ import { JellyfinController } from '/@/renderer/api/jellyfin/jellyfin-controller
 import { NavidromeController } from '/@/renderer/api/navidrome/navidrome-controller';
 import { SubsonicController } from '/@/renderer/api/subsonic/subsonic-controller';
 import { mergeMusicFolderId } from '/@/renderer/api/utils-music-folder';
+import { offlineRead } from '/@/renderer/features/offline/offline-api-cache';
 import { getServerById, useAuthStore, useSettingsStore } from '/@/renderer/store';
 import { logger } from '/@/renderer/utils/logger';
 import { toast } from '/@/shared/components/toast/toast';
@@ -13,6 +14,7 @@ import {
     SetPlaylistSongsArgs,
     SetPlaylistSongsResponse,
 } from '/@/shared/types/domain-types';
+import { isOffline } from '/@/shared/utils/offline-cache';
 
 type ApiController = {
     jellyfin: InternalControllerEndpoint;
@@ -171,7 +173,29 @@ const apiController = <K extends keyof ControllerEndpoint>(
         };
 
         try {
-            const result = (controllerFn as (...a: unknown[]) => unknown)(...args);
+            const invoke = (signal?: AbortSignal) => {
+                if (!signal) return (controllerFn as (...a: unknown[]) => unknown)(...args);
+                const input = args[0] as { apiClientProps: object };
+                return (controllerFn as (...a: unknown[]) => unknown)(
+                    { ...input, apiClientProps: { ...input.apiClientProps, signal } },
+                    ...args.slice(1),
+                );
+            };
+            const cacheable =
+                (endpoint.startsWith('get') || endpoint === 'search') &&
+                ![
+                    'getJukeboxStatus',
+                    'getQueue',
+                    'getScanStatus',
+                    'getServerInfo',
+                    'getTranscoding',
+                    'getUserInfo',
+                    'getUsers',
+                ].includes(endpoint);
+            if (isOffline() && !cacheable && endpoint !== 'authenticate') {
+                throw new Error(i18n.t('offline.onlineRequired'));
+            }
+            const result = cacheable ? offlineRead(endpoint, args, invoke) : invoke();
             if (result instanceof Promise) {
                 return result.then(
                     (value) => {

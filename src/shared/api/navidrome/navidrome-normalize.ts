@@ -305,6 +305,7 @@ const normalizeSong = (
                 : null,
         playCount: item.playCount || 0,
         playlistItemId,
+        relativePath: item.path || null,
         releaseDate,
         releaseYear,
         sampleRate: item.sampleRate || null,

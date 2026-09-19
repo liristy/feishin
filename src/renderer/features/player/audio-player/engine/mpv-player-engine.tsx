@@ -6,6 +6,7 @@ import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { playerHandoff } from './player-handoff';
 
 import { eventEmitter } from '/@/renderer/events/event-emitter';
+import { OfflineSongUnavailableError } from '/@/renderer/features/offline/offline';
 import { usePlayerEvents } from '/@/renderer/features/player/audio-player/hooks/use-player-events';
 import { getSongUrl } from '/@/renderer/features/player/audio-player/hooks/use-stream-url';
 import { AudioPlayer, PlayerOnProgressProps } from '/@/renderer/features/player/audio-player/types';
@@ -21,6 +22,7 @@ import {
     useSettingsStore,
 } from '/@/renderer/store';
 import { logger } from '/@/renderer/utils/logger';
+import { toast } from '/@/shared/components/toast/toast';
 import { MpvQueueIdentity } from '/@/shared/types/mpv';
 import { PlayerStatus } from '/@/shared/types/types';
 
@@ -512,8 +514,10 @@ async function replaceMpvQueue(transcode: {
     } catch (error) {
         if (!isCurrentQueueRequest(request, playerData.currentSong?._uniqueId)) return;
         mpvPlayer?.stop();
+        if (error instanceof OfflineSongUnavailableError) return;
         usePlayerStore.getState().mediaPause();
         logger.error('Failed to resolve the selected MPV track', { error });
+        if (error instanceof Error) toast.error({ message: error.message });
     }
 }
 

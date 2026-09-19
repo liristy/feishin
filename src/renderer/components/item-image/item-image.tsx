@@ -13,6 +13,7 @@ import {
     useSettingsStore,
 } from '/@/renderer/store';
 import { BaseImage, ImageProps } from '/@/shared/components/image/image';
+import { useNativeImage } from '/@/shared/components/image/use-native-image';
 import { useImageHashUrl } from '/@/shared/hooks/use-image-hash-url';
 import { ExplicitStatus, ImageRequest, LibraryItem } from '/@/shared/types/domain-types';
 
@@ -53,14 +54,6 @@ const BaseItemImage = (
     const imagePlaceholderPriority = useImagePlaceholderPriority();
     const hashUrl = useImageHashUrl(thumbHash, blurHash, dominantColor, imagePlaceholderPriority);
 
-    const imageUrl = useItemImageUrl({
-        id: props.id,
-        imageUrl: src,
-        itemType: props.itemType,
-        serverId: serverId || undefined,
-        type: props.type,
-    });
-
     const imageRequest = useItemImageRequest({
         id: props.id,
         imageUrl: src,
@@ -76,7 +69,7 @@ const BaseItemImage = (
             hashUrl={hashUrl}
             imageRequest={imageRequest}
             isExplicit={isExplicit}
-            src={imageUrl}
+            src={imageRequest?.url}
             unloaderIcon={getUnloaderIcon(props.itemType)}
             {...rest}
             id={props.id || undefined}
@@ -97,37 +90,9 @@ interface UseItemImageUrlProps {
 }
 
 export const useItemImageUrl = (args: UseItemImageUrlProps) => {
-    const { id, imageUrl, itemType, size, type, useRemoteUrl } = args;
-    const serverId = useCurrentServerId();
-
-    const imageRes = useImageRes();
-    const sizeByType: number | undefined = type ? imageRes[type] : undefined;
-
-    return useMemo(() => {
-        if (imageUrl) {
-            return imageUrl;
-        }
-
-        if (!id) {
-            return undefined;
-        }
-
-        const targetServerId = args.serverId || serverId;
-        let baseUrl: string | undefined;
-
-        if (useRemoteUrl) {
-            const server = getServerById(targetServerId);
-            baseUrl = server?.remoteUrl || server?.url;
-        }
-
-        return (
-            api.controller.getImageUrl({
-                apiClientProps: { serverId: targetServerId },
-                baseUrl,
-                query: { id, itemType, size: size ?? sizeByType },
-            }) || undefined
-        );
-    }, [args.serverId, id, imageUrl, itemType, serverId, size, sizeByType, useRemoteUrl]);
+    const request = useItemImageRequest(args);
+    const image = useNativeImage({ enabled: !!request && !args.useRemoteUrl, request });
+    return args.useRemoteUrl ? request?.url : image.displaySrc;
 };
 
 export const useItemImageRequest = (args: UseItemImageUrlProps) => {

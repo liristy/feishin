@@ -23,6 +23,7 @@ import {
 import { ListDisplayTypeToggleButton } from '/@/renderer/features/shared/components/list-display-type-toggle-button';
 import { isFilterValueSet } from '/@/renderer/features/shared/components/list-filters';
 import { ListRefreshButton } from '/@/renderer/features/shared/components/list-refresh-button';
+import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { ListSortByDropdown } from '/@/renderer/features/shared/components/list-sort-by-dropdown';
 import { ListSortOrderToggleButton } from '/@/renderer/features/shared/components/list-sort-order-toggle-button';
 import { MoreButton } from '/@/renderer/features/shared/components/more-button';
@@ -202,6 +203,7 @@ export const PlaylistDetailSongListHeaderFilters = ({
                 <MoreButton onClick={handleMore} />
             </Group>
             <Group gap="sm" wrap="nowrap">
+                <ListSearchInput />
                 {isViewEditMode && <SaveAndReplaceButton mode={mode} songIds={tracks} />}
                 {isViewEditMode && (
                     <Button

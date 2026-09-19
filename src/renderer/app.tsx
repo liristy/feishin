@@ -10,6 +10,7 @@ import isElectron from 'is-electron';
 import { lazy, memo, Suspense, useEffect, useMemo, useState } from 'react';
 
 import i18n from '/@/i18n/i18n';
+import { ListeningDownloads } from '/@/renderer/features/offline/offline';
 import { WebAudioContext } from '/@/renderer/features/player/context/webaudio-context';
 import { useCheckForUpdates } from '/@/renderer/hooks/use-check-for-updates';
 import { useFullscreenAutoOpen } from '/@/renderer/hooks/use-fullscreen-auto-open';
@@ -17,7 +18,7 @@ import { useFullscreenToggle } from '/@/renderer/hooks/use-fullscreen-toggle';
 import { useNativeMenuSync } from '/@/renderer/hooks/use-native-menu-sync';
 import { useSyncSettingsToMain } from '/@/renderer/hooks/use-sync-settings-to-main';
 import { AppRouter } from '/@/renderer/router/app-router';
-import { useHotkeySettings, useLanguage } from '/@/renderer/store';
+import { useHotkeySettings, useLanguage, usePlayerHydrated } from '/@/renderer/store';
 import { initCustomThemes } from '/@/renderer/store/custom-themes.store';
 import { useAppTheme } from '/@/renderer/themes/use-app-theme';
 import { WebAudio } from '/@/shared/types/types';
@@ -35,6 +36,7 @@ const UpdateAvailableDialog = lazy(() =>
 const ipc = isElectron() ? window.api.ipc : null;
 
 export const App = () => {
+    const playerHydrated = usePlayerHydrated();
     // Custom themes must be loaded (and registered into the shared theme
     // registry) before the first render of ThemedApp, otherwise a user whose
     // selected theme is a custom one would flash the default theme first.
@@ -48,7 +50,7 @@ export const App = () => {
             .finally(() => setCustomThemesReady(true));
     }, []);
 
-    if (!customThemesReady) {
+    if (!customThemesReady || !playerHydrated) {
         return null;
     }
 
@@ -92,6 +94,7 @@ const AppShell = memo(function AppShell() {
             />
             <WebAudioContext.Provider value={webAudioProvider}>
                 <PlayerProvider>
+                    <ListeningDownloads />
                     <AudioPlayers />
                     <AppRouter />
                 </PlayerProvider>

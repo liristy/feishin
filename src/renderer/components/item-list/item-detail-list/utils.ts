@@ -10,6 +10,7 @@ const FIXED_TRACK_COLUMN_WIDTHS: Partial<Record<TableColumn, number>> = {
     [TableColumn.DATE]: 128,
     [TableColumn.DATE_ADDED]: 128,
     [TableColumn.DISC_NUMBER]: 36,
+    [TableColumn.DOWNLOAD_STATUS]: 100,
     [TableColumn.DURATION]: 72,
     [TableColumn.RELEASE_DATE]: 128,
     [TableColumn.RELEASE_YEAR]: 128,

@@ -6,6 +6,7 @@ import { openCreatePlaylistModal } from '/@/renderer/features/playlists/componen
 import { ListConfigMenu } from '/@/renderer/features/shared/components/list-config-menu';
 import { ListDisplayTypeToggleButton } from '/@/renderer/features/shared/components/list-display-type-toggle-button';
 import { ListRefreshButton } from '/@/renderer/features/shared/components/list-refresh-button';
+import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { ListSortByDropdown } from '/@/renderer/features/shared/components/list-sort-by-dropdown';
 import { ListSortOrderToggleButton } from '/@/renderer/features/shared/components/list-sort-order-toggle-button';
 import { useCurrentServer } from '/@/renderer/store';
@@ -41,6 +42,7 @@ export const PlaylistListHeaderFilters = () => {
                 <ListRefreshButton listKey={ItemListKey.PLAYLIST} />
             </Group>
             <Group gap="sm" wrap="nowrap">
+                <ListSearchInput />
                 <Button onClick={handleCreatePlaylistModal} variant="subtle">
                     {t('action.createPlaylist')}
                 </Button>

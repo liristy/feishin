@@ -14,6 +14,7 @@ import {
     ListFiltersModal,
 } from '/@/renderer/features/shared/components/list-filters';
 import { ListRefreshButton } from '/@/renderer/features/shared/components/list-refresh-button';
+import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { ListSortByDropdown } from '/@/renderer/features/shared/components/list-sort-by-dropdown';
 import { ListSortOrderToggleButton } from '/@/renderer/features/shared/components/list-sort-order-toggle-button';
 import { FILTER_KEYS } from '/@/renderer/features/shared/utils';
@@ -92,6 +93,7 @@ export const SongListHeaderFilters = ({ toggleGenreTarget }: { toggleGenreTarget
                 <ListRefreshButton listKey={pageKey as ItemListKey} />
             </Group>
             <Group gap="sm" wrap="nowrap">
+                <ListSearchInput />
                 <ListDisplayTypeToggleButton listKey={ItemListKey.SONG} />
                 <ListConfigMenu
                     displayTypes={SONG_DISPLAY_TYPES}

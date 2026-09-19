@@ -11,6 +11,7 @@ import {
     filterSongsByPlayerFilters,
     getAlbumArtistSongsById,
     getAlbumSongsById,
+    getArtistSongsById,
     getGenreSongsById,
     getPlaylistSongsById,
     getSongsByFolder,
@@ -993,7 +994,7 @@ export async function fetchSongsByItemType(
         }
 
         case LibraryItem.ARTIST: {
-            const artistSongsResponse = await getAlbumArtistSongsById({
+            const artistSongsResponse = await getArtistSongsById({
                 id: args.id,
                 query: args.params,
                 queryClient,

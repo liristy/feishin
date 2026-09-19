@@ -38,7 +38,8 @@ export const AlbumArtistDetailFavoriteSongsListHeaderFilters = () => {
                     }
                     sortOrder={sortOrder}
                 />
-                <Divider orientation="vertical" />
+            </Group>
+            <Group gap="sm" wrap="nowrap">
                 <ListSearchInput />
             </Group>
         </Flex>

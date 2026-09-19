@@ -15,6 +15,7 @@ import {
     useTimestampStoreBase,
 } from '/@/renderer/store/timestamp.store';
 import { migratePlayerStorePersist, playerStoreStorage } from '/@/renderer/store/utils';
+import { logger } from '/@/renderer/utils/logger';
 import { shuffleInPlace } from '/@/renderer/utils/shuffle';
 import { PlayerData, QueueData, QueueSong, Song } from '/@/shared/types/domain-types';
 import {
@@ -1731,7 +1732,7 @@ export const usePlayerStoreBase = createWithEqualityFn<PlayerState>()(
         ),
         {
             merge: (persistedState: any, currentState: any) => {
-                return merge(currentState, persistedState);
+                return merge({}, currentState, persistedState);
             },
             migrate: async (persistedState, oldVersion) => {
                 if (oldVersion < 3) {
@@ -1746,7 +1747,8 @@ export const usePlayerStoreBase = createWithEqualityFn<PlayerState>()(
                 return persistedState as Partial<PlayerState>;
             },
             name: 'player-store',
-            onRehydrateStorage: () => (state) => {
+            onRehydrateStorage: () => (state, error) => {
+                if (error) logger.error('Failed to restore local playback state', { error });
                 if (!state) return;
                 const playback = useSettingsStore.getState().playback;
                 if (playback.previousLocalVolume !== undefined) {
@@ -1782,7 +1784,14 @@ export const usePlayerStoreBase = createWithEqualityFn<PlayerState>()(
                 // serialize the large queue when the queue slice reference actually changes.
                 return { player, queue: state.queue };
             },
-            storage: playerStoreStorage,
+            storage: {
+                ...playerStoreStorage,
+                setItem: (name, value) => {
+                    // Startup effects must not overwrite IDB before its async restore finishes.
+                    if (!usePlayerStoreBase.getState().hydrated) return;
+                    return playerStoreStorage.setItem(name, value);
+                },
+            },
             version: 4,
         },
     ),

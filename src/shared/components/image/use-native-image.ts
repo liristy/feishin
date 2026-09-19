@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ImageRequest } from '/@/shared/types/domain-types';
+import { cachedImage } from '/@/shared/utils/offline-cache';
 
 type FetchPriority = 'auto' | 'high' | 'low';
 
@@ -76,6 +77,14 @@ export function useNativeImage({
             return;
         }
 
+        // Already-resolved images are owned by the caller, not a persistent cache key.
+        if (/^(blob:|data:)/.test(request.url)) {
+            abortCurrentRequest();
+            revokeObjectUrl();
+            setState({ displaySrc: request.url, status: 'loaded' });
+            return;
+        }
+
         if (loadedRequestSignatureRef.current === requestSignature && objectUrlRef.current) {
             setState({ displaySrc: objectUrlRef.current, status: 'loaded' });
             return;
@@ -87,6 +96,15 @@ export function useNativeImage({
 
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
+
+        const displayBlob = (blob: Blob) => {
+            if (abortController.signal.aborted) return;
+            const objectUrl = URL.createObjectURL(blob);
+            if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+            objectUrlRef.current = objectUrl;
+            loadedRequestSignatureRef.current = requestSignature;
+            setState({ displaySrc: objectUrl, status: 'loaded' });
+        };
 
         void (async () => {
             try {
@@ -100,22 +118,8 @@ export function useNativeImage({
                     init.priority = fetchPriority;
                 }
 
-                const response = await fetch(request.url, init);
-
-                if (!response.ok) {
-                    throw new Error(`Failed to load image: ${response.status}`);
-                }
-
-                const blob = await response.blob();
-
-                if (abortController.signal.aborted) {
-                    return;
-                }
-
-                const objectUrl = URL.createObjectURL(blob);
-                objectUrlRef.current = objectUrl;
-                loadedRequestSignatureRef.current = requestSignature;
-                setState({ displaySrc: objectUrl, status: 'loaded' });
+                const blob = await cachedImage(request, init, displayBlob);
+                displayBlob(blob);
             } catch {
                 if (abortController.signal.aborted) {
                     return;

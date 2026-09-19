@@ -86,12 +86,14 @@ const BackgroundImage = memo(({ dynamicBackground, dynamicIsImage }: BackgroundI
     const currentImageUrl = useItemImageUrl({
         id: currentSong?.imageId || undefined,
         itemType: LibraryItem.SONG,
+        serverId: currentSong?._serverId,
         type: 'itemCard',
     });
 
     const nextImageUrl = useItemImageUrl({
         id: nextSong?.imageId || undefined,
         itemType: LibraryItem.SONG,
+        serverId: nextSong?._serverId,
         type: 'itemCard',
     });
 
@@ -122,20 +124,20 @@ const BackgroundImage = memo(({ dynamicBackground, dynamicIsImage }: BackgroundI
         imageStateRef.current = imageState;
     }, [imageState]);
 
-    // Update images when song changes
+    // Cached artwork can arrive after the song has already changed.
     useEffect(() => {
-        if (currentSong?._uniqueId === previousSongRef.current) {
-            return;
-        }
-
-        const isTop = imageStateRef.current.current === 0;
+        const songChanged = currentSong?._uniqueId !== previousSongRef.current;
+        const current = songChanged
+            ? 1 - imageStateRef.current.current
+            : imageStateRef.current.current;
+        const isTop = current === 0;
 
         setImageState({
-            bottomHash: isTop ? currentHashUrl : nextHashUrl,
-            bottomImage: isTop ? currentImageUrl : nextImageUrl,
-            current: isTop ? 1 : 0,
-            topHash: isTop ? nextHashUrl : currentHashUrl,
-            topImage: isTop ? nextImageUrl : currentImageUrl,
+            bottomHash: isTop ? nextHashUrl : currentHashUrl,
+            bottomImage: isTop ? nextImageUrl : currentImageUrl,
+            current,
+            topHash: isTop ? currentHashUrl : nextHashUrl,
+            topImage: isTop ? currentImageUrl : nextImageUrl,
         });
 
         previousSongRef.current = currentSong?._uniqueId;

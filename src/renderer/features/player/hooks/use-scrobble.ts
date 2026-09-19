@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 
 import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
+import { useOfflineStatus } from '/@/renderer/features/offline/offline-store';
 import { usePlayerEvents } from '/@/renderer/features/player/audio-player/hooks/use-player-events';
 import { useSendScrobble } from '/@/renderer/features/player/mutations/scrobble-mutation';
 import {
@@ -893,10 +894,11 @@ const ScrobbleHookInner = () => {
 };
 
 export const ScrobbleHook = () => {
+    const offline = useOfflineStatus();
     const isScrobbleEnabled = useSettingsStore((state) => state.playback.scrobble.enabled);
     const privateMode = useAppStore((state) => state.privateMode);
 
-    if (!isScrobbleEnabled || privateMode) {
+    if (!isScrobbleEnabled || privateMode || offline) {
         return null;
     }
 

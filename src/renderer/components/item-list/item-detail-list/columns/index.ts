@@ -38,6 +38,7 @@ import { TitleCombinedColumn } from './title-combined-column';
 import { TrackNumberColumn } from './track-number-column';
 import { YearColumn } from './year-column';
 
+import { SongDownloadStatus } from '/@/renderer/features/offline/song-download-status';
 import { TableColumn } from '/@/shared/types/types';
 
 type CellComponent = (props: ItemDetailListCellProps) => ReactNode;
@@ -57,6 +58,7 @@ const COLUMN_MAP: Partial<Record<TableColumn, CellComponent>> = {
     [TableColumn.DATE]: DateColumn,
     [TableColumn.DATE_ADDED]: DateAddedColumn,
     [TableColumn.DISC_NUMBER]: DiscNumberColumn,
+    [TableColumn.DOWNLOAD_STATUS]: SongDownloadStatus,
     [TableColumn.DURATION]: DurationColumn,
     [TableColumn.GENRE]: GenreColumn,
     [TableColumn.GENRE_BADGE]: GenreBadgeColumn,

@@ -2,6 +2,7 @@ import { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { openCreateRadioStationModal } from '/@/renderer/features/radio/components/create-radio-station-form';
+import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
 import { ListSortByDropdown } from '/@/renderer/features/shared/components/list-sort-by-dropdown';
 import { ListSortOrderToggleButton } from '/@/renderer/features/shared/components/list-sort-order-toggle-button';
 import { useCurrentServer, usePermissions } from '/@/renderer/store';
@@ -35,13 +36,14 @@ export const RadioListHeaderFilters = () => {
                     listKey={ItemListKey.RADIO}
                 />
             </Group>
-            {permissions.radio.create && (
-                <Group gap="sm" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap">
+                <ListSearchInput />
+                {permissions.radio.create && (
                     <Button onClick={handleCreateRadioStationModal} variant="subtle">
                         {t('action.createRadioStation')}
                     </Button>
-                </Group>
-            )}
+                )}
+            </Group>
         </Flex>
     );
 };

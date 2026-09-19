@@ -5,8 +5,6 @@ import { useListContext } from '/@/renderer/context/list-context';
 import { RadioListHeaderFilters } from '/@/renderer/features/radio/components/radio-list-header-filters';
 import { FilterBar } from '/@/renderer/features/shared/components/filter-bar';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
-import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
-import { Group } from '/@/shared/components/group/group';
 import { Stack } from '/@/shared/components/stack/stack';
 
 interface RadioListHeaderProps {
@@ -21,16 +19,13 @@ export const RadioListHeader = ({ title }: RadioListHeaderProps) => {
 
     return (
         <Stack gap={0}>
-            <PageHeader>
+            <PageHeader withTopSpacing>
                 <LibraryHeaderBar ignoreMaxWidth>
                     <LibraryHeaderBar.Title>{pageTitle}</LibraryHeaderBar.Title>
                     <LibraryHeaderBar.Badge isLoading={itemCount === undefined}>
                         {itemCount}
                     </LibraryHeaderBar.Badge>
                 </LibraryHeaderBar>
-                <Group>
-                    <ListSearchInput />
-                </Group>
             </PageHeader>
             <FilterBar>
                 <RadioListHeaderFilters />

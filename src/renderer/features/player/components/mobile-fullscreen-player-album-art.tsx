@@ -100,6 +100,7 @@ export const MobileFullscreenPlayerAlbumArt = () => {
     const currentImageUrl = useItemImageUrl({
         id: currentSong?.imageId || undefined,
         itemType: LibraryItem.SONG,
+        serverId: currentSong?._serverId,
         size: mainImageDimensions.idealSize,
         type: 'fullScreenPlayer',
     });
@@ -107,6 +108,7 @@ export const MobileFullscreenPlayerAlbumArt = () => {
     const nextImageUrl = useItemImageUrl({
         id: nextSong?.imageId || undefined,
         itemType: LibraryItem.SONG,
+        serverId: nextSong?._serverId,
         size: mainImageDimensions.idealSize,
         type: 'fullScreenPlayer',
     });
@@ -149,16 +151,17 @@ export const MobileFullscreenPlayerAlbumArt = () => {
 
     // Update images when song or size changes
     useEffect(() => {
-        if (currentSong?._uniqueId === previousSongRef.current) {
-            return;
-        }
-
-        const isTop = imageStateRef.current.current === 0;
+        // Only switch layers on a song change; cached artwork can arrive later.
+        const songChanged = currentSong?._uniqueId !== previousSongRef.current;
+        const current = songChanged
+            ? 1 - imageStateRef.current.current
+            : imageStateRef.current.current;
+        const isTop = current === 0;
 
         setImageState({
-            bottomImage: isTop ? currentImageUrl : nextImageUrl,
-            current: isTop ? 1 : 0,
-            topImage: isTop ? nextImageUrl : currentImageUrl,
+            bottomImage: isTop ? nextImageUrl : currentImageUrl,
+            current,
+            topImage: isTop ? currentImageUrl : nextImageUrl,
         });
 
         previousSongRef.current = currentSong?._uniqueId;

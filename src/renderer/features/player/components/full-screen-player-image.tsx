@@ -227,22 +227,23 @@ export const FullScreenPlayerImage = () => {
         if (isRadioActive) {
             return;
         }
-        if (currentSong?._uniqueId === previousSongRef.current) {
-            return;
-        }
-
-        const isTop = imageStateRef.current.current === 0;
+        // Only switch layers on a song change; cached artwork can arrive later.
+        const songChanged = currentSong?._uniqueId !== previousSongRef.current;
+        const current = songChanged
+            ? 1 - imageStateRef.current.current
+            : imageStateRef.current.current;
+        const isTop = current === 0;
 
         setImageState({
             bottomExplicit:
-                (isTop ? currentSong?.explicitStatus : nextSong?.explicitStatus) ===
-                ExplicitStatus.EXPLICIT,
-            bottomImage: isTop ? currentImageUrl : nextImageUrl,
-            current: isTop ? 1 : 0,
-            topExplicit:
                 (isTop ? nextSong?.explicitStatus : currentSong?.explicitStatus) ===
                 ExplicitStatus.EXPLICIT,
-            topImage: isTop ? nextImageUrl : currentImageUrl,
+            bottomImage: isTop ? nextImageUrl : currentImageUrl,
+            current,
+            topExplicit:
+                (isTop ? currentSong?.explicitStatus : nextSong?.explicitStatus) ===
+                ExplicitStatus.EXPLICIT,
+            topImage: isTop ? currentImageUrl : nextImageUrl,
         });
 
         previousSongRef.current = currentSong?._uniqueId;

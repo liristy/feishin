@@ -12,6 +12,7 @@ import {
 } from '/@/renderer/store/player.store';
 import { logger } from '/@/renderer/utils/logger';
 import { QueueSong, SongDetailQuery } from '/@/shared/types/domain-types';
+import { isOffline } from '/@/shared/utils/offline-cache';
 
 export const useUpdateCurrentSong = () => {
     const queryClient = useQueryClient();
@@ -20,7 +21,7 @@ export const useUpdateCurrentSong = () => {
         async (properties: { index: number; song: QueueSong | undefined }) => {
             const currentSong = properties.song;
 
-            if (!currentSong?.id || !currentSong?._serverId) {
+            if (isOffline() || !currentSong?.id || !currentSong?._serverId) {
                 return;
             }
 

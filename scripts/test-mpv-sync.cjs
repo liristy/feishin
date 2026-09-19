@@ -261,6 +261,9 @@ async function rendererTests() {
     const mocks = {
         './player-handoff': {},
         '/@/renderer/events/event-emitter': {},
+        '/@/renderer/features/offline/offline': {
+            OfflineSongUnavailableError: class extends Error {},
+        },
         '/@/renderer/features/player/audio-player/hooks/use-player-events': {},
         '/@/renderer/features/player/audio-player/hooks/use-stream-url': {
             getSongUrl: (s) =>
@@ -274,6 +277,7 @@ async function rendererTests() {
         '/@/renderer/features/settings/components/playback/mpv-properties': {},
         '/@/renderer/store': store,
         '/@/renderer/utils/logger': { logger },
+        '/@/shared/components/toast/toast': { toast: { error() {} } },
         '/@/shared/types/types': {
             PlayerStatus: { PAUSED: 'PAUSED', PLAYING: 'PLAYING', STOPPED: 'STOPPED' },
         },

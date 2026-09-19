@@ -2,10 +2,12 @@ import { useEffect, useMemo } from 'react';
 import { Navigate, Outlet } from 'react-router';
 import { shallow } from 'zustand/shallow';
 
+import { api } from '/@/renderer/api';
 import { normalizeServerUrl } from '/@/renderer/features/action-required/utils/server-lock';
 import { isServerLock } from '/@/renderer/features/action-required/utils/window-properties';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useAuthStore, useAuthStoreActions } from '/@/renderer/store';
+import { logger } from '/@/renderer/utils/logger';
 import { ServerType } from '/@/shared/types/domain-types';
 
 export const AppOutlet = () => {
@@ -18,11 +20,31 @@ export const AppOutlet = () => {
                       ndCredential: state.currentServer.ndCredential,
                       type: state.currentServer.type,
                       url: state.currentServer.url,
+                      version: state.currentServer.version,
                   }
                 : null,
         shallow,
     );
     const { setCurrentServer, updateServer } = useAuthStoreActions();
+
+    // Fetch capabilities only for new connections. Saved sessions never wait for a probe.
+    useEffect(() => {
+        if (!currentServer?.credential || currentServer.version || !navigator.onLine) return;
+        let cancelled = false;
+        void api.controller
+            .getServerInfo({ apiClientProps: { serverId: currentServer.id } })
+            .then((info) => {
+                if (!cancelled && info)
+                    updateServer(currentServer.id, {
+                        features: info.features,
+                        version: info.version,
+                    });
+            })
+            .catch(() => logger.debug('Server capabilities unavailable; using saved connection'));
+        return () => {
+            cancelled = true;
+        };
+    }, [currentServer?.credential, currentServer?.id, currentServer?.version, updateServer]);
 
     const hasServerLockMismatch = useMemo(() => {
         if (!isServerLock() || !currentServer || !window.SERVER_URL) {

@@ -393,7 +393,6 @@ export const PlayerbarWaveform = () => {
             onClick={(e) => {
                 e?.stopPropagation();
             }}
-            style={{ position: 'relative' }}
         >
             <motion.div
                 animate={{ opacity: isLoading || hasError ? 0 : 1 }}
@@ -406,15 +405,9 @@ export const PlayerbarWaveform = () => {
                 {(isLoading || hasError) && (
                     <motion.div
                         animate={{ opacity: 1 }}
+                        className={styles.fallback}
                         exit={{ opacity: 0 }}
                         initial={{ opacity: 0 }}
-                        style={{
-                            height: '100%',
-                            left: 0,
-                            position: 'absolute',
-                            top: 3,
-                            width: '100%',
-                        }}
                         transition={{ duration: 0.2 }}
                     >
                         <PlayerbarSeekSlider max={songDuration} min={0} />

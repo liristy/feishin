@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { UserFavoriteEventPayload, UserRatingEventPayload } from '/@/renderer/events/events';
 import { DiscordRpcHook } from '/@/renderer/features/discord-rpc/use-discord-rpc';
+import { OfflinePlaybackHook } from '/@/renderer/features/offline/offline-playback';
 import { DlnaPlayer } from '/@/renderer/features/player/audio-player/dlna-player';
 import { MainPlayerListenerHook } from '/@/renderer/features/player/audio-player/hooks/use-main-player-listener';
 import { JukeboxPlayer } from '/@/renderer/features/player/audio-player/jukebox-player';
@@ -144,6 +145,7 @@ export const AudioPlayers = () => {
             <RemoteQueuePushHook />
             <RemoteRadioPushHook />
             <RemoteSettingsPushHook />
+            <OfflinePlaybackHook />
             <AutoDJHook />
             <QueueRestoreTimestampHook />
             <InitialTimestampRestoreHook />

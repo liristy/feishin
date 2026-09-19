@@ -6,8 +6,6 @@ import { useListContext } from '/@/renderer/context/list-context';
 import { FolderListHeaderFilters } from '/@/renderer/features/folders/components/folder-list-header-filters';
 import { FilterBar } from '/@/renderer/features/shared/components/filter-bar';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
-import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
-import { Group } from '/@/shared/components/group/group';
 import { Stack } from '/@/shared/components/stack/stack';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
@@ -22,16 +20,13 @@ export const FolderListHeader = ({ title }: FolderListHeaderProps) => {
 
     return (
         <Stack gap={0}>
-            <PageHeader>
+            <PageHeader withTopSpacing>
                 <LibraryHeaderBar ignoreMaxWidth>
                     <Stack>
                         <LibraryHeaderBar.Title>{pageTitle}</LibraryHeaderBar.Title>
                     </Stack>
                     <FolderListHeaderBadge />
                 </LibraryHeaderBar>
-                <Group>
-                    <ListSearchInput />
-                </Group>
             </PageHeader>
             <FilterBar>
                 <FolderListHeaderFilters />

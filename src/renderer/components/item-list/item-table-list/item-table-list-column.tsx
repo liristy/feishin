@@ -39,6 +39,7 @@ import {
     RelativeDateColumn,
 } from '/@/renderer/components/item-list/item-table-list/columns/date-column';
 import { DefaultColumn } from '/@/renderer/components/item-list/item-table-list/columns/default-column';
+import { DownloadStatusColumn } from '/@/renderer/components/item-list/item-table-list/columns/download-status-column';
 import { DurationColumn } from '/@/renderer/components/item-list/item-table-list/columns/duration-column';
 import { FavoriteColumn } from '/@/renderer/components/item-list/item-table-list/columns/favorite-column';
 import { GenreBadgeColumn } from '/@/renderer/components/item-list/item-table-list/columns/genre-badge-column';
@@ -257,6 +258,16 @@ const ItemTableListColumnBase = (props: ItemTableListColumn) => {
 
             case TableColumn.DATE_ADDED:
                 return <DateColumn {...props} {...dragProps} controls={controls} type={type} />;
+
+            case TableColumn.DOWNLOAD_STATUS:
+                return (
+                    <DownloadStatusColumn
+                        {...props}
+                        {...dragProps}
+                        controls={controls}
+                        type={type}
+                    />
+                );
 
             case TableColumn.DURATION:
                 return <DurationColumn {...props} {...dragProps} controls={controls} type={type} />;
@@ -1291,6 +1302,7 @@ export const columnLabelMap: Record<TableColumn, ReactNode | string> = {
             <Icon icon="disc" />
         </Flex>
     ),
+    [TableColumn.DOWNLOAD_STATUS]: 'STATUS',
     [TableColumn.DURATION]: (
         <Flex className={styles.headerIconWrapper}>
             <Icon icon="duration" />

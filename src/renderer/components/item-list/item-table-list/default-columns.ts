@@ -1,3 +1,5 @@
+import isElectron from 'is-electron';
+
 import i18n from '/@/i18n/i18n';
 import { ItemGridListRowConfig, ItemTableListColumnConfig } from '/@/renderer/store';
 import { TableColumn } from '/@/shared/types/types';
@@ -281,6 +283,15 @@ export const SONG_TABLE_COLUMNS: DefaultTableColumn[] = [
         label: i18n.t('table.config.label.playCount'),
         pinned: null,
         value: TableColumn.PLAY_COUNT,
+        width: 100,
+    },
+    {
+        align: 'center',
+        autoSize: false,
+        isEnabled: isElectron(),
+        label: i18n.t('table.column.downloadStatus'),
+        pinned: null,
+        value: TableColumn.DOWNLOAD_STATUS,
         width: 100,
     },
     {

@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect } from 'react';
 
 import { eventEmitter } from '/@/renderer/events/event-emitter';
+import { useOfflineStatus } from '/@/renderer/features/offline/offline-store';
 import { runAutoDjAlbumIds } from '/@/renderer/features/player/auto-dj/auto-dj-albums';
 import { runAutoDjSongs } from '/@/renderer/features/player/auto-dj/auto-dj-songs';
 import { useIsPlayerFetching, usePlayer } from '/@/renderer/features/player/context/player-context';
@@ -183,9 +184,10 @@ const AutoDJHookInner = () => {
 };
 
 export const AutoDJHook = () => {
+    const offline = useOfflineStatus();
     const isAutoDJEnabled = useSettingsStore((state) => state.autoDJ.enabled);
 
-    if (!isAutoDJEnabled) {
+    if (!isAutoDJEnabled || offline) {
         return null;
     }
 

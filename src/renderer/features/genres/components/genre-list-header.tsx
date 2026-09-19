@@ -7,8 +7,6 @@ import { GenreListHeaderFilters } from '/@/renderer/features/genres/components/g
 import { useGenreListFilters } from '/@/renderer/features/genres/hooks/use-genre-list-filters';
 import { FilterBar } from '/@/renderer/features/shared/components/filter-bar';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
-import { ListSearchInput } from '/@/renderer/features/shared/components/list-search-input';
-import { Group } from '/@/shared/components/group/group';
 import { Stack } from '/@/shared/components/stack/stack';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
@@ -23,15 +21,12 @@ export const GenreListHeader = ({ title }: GenreListHeaderProps) => {
 
     return (
         <Stack gap={0}>
-            <PageHeader>
+            <PageHeader withTopSpacing>
                 <LibraryHeaderBar ignoreMaxWidth>
                     <PlayButton />
                     <LibraryHeaderBar.Title>{pageTitle}</LibraryHeaderBar.Title>
                     <GenreListHeaderBadge />
                 </LibraryHeaderBar>
-                <Group>
-                    <ListSearchInput />
-                </Group>
             </PageHeader>
             <FilterBar>
                 <GenreListHeaderFilters />

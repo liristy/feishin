@@ -1512,6 +1512,7 @@ const initialState: SettingsState = {
                         TableColumn.TRACK_NUMBER,
                         TableColumn.TITLE,
                         TableColumn.DURATION,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
                         TableColumn.USER_FAVORITE,
                     ],
                 }),
@@ -1568,6 +1569,7 @@ const initialState: SettingsState = {
                         TableColumn.TRACK_NUMBER,
                         TableColumn.TITLE,
                         TableColumn.DURATION,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
                         TableColumn.USER_FAVORITE,
                         TableColumn.ACTIONS,
                     ],
@@ -1649,6 +1651,7 @@ const initialState: SettingsState = {
                         TableColumn.TRACK_NUMBER,
                         TableColumn.TITLE,
                         TableColumn.DURATION,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
                         TableColumn.USER_FAVORITE,
                         TableColumn.ACTIONS,
                     ],
@@ -2030,6 +2033,7 @@ const initialState: SettingsState = {
                         TableColumn.ROW_INDEX,
                         TableColumn.TITLE_COMBINED,
                         TableColumn.DURATION,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
                         TableColumn.USER_FAVORITE,
                     ],
                 }),
@@ -2931,10 +2935,78 @@ export const useSettingsStore = createWithEqualityFn<SettingsSlice>()(
                     });
                 }
 
+                if (version < 35) {
+                    const songLists = [
+                        ItemListKey.SONG,
+                        ItemListKey.FAVORITE_SONG,
+                        ItemListKey.ALBUM_DETAIL,
+                        ItemListKey.FOLDER,
+                        ItemListKey.PLAYLIST_SONG,
+                        ItemListKey.ALBUM_ARTIST_SONG,
+                        ItemListKey.GENRE_SONG,
+                        ItemListKey.QUEUE_SONG,
+                        ItemListKey.FULL_SCREEN,
+                        ItemListKey.SIDE_QUEUE,
+                    ];
+                    const configs = [
+                        ...songLists.map((key) => state.lists?.[key]?.table),
+                        state.lists?.[ItemListKey.ALBUM]?.detail,
+                        state.lists?.[ItemListKey.PLAYLIST_ALBUM]?.detail,
+                    ];
+                    for (const config of configs) {
+                        const columns = config?.columns;
+                        if (
+                            !columns ||
+                            columns.some((column) => column.id === TableColumn.DOWNLOAD_STATUS)
+                        )
+                            continue;
+                        const durationIndex = columns.findIndex(
+                            (column) => column.id === TableColumn.DURATION,
+                        );
+                        columns.splice(durationIndex < 0 ? columns.length : durationIndex, 0, {
+                            align: 'center',
+                            autoSize: false,
+                            id: TableColumn.DOWNLOAD_STATUS,
+                            isEnabled: isElectron(),
+                            pinned: null,
+                            width: 160,
+                        });
+                    }
+                }
+
+                if (version < 36) {
+                    for (const list of Object.values(state.lists ?? {})) {
+                        for (const config of [list.table, list.detail]) {
+                            const columns = config?.columns;
+                            const index =
+                                columns?.findIndex(
+                                    (column) => column.id === TableColumn.DOWNLOAD_STATUS,
+                                ) ?? -1;
+                            if (!columns || index < 0) continue;
+                            const [status] = columns.splice(index, 1);
+                            const plays = columns.findIndex(
+                                (column) =>
+                                    column.id === TableColumn.PLAY_COUNT && column.isEnabled,
+                            );
+                            const favorite = columns.findIndex(
+                                (column) => column.id === TableColumn.USER_FAVORITE,
+                            );
+                            const position =
+                                plays >= 0 ? plays + 1 : favorite >= 0 ? favorite : columns.length;
+                            columns.splice(position, 0, {
+                                ...status,
+                                align: 'center',
+                                pinned: null,
+                                width: 100,
+                            });
+                        }
+                    }
+                }
+
                 return persistedState;
             },
             name: 'store_settings',
-            version: 34,
+            version: 36,
         },
     ),
 );
@@ -3125,8 +3197,28 @@ export const useSidebarPlaylistSorting = () =>
 export const useSidebarPlaylistListFilterRegex = () =>
     useSettingsStore((state) => state.general.sidebarPlaylistListFilterRegex, shallow);
 
-export const useSidebarItems = () =>
-    useSettingsStore((state) => state.general.sidebarItems, shallow);
+export const useSidebarItems = () => {
+    const items = useSettingsStore((state) => state.general.sidebarItems, shallow);
+    return useMemo(
+        () =>
+            isElectron() && !items.some((item) => item.id === 'Offline')
+                ? [
+                      ...items,
+                      {
+                          disabled: false,
+                          id: 'Offline',
+                          label: 'Downloads',
+                          route: AppRoute.DOWNLOADS,
+                      },
+                  ]
+                : items.map((item) =>
+                      item.id === 'Offline'
+                          ? { ...item, label: 'Downloads', route: AppRoute.DOWNLOADS }
+                          : item,
+                  ),
+        [items],
+    );
+};
 
 export const usePlayerItems = () => useSettingsStore((state) => state.general.playerItems, shallow);
 

@@ -440,6 +440,8 @@ export type Song = {
     peak: GainInfo | null;
     playCount: number;
     playlistItemId?: string;
+    /** File path relative to the server's media library root. */
+    relativePath?: null | string;
     releaseDate: null | PartialIsoDateString;
     releaseYear: null | number;
     sampleRate: null | number;

@@ -77,6 +77,7 @@ export const Sidebar = () => {
             Genres: t('page.sidebar.genres'),
             Home: t('page.sidebar.home'),
             'Now Playing': t('page.sidebar.nowPlaying'),
+            Offline: t('offline.title'),
             Playlists: t('page.sidebar.playlists'),
             Radio: t('page.sidebar.radio'),
             Search: t('page.sidebar.search'),
