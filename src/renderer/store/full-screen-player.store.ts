@@ -89,7 +89,7 @@ export const useFullScreenPlayerStore = createWithEqualityFn<FullScreenPlayerSli
             // `visualizerReturnToPlayer` is transient navigation intent used only to route
             // the "shrink visualizer" action back to the full-screen player; it isn't
             // meaningful across app restarts, so it's excluded from persistence.
-            partialize: (state) => omit(state, ['visualizerReturnToPlayer']),
+            partialize: (state) => omit(state, ['actions', 'visualizerReturnToPlayer']),
             version: 6,
         },
     ),
