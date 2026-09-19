@@ -119,7 +119,7 @@ export default defineConfig({
                 screenshots: [
                     {
                         form_factor: 'wide',
-                        label: 'Full screen player showing music player and lyrics',
+                        label: 'Full screen player showing album artwork and play queue',
                         sizes: '720x450',
                         src: 'preview_full_screen_player.webp',
                         type: 'image/webp',

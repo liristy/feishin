@@ -1,227 +1,141 @@
-<img src="assets/icons/icon.png" alt="logo" title="feishin" align="right" height="60px" width="60px" />
+<img src="assets/icons/icon.png" alt="Feishin 图标" align="right" width="72" height="72" />
 
-# Feishin
+# Feishin · 2.0 Beta
 
-  <p align="center">
-    <a href="https://github.com/jeffvli/feishin/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/jeffvli/feishin?style=flat-square&color=brightgreen"
-      alt="License">
-    </a>
-      <a href="https://github.com/jeffvli/feishin/releases">
-      <img src="https://img.shields.io/github/v/release/jeffvli/feishin?style=flat-square&color=blue"
-      alt="Release">
-    </a>
-    <a href="https://github.com/jeffvli/feishin/releases">
-      <img src="https://img.shields.io/github/downloads/jeffvli/feishin/total?style=flat-square&color=orange"
-      alt="Downloads">
-    </a>
-  </p>
-  <p align="center">
-    <a href="https://discord.gg/FVKpcMDy5f">
-      <img src="https://img.shields.io/discord/922656312888811530?color=black&label=discord&logo=discord&logoColor=white"
-      alt="Discord">
-    </a>
-    <a href="https://matrix.to/#/#sonixd:matrix.org">
-      <img src="https://img.shields.io/matrix/sonixd:matrix.org?color=black&label=matrix&logo=matrix&logoColor=white"
-      alt="Matrix">
-    </a>
-  </p>
+面向自托管音乐服务的跨平台播放器，支持 Navidrome、Jellyfin 和兼容 Subsonic / OpenSubsonic API 的服务器。本分支在 Feishin 的基础上，重点扩展**离线使用、下载管理和桌面播放体验**。
 
----
+[![License](https://img.shields.io/github/license/liristy/feishin?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/liristy/feishin?include_prereleases&style=flat-square&label=release)](https://github.com/liristy/feishin/releases)
 
-Rewrite of [Sonixd](https://github.com/jeffvli/sonixd).
+[下载安装](https://github.com/liristy/feishin/releases) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md) · [上游项目](https://github.com/jeffvli/feishin)
 
-## Features
+> 本仓库是独立维护的 Feishin 分支。`2.0.0-beta.1` 是本分支的版本号，不代表上游 Feishin 的官方版本。Beta 为预发布版本，安装文件及已知问题以本仓库 Release 说明为准。
 
-- [x] MPV player backend
-- [x] Web player backend
-- [x] Modern UI
-- [x] Scrobble playback to your server
-- [x] Smart playlist editor (Navidrome)
-- [x] Synchronized and unsynchronized lyrics support
-- [ ] [Request a feature](https://github.com/jeffvli/feishin/issues) or [view taskboard](https://github.com/users/jeffvli/projects/5/views/1)
+## 2.0 新增功能
 
-## Screenshots
+### 下载管理
 
-<a href="./media/preview_full_screen_player.png"><img src="./media/preview_full_screen_player.png" width="49.5%"/></a> <a href="./media/preview_album_artist_detail.png"><img src="./media/preview_album_artist_detail.png" width="49.5%"/></a> <a href="./media/preview_album_detail.png"><img src="./media/preview_album_detail.png" width="49.5%"/></a> <a href="./media/preview_smart_playlist.png"><img src="./media/preview_smart_playlist.png" width="49.5%"/></a>
+- 通过歌曲、专辑、歌手、文件夹或播放列表的右键菜单添加下载，在统一的“下载管理”页面查看已下载歌曲与下载任务。
+- 支持进度查看、取消、失败重试，以及按搜索结果批量选择、删除或管理任务。
+- 歌曲列表显示下载状态；已下载内容支持播放、定位本地文件和打开音乐目录。
+- 音频以独立文件保存。服务器提供有效媒体库相对路径时，保留其目录结构；否则按歌手和专辑组织，并处理文件名冲突。Navidrome 的 `.strm` 条目下载后按实际音频格式保存。
 
-## Getting Started
+### 边听边存与本地优先播放
 
-### Desktop (recommended)
+- “边听边存”默认开启，可在下载管理的设置中关闭。播放时通过独立请求保存音频，完整下载后纳入同一个本地音乐目录。
+- MPV 和内置播放器优先播放已保存的本地文件；未保存的曲目仍需连接服务器。
+- 设备断网时，播放队列可跳过尚未下载的歌曲，保留队列条目；没有可播放的本地歌曲时停止播放。
+- 在启用播放队列恢复的情况下，重新启动后恢复队列和当前位置，并保留音量设置；不会在启动时自动开始播放。
 
-Download the [latest desktop client](https://github.com/jeffvli/feishin/releases). The desktop client is the recommended way to use Feishin. It supports both the MPV and web player backends, as well as includes built-in fetching for lyrics.
+### 离线浏览
 
-#### macOS Notes
+- 已保存登录信息的服务器在无法联网时仍可进入，无需先通过启动连接检查。
+- 已访问的列表、详情与封面持久保存在本地；服务器不可达时，使用已有缓存及下载记录展示可用内容。
+- 对本地已有记录支持分页、排序、搜索和常用筛选，无需手动切换离线模式。
+- 已缓存的封面可用于音乐库、侧栏及全屏播放器；缺少所需分辨率时，可复用同一封面的已有尺寸。
 
-If you're using a device running macOS 12 (Monterey) or higher, [check here](https://github.com/jeffvli/feishin/issues/104#issuecomment-1553914730) for instructions on how to remove the app from quarantine.
+## 与原版 Feishin 的区别
 
-For media keys to work, you will be prompted to allow Feishin to be a Trusted Accessibility Client. After allowing, you will need to restart Feishin for the privacy settings to take effect.
+以下比较以上游提交 [`02bfa68d`](https://github.com/jeffvli/feishin/commit/02bfa68d88dc95f5f1f9e4d11a7433bf63e5fef6) 为基线，对应本分支引入定制改动前的代码。上游后续版本可能有所变化。
 
-#### Linux Notes
+| 项目 | 上游基线 | 本分支 2.0 Beta |
+| --- | --- | --- |
+| 下载方式 | 将服务器下载地址交给桌面下载器或浏览器处理 | 增加应用内任务管理、本地歌曲索引及批量操作 |
+| 离线使用 | 启动与服务器切换包含连接验证流程 | 使用保存的登录信息进入应用，并读取已缓存的音乐库内容 |
+| 音频保存 | 未提供本分支的边听边存与本地索引联动 | 播放时可自动保存音频，MPV 和内置播放器优先使用本地文件 |
+| 全屏播放器 | 上游全屏播放器布局与背景效果 | 调整封面、队列和控制栏布局，增加基于封面配色的流动背景 |
+| 歌词交互 | 上游歌词显示与跟随行为 | 手动浏览时暂缓自动跟随，离开后恢复；突出当前歌词行 |
+| Windows 播放体验 | 用户自行配置 MPV；使用上游媒体控制实现 | Windows x64 包含固定版本 MPV，并改进系统媒体面板、任务栏按钮与播放状态同步 |
+| 界面与发布渠道 | 上游图标、默认主题和更新来源 | 调整图标、默认主题、侧栏与列表布局；更新与发布说明指向本仓库 |
 
-Feishin is available in [Flathub](https://flathub.org/en/apps/org.jeffvli.feishin).
+上表包含本分支在 1.x 阶段已引入、并由 2.0 延续的改动。MPV / 内置双播放引擎、服务器曲库浏览、播放列表、歌词、Navidrome 智能播放列表等能力来自上游，仍是本项目的基础功能；具体可用功能取决于服务器实现。
 
-Alternatively, you can install it as an Appimage. We provide a small install script to download the latest `.AppImage`, make it executable, and also download the icons required by Desktop Environments. Finally, it generates a `.desktop` file to add Feishin to your Application Launcher.
+## 界面预览
 
-Simply run the installer like this:
+以下图片由当前版本的真实界面生成，使用独立演示配置。歌曲及封面用于展示；不含个人账号、服务器地址、播放历史或收藏记录，页面中的本地文件信息为演示数据。
+
+### 全屏播放器
+
+以戴佩妮《你要的爱》为例，展示封面配色背景与播放队列。
+
+![全屏播放器：戴佩妮《你要的爱》与演示播放队列](media/screenshots/player.png)
+
+### 音乐库
+
+![音乐库：专辑封面网格与统一导航](media/screenshots/library.png)
+
+### 下载管理
+
+![下载管理：已下载歌曲、专辑及本地文件管理入口](media/screenshots/downloads.png)
+
+### 专辑详情
+
+![专辑详情：戴佩妮《怎样》的歌曲列表](media/screenshots/album.png)
+
+## 安装与使用
+
+### 桌面端
+
+从[本仓库 Releases](https://github.com/liristy/feishin/releases)选择对应操作系统及处理器架构的文件。Beta 版本会标注为预发布版本；请勿将上游安装包、Flathub 分发包或上游托管网页视为本分支的发行版本。
+
+| 平台 | 构建格式 | MPV 配置 |
+| --- | --- | --- |
+| Windows | 安装程序、ZIP 压缩包 | x64 构建包含 MPV；其他架构需自行准备兼容的 MPV，或选择内置播放器 |
+| macOS | DMG、ZIP 压缩包 | 使用 MPV 时需自行安装并设置可执行文件路径 |
+| Linux | AppImage、DEB、tar.xz | 使用 MPV 时需自行安装并设置可执行文件路径 |
+
+各次发布提供的架构和文件以 Release 附件为准。macOS 的系统权限提示及 Linux 的桌面集成行为取决于系统配置。
+
+1. 安装或解压应用，在服务器管理中添加 Navidrome、Jellyfin 或 Subsonic / OpenSubsonic 服务器。
+2. 输入完整服务器地址及账号信息。本项目是音乐客户端，需要已有音乐服务器，不提供音乐内容服务。
+3. 在播放设置中选择 MPV 或内置播放器。内置播放器支持的音频格式取决于 Chromium；可使用 MPV 播放其支持的其他格式。
+4. 如需离线使用，先联网浏览所需内容，并下载歌曲。完整保存的歌曲会出现在“下载管理”的“已下载”列表中。
+5. 在下载管理的设置中查看保存目录，并根据需要开启或关闭“边听边存”。默认目录位于系统音乐文件夹下的 `Feishin` 目录。
+
+### 使用范围与限制
+
+- **离线内容有限**：仅能访问已缓存或已下载的内容，不能在断网时获得未保存的完整服务器音乐库。自定义服务器筛选表达式不能在本地执行。
+- **下载不是断点续传**：最多同时处理两个任务。未完成的文件不能离线播放，退出应用时未完成的任务需要重新发起。
+- **存储与流量**：“边听边存”会增加独立下载流量；音频目录不设自动容量上限，也不自动淘汰旧文件，可在下载管理中删除不再需要的内容。
+- **联网功能**：网络电台、DLNA 和服务器点唱机仍需网络。离线期间不提交播放记录、不自动保存服务器队列、不执行自动 DJ；离线播放记录不会在恢复连接后补传。
+- **客户端差异**：桌面端提供本地音频下载与音乐目录管理。网页版仅提供已访问数据和图片的持久缓存，不具备桌面端的本地音频管理功能。
+
+详细行为见[下载与离线说明](docs/OFFLINE.md)。
+
+### Web 与 Docker
+
+可从本仓库源码构建网页版或 Docker 镜像。上游的在线演示站点和 `ghcr.io/jeffvli/feishin` 镜像由上游维护，不包含本分支的全部改动。
 
 ```sh
-dir=/your/application/directory
-curl 'https://raw.githubusercontent.com/jeffvli/feishin/refs/heads/development/install-feishin-appimage' | sh -s -- "$dir"
+docker build -t feishin-local .
+docker run --name feishin -p 9180:9180 feishin-local
 ```
 
-The script also has an option to add launch arguments to run Feishin in native Wayland mode. Note that this is experimental in Electron and therefore not officially supported. If you want to use it, run this instead:
+服务器预配置可使用 `SERVER_NAME`、`SERVER_TYPE`、`SERVER_URL`；同时设置 `SERVER_LOCK=true` 可锁定服务器配置。设置覆盖项见[环境变量文档](docs/ENV_SETTINGS.md)。
+
+## 从源码构建
+
+使用与项目依赖兼容的 Node.js，并按 [`package.json`](package.json) 的 `packageManager` 字段配置 pnpm。
 
 ```sh
-dir=/your/application/directory
-curl 'https://raw.githubusercontent.com/jeffvli/feishin/refs/heads/development/install-feishin-appimage' | sh -s -- "$dir" wayland-native
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-It also provides a simple uninstall routine, removing the downloaded files:
+| 命令 | 用途 |
+| --- | --- |
+| `pnpm build` | 构建 Electron 应用及远程控制页面 |
+| `pnpm build:web` | 构建网页版，输出到 `out/web` |
+| `pnpm package:win:pr` | 构建 Windows 安装包，不上传发布 |
+| `pnpm package:mac:pr` | 构建 macOS 安装包，不上传发布 |
+| `pnpm package:linux:pr` | 构建 Linux 安装包，不上传发布 |
 
-```sh
-dir=/your/application/directory
-curl 'https://raw.githubusercontent.com/jeffvli/feishin/refs/heads/development/install-feishin-appimage' | sh -s -- "$dir" remove
-```
+Windows x64 打包过程会准备并校验内置 MPV。开发环境下的准备方法及第三方许可见 [MPV 说明](assets/mpv/README.md)。
 
-The entry should show up in your Application Launcher immediately. If it does not, simply log out, wait 10 seconds, and log back in. Your Desktop Environment may alternatively provide a way to reload entries.
+## 反馈、来源与许可
 
-### Web and Docker
+本分支的问题请提交至[本仓库 Issues](https://github.com/liristy/feishin/issues)，并提供版本号、操作系统、服务器类型及复现步骤。提交日志或截图前，请移除密码、访问令牌、服务器地址及其他不宜公开的信息。
 
-Visit [https://feishin.vercel.app](https://feishin.vercel.app) to use the hosted web version of Feishin. The web client only supports the web player backend.
+本项目基于 [jeffvli/feishin](https://github.com/jeffvli/feishin)，保留上游作者及贡献者的版权声明。感谢上游提供播放器及服务器集成基础。
 
-Feishin is also available as a Docker image. The images are hosted via `ghcr.io` and are available to view [here](https://github.com/jeffvli/feishin/pkgs/container/feishin). You can run the container using the following commands:
-
-```bash
-# Run the latest version
-docker run --name feishin -p 9180:9180 ghcr.io/jeffvli/feishin:latest
-
-# Build the image locally
-docker build -t feishin .
-docker run --name feishin -p 9180:9180 feishin
-```
-
-#### Docker Compose
-
-To install via Docker Compose, use the following snippet. This also works on Portainer.
-
-```yaml
-services:
-    feishin:
-        container_name: feishin
-        image: 'ghcr.io/jeffvli/feishin:latest'
-        restart: unless-stopped
-        environment:
-            - SERVER_NAME=jellyfin # pre-defined server name
-            - SERVER_LOCK=true # When true AND name/type/url are set, only username/password can be toggled
-            - SERVER_TYPE=jellyfin # the allowed types are: jellyfin, navidrome, subsonic. These values are case insensitive
-            - SERVER_URL= # http://address:port or https://address:port
-            - REMOTE_URL= # http://address or https://address
-            - LEGACY_AUTHENTICATION=false # When SERVER_LOCK is true, sets the legacy (plaintext) authentication flag for Subsonic/OpenSubsonic servers
-            - ANALYTICS_DISABLED=true # Set to true to disable Umami analytics tracking
-        ports:
-            - 9180:9180
-            # Alternatively, to restrict to only localhost, - 127.0.0.1:9180:8190
-```
-
-### Configuration
-
-1. Upon startup you will be greeted with a prompt to select the path to your MPV binary. If you do not have MPV installed, you can download it [here](https://mpv.io/installation/) or install it using any package manager supported by your OS. After inputting the path, restart the app.
-
-2. After restarting the app, you will be prompted to select a server. Click the `Open menu` button and select `Manage servers`. Click the `Add server` button in the popup and fill out all applicable details. You will need to enter the full URL to your server, including the protocol and port if applicable (e.g. `https://navidrome.my-server.com` or `http://192.168.0.1:4533`).
-
-- **Navidrome** - For the best experience, select "Save password" when creating the server and configure the `SessionTimeout` setting in your Navidrome config to a larger value (e.g. 72h).
-    - **Linux users** - The default password store uses `libsecret`. `kwallet4/5/6` are also supported, but must be explicitly set in Settings > Window > Passwords/secret store.
-
-3. _Optional_ - If you want to host Feishin on a subpath (not `/`), then pass in the following environment variable: `PUBLIC_PATH=PATH`. For example, to host on `/feishin`, pass in `PUBLIC_PATH=/feishin`.
-
-4. _Optional_ - To hard code the server url, pass the following environment variables: `SERVER_NAME`, `SERVER_TYPE` (one of `jellyfin` or `navidrome` or `subsonic`), `SERVER_URL`. To prevent users from changing these settings, pass `SERVER_LOCK=true`. This can only be set if all three of the previous values are set. When `SERVER_LOCK=true`, you can also set `LEGACY_AUTHENTICATION=true` or `LEGACY_AUTHENTICATION=false` to configure the legacy authentication flag for the server (only applicable for Subsonic/OpenSubsonic servers).
-
-5. _Optional_ - If your server uses a separate public-facing URL than what integrating applications use internally to communicate with your server, such as a separate Navidrome `ShareURL`, set `REMOTE_URL` to said public-facing URL.
-
-6. _Optional_ - To disable Umami analytics tracking in the Docker/web version, set the environment variable `ANALYTICS_DISABLED=true`. When enabled, the analytics script will not be loaded and all tracking will be disabled.
-
-7. _Optional_ - App settings (theme, language, sidebar options, etc.) can be overridden with environment variables on first run. The variables use the `FS_` prefix (e.g. `FS_GENERAL_THEME=defaultDark`, `FS_GENERAL_LANGUAGE=de`). See [the settings environment variable documentation](docs/ENV_SETTINGS.md) for the full list.
-
-## FAQ
-
-### MPV is either not working or is rapidly switching between pause/play states
-
-First thing to do is check that your MPV binary path is correct. Navigate to the settings page and re-set the path and restart the app. If your issue still isn't resolved, try reinstalling MPV. Known working versions include `v0.35.x` and `v0.36.x`. `v0.34.x` is a known broken version.
-
-### What music servers does Feishin support?
-
-Feishin supports any music server that implements a [Navidrome](https://www.navidrome.org/), [Jellyfin](https://jellyfin.org/), or [OpenSubsonic compatible](https://opensubsonic.netlify.app/) API.
-
-- [Navidrome](https://github.com/navidrome/navidrome)
-- [Jellyfin](https://github.com/jellyfin/jellyfin)
-- [OpenSubsonic](https://opensubsonic.netlify.app/) compatible servers, such as...
-    - [Airsonic-Advanced](https://github.com/airsonic-advanced/airsonic-advanced)
-    - [Ampache](https://ampache.org)
-    - [Astiga](https://asti.ga/)
-    - [Funkwhale](https://www.funkwhale.audio/)
-    - [Gonic](https://github.com/sentriz/gonic)
-    - [LMS](https://github.com/epoupon/lms)
-    - [Nextcloud Music](https://apps.nextcloud.com/apps/music)
-    - [Supysonic](https://github.com/spl0k/supysonic)
-    - [Qm-Music](https://github.com/chenqimiao/qm-music)
-    - More (?)
-
-- [Plex](https://www.plex.tv/media-server-downloads)
-    - [Feishin fork by lux032](https://github.com/lux032/feishin) - Plex is not natively supported. Use the fork by lux032 to use Plex with Feishin.
-
-### I have the issue "The SUID sandbox helper binary was found, but is not configured correctly" on Linux
-
-This happens when you have user (unprivileged) namespaces disabled (`sysctl kernel.unprivileged_userns_clone` returns 0). You can fix this by either enabling unprivileged namespaces, or by making the `chrome-sandbox` Setuid.
-
-```bash
-chmod 4755 chrome-sandbox
-sudo chown root:root chrome-sandbox
-```
-
-Ubuntu 24.04 specifically introduced breaking changes that affect how namespaces work. Please see https://discourse.ubuntu.com/t/ubuntu-24-04-lts-noble-numbat-release-notes/39890#:~:text=security%20improvements%20 for possible fixes.
-
-### How can I add custom themes?
-
-On the desktop app, you can add custom themes by dropping JSON files into the Themes folder (Settings → General → Theme → Open Folder). See [the custom themes documentation](docs/CUSTOM_THEMES.md) for the file format and examples.
-
-## Development
-
-Built and tested using Node `v23.11.0`.
-
-This project is built off of [electron-vite](https://github.com/alex8088/electron-vite)
-
-- `pnpm run dev` - Start the development server
-- `pnpm run dev:watch` - Start the development server in watch mode (for main / preload HMR)
-- `pnpm run start` - Starts the app in production preview mode
-- `pnpm run build` - Builds the app for desktop
-- `pnpm run build:electron` - Build the electron app (main, preload, and renderer)
-- `pnpm run build:remote` - Build the remote app (remote)
-- `pnpm run build:web` - Build the standalone web app (renderer)
-- `pnpm run package` - Package the project
-- `pnpm run package:dev` - Package the project for development locally
-- `pnpm run package:linux` - Package the project for Linux locally
-- `pnpm run package:mac` - Package the project for Mac locally
-- `pnpm run package:win` - Package the project for Windows locally
-- `pnpm run publish:linux` - Publish the project for Linux
-- `pnpm run publish:linux:beta` - Publish the project for Linux (beta channel)
-- `pnpm run publish:linux-arm64` - Publish the project for Linux ARM64
-- `pnpm run publish:linux-arm64:beta` - Publish the project for Linux ARM64 (beta channel)
-- `pnpm run publish:mac` - Publish the project for Mac
-- `pnpm run publish:mac:beta` - Publish the project for Mac (beta channel)
-- `pnpm run publish:win` - Publish the project for Windows
-- `pnpm run publish:win:beta` - Publish the project for Windows (beta channel)
-- `pnpm run typecheck` - Type check the project
-- `pnpm run typecheck:node` - Type check the project with tsconfig.node.json
-- `pnpm run typecheck:web` - Type check the project with tsconfig.web.json
-- `pnpm run lint` - Lint the project
-- `pnpm run lint:fix` - Lint the project and fix linting errors
-- `pnpm run i18next` - Generate i18n files
-
-## Translation
-
-This project uses [Weblate](https://hosted.weblate.org/projects/feishin/) for translations. If you would like to contribute, please visit the link and submit a translation.
-
-## License
-
-[GNU General Public License v3.0 ©](https://github.com/jeffvli/feishin/blob/dev/LICENSE)
+代码遵循 [GNU GPL v3](LICENSE)。第三方组件遵循各自许可；截图中的音乐作品、封面及相关标识的权利归各自权利人所有。

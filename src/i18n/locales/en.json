@@ -1373,7 +1373,7 @@
     },
     "table": {
         "column": {
-            "downloadStatus": "Download status",
+            "downloadStatus": "Download Status",
             "album": "Album",
             "albumArtist": "Album artist",
             "albumCount": "Albums",

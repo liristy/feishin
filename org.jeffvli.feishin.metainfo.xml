@@ -28,16 +28,20 @@
   <url type="homepage">https://github.com/jeffvli/feishin</url>
   <screenshots>
     <screenshot type="default">
-      <caption>The main menu</caption>
-      <image type="source">https://raw.githubusercontent.com/jeffvli/feishin/development/media/preview_home.png</image>
+      <caption>Album library using demonstration data</caption>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/library.png</image>
     </screenshot>
     <screenshot>
       <caption>Browsing an album</caption>
-      <image type="source">https://raw.githubusercontent.com/jeffvli/feishin/development/media/preview_album_detail.png</image>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/album.png</image>
     </screenshot>
     <screenshot>
-      <caption>Smart playlist creation</caption>
-      <image type="source">https://raw.githubusercontent.com/jeffvli/feishin/development/media/preview_smart_playlist.png</image>
+      <caption>Download management</caption>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/downloads.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Full-screen player and play queue</caption>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/player.png</image>
     </screenshot>
   </screenshots>
   <categories>
