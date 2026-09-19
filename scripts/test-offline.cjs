@@ -122,6 +122,9 @@ async function main() {
     let requests = 0;
     const server = http.createServer((req, res) => {
         requests++;
+        if (req.url.startsWith('/rest/stream.view?'))
+            return res.writeHead(302, { Location: '/ok' }).end();
+        if (req.url.startsWith('/rest/download.view')) return res.writeHead(403).end();
         if (req.url === '/bad') return res.end('<html>login required</html>');
         res.writeHead(200, { 'Content-Length': audio.length, 'Content-Type': 'audio/wav' });
         if (req.url === '/slow') {
@@ -205,6 +208,48 @@ async function main() {
         assert.ok(first.path.startsWith(path.join(root, 'music', 'Feishin')));
         assert.deepEqual(await fsp.readFile(first.path), audio);
         assert.ok((await musicMetadata.parseFile(first.path)).format.codec);
+        const downloads = load(
+            'src/renderer/features/offline/offline.tsx',
+            {
+                '/@/i18n/i18n': { t: (key) => key },
+                '/@/renderer/api': {
+                    api: {
+                        controller: {
+                            getDownloadUrl: () =>
+                                assert.fail('Downloads must use the 302 playback route'),
+                            getStreamUrl: async ({ apiClientProps, query }) => {
+                                assert.equal(apiClientProps.serverId, 'server-a');
+                                assert.equal(query.skipAutoTranscode, true);
+                                assert.equal(query.transcode, false);
+                                return `${url}/rest/stream.view?id=${query.id}`;
+                            },
+                        },
+                    },
+                },
+                '/@/renderer/features/offline/offline-store': {},
+                '/@/renderer/store': {
+                    useSettingsStore: { getState: () => ({ general: { imageRes: {} } }) },
+                },
+                '/@/renderer/utils/logger': { logger: { debug() {}, warn() {} } },
+                '/@/shared/types/domain-types': { ServerType: { NAVIDROME: 'navidrome' } },
+                '/@/shared/types/types': {},
+                '/@/shared/utils/offline-cache': { isOffline: () => false },
+                'is-electron': () => true,
+            },
+            {
+                window: { api: { offline: { save: (song, url) => call('save', { song, url }) } } },
+            },
+        );
+        const beforeRedirect = requests;
+        await downloads.saveOfflineSong({ ...song('redirect'), _serverType: 'subsonic' });
+        await wait(files.offlineKey('server-a', 'redirect'), 'saved');
+        const redirected = await call('resolve', 'server-a', 'redirect');
+        assert.deepEqual(await fsp.readFile(redirected.path), audio);
+        assert.equal(
+            requests,
+            beforeRedirect + 2,
+            'Follow playback 302 to the complete audio file',
+        );
         const structured = { ...song('path-a'), relativePath: 'Artist/Album/01 - Song.strm' };
         const samePath = { ...structured, id: 'path-b' };
         const structuredKey = await call('save', { song: structured, url: `${url}/slow` });

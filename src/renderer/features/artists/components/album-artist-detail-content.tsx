@@ -1,13 +1,8 @@
-import {
-    useQuery,
-    useQueryClient,
-    useSuspenseQuery,
-    UseSuspenseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, useQueryClient, UseSuspenseQueryResult } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { memo, Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { createSearchParams, generatePath, Link, useLocation, useParams } from 'react-router';
+import { createSearchParams, generatePath, Link, useParams } from 'react-router';
 
 import styles from './album-artist-detail-content.module.css';
 
@@ -19,11 +14,13 @@ import { useGridRows } from '/@/renderer/components/item-list/helpers/use-grid-r
 import { useItemListColumnReorder } from '/@/renderer/components/item-list/helpers/use-item-list-column-reorder';
 import { useItemListColumnResize } from '/@/renderer/components/item-list/helpers/use-item-list-column-resize';
 import { SONG_TABLE_COLUMNS } from '/@/renderer/components/item-list/item-table-list/default-columns';
-import { ItemTableList } from '/@/renderer/components/item-list/item-table-list/item-table-list';
+import {
+    ItemTableList,
+    TableItemSize,
+} from '/@/renderer/components/item-list/item-table-list/item-table-list';
 import { ItemTableListColumn } from '/@/renderer/components/item-list/item-table-list/item-table-list-column';
 import { ItemControls } from '/@/renderer/components/item-list/types';
 import { artistsQueries } from '/@/renderer/features/artists/api/artists-api';
-import { AlbumArtistGridCarousel } from '/@/renderer/features/artists/components/album-artist-grid-carousel';
 import { useIsPlayerFetching, usePlayer } from '/@/renderer/features/player/context/player-context';
 import {
     ListConfigMenu,
@@ -61,7 +58,6 @@ import {
     useExternalLinks,
     useSettingsStore,
 } from '/@/renderer/store/settings.store';
-import { sanitize } from '/@/renderer/utils/sanitize';
 import { sortAlbumList, sortSongList } from '/@/shared/api/utils';
 import { ActionIcon, ActionIconGroup } from '/@/shared/components/action-icon/action-icon';
 import { Badge } from '/@/shared/components/badge/badge';
@@ -71,9 +67,7 @@ import { Grid } from '/@/shared/components/grid/grid';
 import { Group } from '/@/shared/components/group/group';
 import { Icon } from '/@/shared/components/icon/icon';
 import { SegmentedControl } from '/@/shared/components/segmented-control/segmented-control';
-import { Skeleton } from '/@/shared/components/skeleton/skeleton';
 import { Spinner } from '/@/shared/components/spinner/spinner';
-import { Spoiler } from '/@/shared/components/spoiler/spoiler';
 import { Stack } from '/@/shared/components/stack/stack';
 import { TextInput } from '/@/shared/components/text-input/text-input';
 import { TextTitle } from '/@/shared/components/text-title/text-title';
@@ -82,12 +76,10 @@ import { useDebouncedValue } from '/@/shared/hooks/use-debounced-value';
 import { useLocalStorage } from '/@/shared/hooks/use-local-storage';
 import {
     Album,
-    AlbumArtist,
     AlbumArtistDetailResponse,
     AlbumListResponse,
     AlbumListSort,
     LibraryItem,
-    RelatedArtist,
     ServerType,
     Song,
     SongListSort,
@@ -198,84 +190,10 @@ const AlbumArtistMetadataGenres = ({ genres, order }: AlbumArtistMetadataGenresP
     );
 };
 
-interface AlbumArtistMetadataBiographyProps {
-    artistName?: string;
-    order?: number;
-    routeId: string;
-}
-
-const AlbumArtistMetadataBiography = ({
-    artistName,
-    order,
-    routeId,
-}: AlbumArtistMetadataBiographyProps) => {
-    const { t } = useTranslation();
-    const server = useCurrentServer();
-
-    const artistInfoQuery = useQuery({
-        ...artistsQueries.albumArtistInfo({
-            query: { id: routeId, limit: 10 },
-            serverId: server?.id,
-        }),
-        enabled: Boolean(server?.id && routeId),
-    });
-
-    const detailQuery = useQuery({
-        ...artistsQueries.albumArtistDetail({
-            query: { id: routeId },
-            serverId: server?.id,
-        }),
-        enabled: Boolean(server?.id && routeId),
-    });
-
-    const biography = artistInfoQuery.data?.biography || detailQuery.data?.biography;
-    const isLoading = !biography && (artistInfoQuery.isLoading || detailQuery.isLoading);
-
-    const sanitizedBiography = biography ? sanitize(biography) : '';
-
-    if (isLoading) {
-        return (
-            <Grid.Col order={order} span={12}>
-                <section style={{ maxWidth: '1280px' }}>
-                    <TextTitle fw={700} order={3}>
-                        {t('page.albumArtistDetail.about', {
-                            artist: artistName,
-                        })}
-                    </TextTitle>
-                    <Stack gap="xs">
-                        <Skeleton enableAnimation height="1rem" width="100%" />
-                        <Skeleton enableAnimation height="1rem" width="98%" />
-                        <Skeleton enableAnimation height="1rem" width="60%" />
-                    </Stack>
-                </section>
-            </Grid.Col>
-        );
-    }
-
-    if (!biography) {
-        return null;
-    }
-
-    return (
-        <Grid.Col order={order} span={12}>
-            <section style={{ maxWidth: '1280px' }}>
-                <TextTitle fw={700} order={3}>
-                    {t('page.albumArtistDetail.about', {
-                        artist: artistName,
-                    })}
-                </TextTitle>
-                <Spoiler>
-                    <Text dangerouslySetInnerHTML={{ __html: sanitizedBiography }} />
-                </Spoiler>
-            </section>
-        </Grid.Col>
-    );
-};
-
 const TABLE_ROW_HEIGHT = {
-    compact: 40,
-    default: 64,
-    large: 88,
+    compact: TableItemSize.COMPACT,
+    default: TableItemSize.DEFAULT,
+    large: TableItemSize.LARGE,
 } as const;
 
 const TABLE_HEADER_HEIGHT = 40;
@@ -303,296 +221,6 @@ const SongTableListContainer = ({
     const headerOffset = enableHeader ? TABLE_HEADER_HEIGHT : 0;
     const height = headerOffset + rowHeight * Math.min(itemCount, maxRows);
     return <div style={{ height }}>{children}</div>;
-};
-
-interface AlbumArtistMetadataTopSongsProps {
-    detailQuery: ReturnType<typeof useSuspenseQuery<AlbumArtistDetailResponse>>;
-    order?: number;
-    routeId: string;
-}
-
-const AlbumArtistMetadataTopSongsContent = ({
-    detailQuery,
-    order,
-    routeId,
-}: AlbumArtistMetadataTopSongsProps) => {
-    const { t } = useTranslation();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 300);
-    const [topSongsQueryType, setTopSongsQueryType] = useLocalStorage<'community' | 'personal'>({
-        defaultValue: 'community',
-        key: 'album-artist-top-songs-query-type',
-    });
-    const tableConfig = useSettingsStore((state) => state.lists[ItemListKey.SONG]?.table);
-    const currentSong = usePlayerSong();
-    const player = usePlayer();
-    const serverId = useCurrentServerId();
-    const server = useCurrentServer();
-
-    const canStartQuery = server?.type === ServerType.JELLYFIN || !!detailQuery.data?.name;
-
-    const topSongsQuery = useQuery({
-        ...artistsQueries.topSongs({
-            query: {
-                artist: detailQuery.data?.name || '',
-                artistId: routeId,
-                type: topSongsQueryType,
-            },
-            serverId: serverId,
-        }),
-        enabled: canStartQuery,
-    });
-
-    const songs = useMemo(() => topSongsQuery.data?.items || [], [topSongsQuery.data?.items]);
-
-    const columns = useMemo(() => {
-        return tableConfig?.columns || [];
-    }, [tableConfig?.columns]);
-
-    const filteredSongs = useMemo(() => {
-        return searchLibraryItems(songs, debouncedSearchTerm, LibraryItem.SONG);
-    }, [songs, debouncedSearchTerm]);
-
-    const { handleColumnReordered } = useItemListColumnReorder({
-        itemListKey: ItemListKey.SONG,
-    });
-
-    const { handleColumnResized } = useItemListColumnResize({
-        itemListKey: ItemListKey.SONG,
-    });
-
-    const overrideControls: Partial<ItemControls> = useMemo(() => {
-        return {
-            onDoubleClick: ({ index, internalState, item, meta }) => {
-                if (!item) {
-                    return;
-                }
-
-                playSongFromItemListControl({
-                    index,
-                    internalState,
-                    item: item as Song,
-                    meta,
-                    player,
-                });
-            },
-        };
-    }, [player]);
-
-    const handlePlay = useCallback(
-        (playType: Play) => {
-            if (songs.length === 0) return;
-            player.addToQueueByData(songs, playType);
-        },
-        [songs, player],
-    );
-
-    const handlePlayNext = usePlayButtonClick({
-        onClick: () => handlePlay(Play.NEXT),
-        onLongPress: () => handlePlay(LONG_PRESS_PLAY_BEHAVIOR[Play.NEXT]),
-    });
-    const handlePlayNow = usePlayButtonClick({
-        onClick: () => handlePlay(Play.NOW),
-        onLongPress: () => handlePlay(LONG_PRESS_PLAY_BEHAVIOR[Play.NOW]),
-    });
-    const handlePlayLast = usePlayButtonClick({
-        onClick: () => handlePlay(Play.LAST),
-        onLongPress: () => handlePlay(LONG_PRESS_PLAY_BEHAVIOR[Play.LAST]),
-    });
-
-    const isLoading = topSongsQuery.isLoading || !topSongsQuery.data;
-
-    if (!isLoading && !tableConfig) return null;
-    if (!isLoading && songs.length === 0) return null;
-
-    const currentSongId = currentSong?.id;
-
-    return (
-        <Grid.Col order={order} span={12}>
-            <section>
-                <Stack gap="md">
-                    <div className={styles.albumSectionTitle}>
-                        <Group>
-                            <TextTitle fw={700} order={3}>
-                                {t('page.albumArtistDetail.topSongs')}
-                            </TextTitle>
-                            {!isLoading && <Badge>{songs.length}</Badge>}
-                        </Group>
-                        <div className={styles.albumSectionDividerContainer}>
-                            <div className={styles.albumSectionDivider} />
-                            <Button
-                                component={Link}
-                                size="compact-md"
-                                to={generatePath(AppRoute.LIBRARY_ALBUM_ARTISTS_DETAIL_TOP_SONGS, {
-                                    albumArtistId: routeId,
-                                })}
-                                uppercase
-                                variant="subtle"
-                            >
-                                {t('page.albumArtistDetail.viewAll')}
-                            </Button>
-                            {songs.length > 0 && (
-                                <ActionIconGroup>
-                                    <PlayTooltip type={Play.NOW}>
-                                        <ActionIcon
-                                            icon="mediaPlay"
-                                            iconProps={{ size: 'md' }}
-                                            size="xs"
-                                            variant="subtle"
-                                            {...handlePlayNow.handlers}
-                                            {...handlePlayNow.props}
-                                            disabled={isLoading}
-                                        />
-                                    </PlayTooltip>
-                                    <PlayTooltip type={Play.NEXT}>
-                                        <ActionIcon
-                                            icon="mediaPlayNext"
-                                            iconProps={{ size: 'md' }}
-                                            size="xs"
-                                            variant="subtle"
-                                            {...handlePlayNext.handlers}
-                                            {...handlePlayNext.props}
-                                            disabled={isLoading}
-                                        />
-                                    </PlayTooltip>
-                                    <PlayTooltip type={Play.LAST}>
-                                        <ActionIcon
-                                            icon="mediaPlayLast"
-                                            iconProps={{ size: 'md' }}
-                                            size="xs"
-                                            variant="subtle"
-                                            {...handlePlayLast.handlers}
-                                            {...handlePlayLast.props}
-                                            disabled={isLoading}
-                                        />
-                                    </PlayTooltip>
-                                </ActionIconGroup>
-                            )}
-                        </div>
-                    </div>
-                    {isLoading ? (
-                        <Group justify="center" py="md">
-                            <Spinner container />
-                        </Group>
-                    ) : tableConfig ? (
-                        <>
-                            <Group gap="sm" w="100%">
-                                <TextInput
-                                    flex={1}
-                                    leftSection={<Icon icon="search" />}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder={t('common.search')}
-                                    radius="xl"
-                                    rightSection={
-                                        searchTerm ? (
-                                            <ActionIcon
-                                                icon="x"
-                                                onClick={() => setSearchTerm('')}
-                                                size="sm"
-                                                variant="transparent"
-                                            />
-                                        ) : null
-                                    }
-                                    styles={{
-                                        input: {
-                                            background: 'transparent',
-                                            border: '1px solid rgba(255, 255, 255, 0.05)',
-                                        },
-                                    }}
-                                    value={searchTerm}
-                                />
-                                <SegmentedControl
-                                    data={[
-                                        {
-                                            label: t('page.albumArtistDetail.topSongsCommunity'),
-                                            value: 'community',
-                                        },
-                                        {
-                                            label: t('page.albumArtistDetail.topSongsPersonal'),
-                                            value: 'personal',
-                                        },
-                                    ]}
-                                    onChange={(value) =>
-                                        setTopSongsQueryType(value as 'community' | 'personal')
-                                    }
-                                    size="xs"
-                                    value={topSongsQueryType}
-                                />
-                                <ListConfigMenu
-                                    displayTypes={[
-                                        { hidden: true, value: ListDisplayType.GRID },
-                                        ...SONG_DISPLAY_TYPES,
-                                    ]}
-                                    listKey={ItemListKey.SONG}
-                                    optionsConfig={{
-                                        table: {
-                                            itemsPerPage: { hidden: true },
-                                            pagination: { hidden: true },
-                                        },
-                                    }}
-                                    tableColumnsData={SONG_TABLE_COLUMNS}
-                                />
-                            </Group>
-                            <SongTableListContainer
-                                enableHeader={tableConfig.enableHeader}
-                                itemCount={filteredSongs.length}
-                                maxRows={5}
-                                tableSize={tableConfig.size}
-                            >
-                                <ItemTableList
-                                    activeRowId={currentSongId}
-                                    autoFitColumns={tableConfig.autoFitColumns}
-                                    CellComponent={ItemTableListColumn}
-                                    columns={columns}
-                                    data={filteredSongs}
-                                    enableAlternateRowColors={tableConfig.enableAlternateRowColors}
-                                    enableDrag
-                                    enableDragScroll={false}
-                                    enableExpansion={false}
-                                    enableHeader={tableConfig.enableHeader}
-                                    enableHorizontalBorders={tableConfig.enableHorizontalBorders}
-                                    enableRowHoverHighlight={tableConfig.enableRowHoverHighlight}
-                                    enableSelection
-                                    enableSelectionDialog={false}
-                                    enableVerticalBorders={tableConfig.enableVerticalBorders}
-                                    itemType={LibraryItem.SONG}
-                                    onColumnReordered={handleColumnReordered}
-                                    onColumnResized={handleColumnResized}
-                                    overrideControls={overrideControls}
-                                    size={tableConfig.size}
-                                />
-                            </SongTableListContainer>
-                        </>
-                    ) : null}
-                </Stack>
-            </section>
-        </Grid.Col>
-    );
-};
-
-const AlbumArtistMetadataTopSongs = ({
-    detailQuery,
-    order,
-    routeId,
-}: AlbumArtistMetadataTopSongsProps) => {
-    const server = useCurrentServer();
-
-    const location = useLocation();
-    const artistName = location.state?.item?.name || detailQuery.data?.name;
-
-    const canStartQuery = server?.type === ServerType.JELLYFIN || !!artistName;
-
-    return (
-        <Suspense fallback={null}>
-            {canStartQuery ? (
-                <AlbumArtistMetadataTopSongsContent
-                    detailQuery={detailQuery}
-                    order={order}
-                    routeId={routeId}
-                />
-            ) : null}
-        </Suspense>
-    );
 };
 
 interface AlbumArtistMetadataFavoriteSongsProps {
@@ -894,6 +522,7 @@ const AlbumArtistMetadataFavoriteSongs = ({
                                     enableSelection
                                     enableSelectionDialog={false}
                                     enableVerticalBorders={tableConfig.enableVerticalBorders}
+                                    headerHeight={TABLE_HEADER_HEIGHT}
                                     itemType={LibraryItem.SONG}
                                     onColumnReordered={handleColumnReordered}
                                     onColumnResized={handleColumnResized}
@@ -1059,95 +688,6 @@ const AlbumArtistMetadataExternalLinks = ({
     );
 };
 
-interface AlbumArtistMetadataSimilarArtistsProps {
-    order?: number;
-    routeId: string;
-}
-
-const AlbumArtistMetadataSimilarArtists = ({
-    order,
-    routeId,
-}: AlbumArtistMetadataSimilarArtistsProps) => {
-    const { t } = useTranslation();
-    const server = useCurrentServer();
-    const serverId = useCurrentServerId();
-
-    const artistInfoQuery = useQuery({
-        ...artistsQueries.albumArtistInfo({
-            query: { id: routeId, limit: 10 },
-            serverId: server?.id,
-        }),
-        enabled: Boolean(server?.id && routeId),
-    });
-
-    const relatedArtists = artistInfoQuery.data?.similarArtists ?? null;
-
-    const similarArtists = useMemo(() => {
-        if (!relatedArtists || relatedArtists.length === 0) {
-            return [];
-        }
-
-        return relatedArtists.map(
-            (relatedArtist: RelatedArtist): AlbumArtist => ({
-                _itemType: LibraryItem.ALBUM_ARTIST,
-                _serverId: serverId || '',
-                _serverType: (server?.type as ServerType) || ServerType.JELLYFIN,
-                albumCount: null,
-                biography: null,
-                blurHash: null,
-                dominantColor: null,
-                duration: null,
-                genres: [],
-                id: relatedArtist.id,
-                imageId: relatedArtist.imageId,
-                imageUrl: relatedArtist.imageUrl,
-                lastPlayedAt: null,
-                mbz: null,
-                missing: null,
-                name: relatedArtist.name,
-                playCount: null,
-                ratedAt: null,
-                similarArtists: null,
-                songCount: null,
-                starredAt: null,
-                thumbHash: null,
-                userFavorite: relatedArtist.userFavorite,
-                userRating: relatedArtist.userRating,
-            }),
-        );
-    }, [relatedArtists, server?.type, serverId]);
-
-    const carouselTitle = useMemo(
-        () => (
-            <div className={styles.similarArtistsTitle}>
-                <TextTitle fw={700} order={3}>
-                    {t('page.albumArtistDetail.relatedArtists')}
-                </TextTitle>
-                <div className={styles.albumSectionDividerContainer}>
-                    <div className={styles.albumSectionDivider} />
-                </div>
-            </div>
-        ),
-        [t],
-    );
-
-    if (!artistInfoQuery.isLoading && similarArtists.length === 0) {
-        return null;
-    }
-
-    return (
-        <Grid.Col order={order} span={12}>
-            <AlbumArtistGridCarousel
-                data={similarArtists}
-                excludeIds={[routeId]}
-                isLoading={artistInfoQuery.isLoading}
-                rowCount={1}
-                title={carouselTitle}
-            />
-        </Grid.Col>
-    );
-};
-
 interface AlbumArtistDetailContentProps {
     albumsQuery: UseSuspenseQueryResult<AlbumListResponse, Error>;
     detailQuery: UseSuspenseQueryResult<AlbumArtistDetailResponse, Error>;
@@ -1261,27 +801,7 @@ export const AlbumArtistDetailContent = ({
                                 spotify={spotify}
                             />
                         )}
-                    {enabledItem.biography && (
-                        <AlbumArtistMetadataBiography
-                            artistName={detailQuery.data?.name}
-                            order={itemOrder.biography}
-                            routeId={routeId}
-                        />
-                    )}
                     <ArtistAlbums albumsQuery={albumsQuery} order={itemOrder.recentAlbums} />
-                    {enabledItem.similarArtists && (
-                        <AlbumArtistMetadataSimilarArtists
-                            order={itemOrder.similarArtists}
-                            routeId={routeId}
-                        />
-                    )}
-                    {enabledItem.topSongs && (
-                        <AlbumArtistMetadataTopSongs
-                            detailQuery={detailQuery}
-                            order={itemOrder.topSongs}
-                            routeId={routeId}
-                        />
-                    )}
                     {enabledItem.favoriteSongs && (
                         <AlbumArtistMetadataFavoriteSongs
                             order={itemOrder.favoriteSongs}

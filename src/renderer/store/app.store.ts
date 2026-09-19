@@ -233,7 +233,7 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                 latestVersion: null,
                 pageSidebar: {
                     album: true,
-                    song: true,
+                    song: false,
                 },
                 platform: Platform.WINDOWS,
                 privateMode: false,
@@ -242,10 +242,10 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                     collapsed: false,
                     expanded: [],
                     image: false,
-                    leftWidth: '260px',
+                    leftWidth: '309px',
                     rightExpanded: false,
                     rightHeight: '320px',
-                    rightWidth: '600px',
+                    rightWidth: '522px',
                 },
                 titlebar: {
                     backgroundColor: '#000000',

@@ -67,9 +67,10 @@ export async function saveOfflineSong(song: Song) {
             query: { id: song.id },
         });
     }
-    const url = api.controller.getDownloadUrl({
+    // Use the playback route so server-side 302 redirects also apply to downloads.
+    const url = await api.controller.getStreamUrl({
         apiClientProps: { serverId: song._serverId },
-        query: { id: song.id },
+        query: { id: song.id, skipAutoTranscode: true, transcode: false },
     });
     await offline.save(song, url);
     // Cache the actual configured sizes so downloaded covers work in lists and the player.

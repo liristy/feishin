@@ -40,15 +40,6 @@
     background: var(--theme-colors-border);
 }
 
-.similar-artists-title {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--theme-spacing-md);
-    align-items: center;
-    width: 100%;
-    min-width: 0;
-}
-
 .album-grid {
     display: flex;
     flex-wrap: wrap;

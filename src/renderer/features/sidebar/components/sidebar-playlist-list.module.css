@@ -46,9 +46,9 @@
 .controls {
     position: absolute;
     top: 50%;
-    right: var(--theme-spacing-xs);
-    padding: var(--theme-spacing-md);
-    background: var(--theme-colors-surface);
+    right: var(--theme-spacing-md);
+    padding: 0;
+    background: none;
     transform: translateY(-50%);
 }
 

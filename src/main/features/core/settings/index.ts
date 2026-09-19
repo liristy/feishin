@@ -17,21 +17,6 @@ import path from 'path';
 
 import log from '/@/main/logger';
 
-const getFrame = () => {
-    const isWindows = process.platform === 'win32';
-    const isMacOS = process.platform === 'darwin';
-
-    if (isWindows) {
-        return 'windows';
-    }
-
-    if (isMacOS) {
-        return 'macOS';
-    }
-
-    return 'linux';
-};
-
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 const defaultUserDataPath = app.getPath('userData');
@@ -119,7 +104,7 @@ export const store = new Store<any>({
         window_exit_to_tray: false,
         window_minimize_to_tray: false,
         window_start_minimized: false,
-        window_window_bar_style: getFrame(),
+        window_window_bar_style: 'web',
     },
     migrations: {
         '>=0.21.2': (store) => {

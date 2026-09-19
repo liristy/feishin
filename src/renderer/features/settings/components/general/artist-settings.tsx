@@ -10,11 +10,8 @@ import {
 } from '/@/renderer/store';
 
 const ARTIST_ITEMS: Array<[ArtistItem, string]> = [
-    [ArtistItem.BIOGRAPHY, 'table.column.biography'],
     [ArtistItem.FAVORITE_SONGS, 'page.albumArtistDetail.favoriteSongs'],
-    [ArtistItem.TOP_SONGS, 'page.albumArtistDetail.topSongs'],
     [ArtistItem.RECENT_ALBUMS, 'page.albumArtistDetail.recentReleases'],
-    [ArtistItem.SIMILAR_ARTISTS, 'page.albumArtistDetail.relatedArtists'],
 ];
 
 export const ArtistSettings = memo(() => {

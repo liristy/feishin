@@ -1097,15 +1097,15 @@ export type VersionedSettings = SettingsState & { version: number };
 
 export const playerItems: SortableItem<PlayerItem>[] = [
     {
-        disabled: true,
+        disabled: false,
         id: PlayerItem.ALBUM,
     },
     {
-        disabled: true,
+        disabled: false,
         id: PlayerItem.ARTIST,
     },
     {
-        disabled: true,
+        disabled: false,
         id: PlayerItem.TITLE,
     },
     {
@@ -1121,7 +1121,7 @@ export const playerItems: SortableItem<PlayerItem>[] = [
         id: PlayerItem.BPM,
     },
     {
-        disabled: true,
+        disabled: false,
         id: PlayerItem.CODEC,
     },
     {
@@ -1145,7 +1145,7 @@ export const playerItems: SortableItem<PlayerItem>[] = [
         id: PlayerItem.RELEASE_TYPE,
     },
     {
-        disabled: true,
+        disabled: false,
         id: PlayerItem.RELEASE_YEAR,
     },
     {
@@ -1195,7 +1195,7 @@ export const sidebarItems: SidebarItemType[] = [
         route: AppRoute.LIBRARY_SONGS,
     },
     {
-        disabled: false,
+        disabled: true,
         id: 'Artists',
         label: i18n.t('page.sidebar.albumArtists'),
         route: AppRoute.LIBRARY_ALBUM_ARTISTS,
@@ -1207,31 +1207,25 @@ export const sidebarItems: SidebarItemType[] = [
         route: AppRoute.LIBRARY_ARTISTS,
     },
     {
-        disabled: false,
+        disabled: true,
         id: 'Genres',
         label: i18n.t('page.sidebar.genres'),
         route: AppRoute.LIBRARY_GENRES,
     },
     {
-        disabled: false,
+        disabled: true,
         id: 'Folders',
         label: i18n.t('page.sidebar.folders'),
         route: AppRoute.LIBRARY_FOLDERS,
     },
     {
-        disabled: true,
+        disabled: false,
         id: 'Playlists',
         label: i18n.t('page.sidebar.playlists'),
         route: AppRoute.PLAYLISTS,
     },
     {
-        disabled: false,
-        id: 'Collections',
-        label: i18n.t('page.sidebar.collections'),
-        route: '',
-    },
-    {
-        disabled: false,
+        disabled: true,
         id: 'Radio',
         label: i18n.t('page.sidebar.radio'),
         route: AppRoute.RADIO,
@@ -1242,27 +1236,28 @@ export const sidebarItems: SidebarItemType[] = [
         label: i18n.t('page.sidebar.settings'),
         route: AppRoute.SETTINGS,
     },
+    {
+        disabled: true,
+        id: 'Collections',
+        label: i18n.t('page.sidebar.collections'),
+        route: '',
+    },
 ];
 
-const defaultHomeItemOrder: HomeItem[] = [
-    HomeItem.RECENTLY_ADDED,
-    HomeItem.RECENTLY_PLAYED,
-    HomeItem.RANDOM,
-    HomeItem.RECENTLY_RELEASED,
-    HomeItem.MOST_PLAYED,
-    HomeItem.PLAYLISTS,
-    HomeItem.GENRES,
+const homeItems = [
+    { disabled: true, id: HomeItem.GENRES },
+    { disabled: false, id: HomeItem.MOST_PLAYED },
+    { disabled: false, id: HomeItem.RANDOM },
+    { disabled: false, id: HomeItem.RECENTLY_ADDED },
+    { disabled: false, id: HomeItem.RECENTLY_PLAYED },
+    { disabled: false, id: HomeItem.RECENTLY_RELEASED },
+    { disabled: false, id: HomeItem.PLAYLISTS },
 ];
 
-const homeItems = defaultHomeItemOrder.map((id) => ({
-    disabled: false,
-    id,
-}));
-
-const artistItems = Object.values(ArtistItem).map((item) => ({
-    disabled: false,
-    id: item,
-}));
+const artistItems = [
+    { disabled: false, id: ArtistItem.RECENT_ALBUMS },
+    { disabled: false, id: ArtistItem.FAVORITE_SONGS },
+];
 
 const artistReleaseTypeItems = Object.values(ArtistReleaseTypeItem).map((item) => ({
     disabled: false,
@@ -1280,34 +1275,15 @@ const albumGroupItems: SortableItem<AlbumGroupItem>[] = [
     { disabled: true, id: AlbumGroupItem.SIZE },
 ];
 
-// Determines the default/initial windowBarStyle value based on the current platform.
-const getPlatformDefaultWindowBarStyle = (): Platform => {
-    if (utils?.isWindows()) {
-        return Platform.WINDOWS;
-    }
-
-    if (utils?.isMacOS()) {
-        return Platform.MACOS;
-    }
-
-    if (utils?.isLinux()) {
-        return Platform.WINDOWS;
-    }
-
-    return Platform.WEB;
-};
-
-const platformDefaultWindowBarStyle: Platform = getPlatformDefaultWindowBarStyle();
-
 const initialState: SettingsState = {
     autoDJ: {
-        albumStrategy: AUTO_DJ_STRATEGY.SIMILAR,
+        albumStrategy: AUTO_DJ_STRATEGY.LIBRARY_RANDOM,
         allowDuplicates: false,
-        enabled: false,
+        enabled: true,
         itemCount: 5,
         mode: 'songs',
         onlySimilar: false,
-        songStrategy: AUTO_DJ_STRATEGY.SIMILAR,
+        songStrategy: AUTO_DJ_STRATEGY.LIBRARY_RANDOM,
         timing: 1,
     },
     css: {
@@ -1331,15 +1307,15 @@ const initialState: SettingsState = {
         type: FontType.BUILT_IN,
     },
     general: {
-        accent: 'rgb(48, 207, 155)',
+        accent: 'rgb(240, 170, 22)',
         albumBackground: false,
-        albumBackgroundBlur: 6,
+        albumBackgroundBlur: 3,
         albumGroupImageSize: 0,
         albumGroupItems,
         albumGroupShowFavoriteRating: true,
         albumGroupVerticalLayout: true,
         artistBackground: true,
-        artistBackgroundBlur: 6,
+        artistBackgroundBlur: 3,
         artistItems,
         artistRadioCount: 20,
         artistReleaseTypeItems,
@@ -1351,12 +1327,12 @@ const initialState: SettingsState = {
         buttonSize: 15,
         collections: [],
         combinedLyricsAndVisualizer: false,
-        confirmQueueChanges: true,
+        confirmQueueChanges: false,
         disabledContextMenu: {},
         enableGridMultiSelect: false,
-        externalLinks: true,
+        externalLinks: false,
         followCurrentSong: true,
-        followSystemTheme: false,
+        followSystemTheme: true,
         fullscreenAutoOpenTimeout: 0,
         genreTarget: GenreTarget.TRACK,
         homeFeature: true,
@@ -1370,18 +1346,18 @@ const initialState: SettingsState = {
             sidebar: 400,
             table: 80,
         },
-        language: 'en',
-        lastFM: true,
+        language: 'zh-Hans',
+        lastFM: false,
         lastfmApiKey: '',
         listenBrainz: true,
         microtonalPitchControls: false,
-        musicBrainz: true,
-        nativeAspectRatio: false,
+        musicBrainz: false,
+        nativeAspectRatio: true,
         nativeSpotify: false,
         passwordStore: undefined,
         pathReplace: '',
         pathReplaceWith: '',
-        playButtonBehavior: Play.NOW,
+        playButtonBehavior: Play.SHUFFLE,
         playerbarOpenDrawer: false,
         playerbarSlider: {
             barAlign: BarAlign.CENTER,
@@ -1390,7 +1366,7 @@ const initialState: SettingsState = {
             barWidth: 2,
             loadingDelay: 2,
             stretched: false,
-            type: PlayerbarSliderType.SLIDER,
+            type: PlayerbarSliderType.WAVEFORM,
         },
         playerItems,
         playlistTarget: PlaylistTarget.TRACK,
@@ -1405,14 +1381,14 @@ const initialState: SettingsState = {
         showFavorites: true,
         showLyricsInSidebar: true,
         showQueueInSidebar: true,
-        showRatings: true,
-        showVisualizerInSidebar: true,
+        showRatings: false,
+        showVisualizerInSidebar: false,
         sidebarCollapsedNavigation: true,
         sidebarCollapseShared: false,
         sidebarImageEnabled: false,
         sidebarItems,
         sidebarPanelOrder: ['queue', 'lyrics', 'visualizer'],
-        sidebarPlaylistFolders: false,
+        sidebarPlaylistFolders: true,
         sidebarPlaylistFolderSeparator: '/',
         sidebarPlaylistFolderTreeIndent: 16,
         sidebarPlaylistFolderTreeLineColor: '',
@@ -1429,7 +1405,7 @@ const initialState: SettingsState = {
             skipForwardSeconds: 10,
         },
         spotify: true,
-        theme: AppTheme.DEFAULT_DARK,
+        theme: AppTheme.GRUVBOX_DARK,
         themeDark: AppTheme.DEFAULT_DARK,
         themeLight: AppTheme.DEFAULT_LIGHT,
         useThemeAccentColor: false,
@@ -1500,20 +1476,20 @@ const initialState: SettingsState = {
             table: {
                 autoFitColumns: true,
                 columns: pickTableColumns({
-                    autoSizeColumns: [],
                     columns: SONG_TABLE_COLUMNS,
                     columnWidths: {
-                        [TableColumn.DURATION]: 100,
+                        [TableColumn.RELEASE_DATE]: 120,
+                        [TableColumn.RELEASE_YEAR]: 100,
                         [TableColumn.TITLE]: 400,
                         [TableColumn.TRACK_NUMBER]: 50,
-                        [TableColumn.USER_FAVORITE]: 60,
                     },
                     enabledColumns: [
                         TableColumn.TRACK_NUMBER,
                         TableColumn.TITLE,
                         TableColumn.DURATION,
-                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
                         TableColumn.USER_FAVORITE,
+                        TableColumn.PLAY_COUNT,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
                     ],
                 }),
                 enableAlternateRowColors: false,
@@ -1537,16 +1513,28 @@ const initialState: SettingsState = {
             pagination: ListPaginationType.INFINITE,
             table: {
                 autoFitColumns: true,
-                columns: SONG_TABLE_COLUMNS.map((column) => ({
-                    align: column.align,
-                    autoSize: column.autoSize,
-                    id: column.value,
-                    isEnabled: column.value === TableColumn.ROW_INDEX ? false : column.isEnabled,
-                    pinned: column.pinned,
-                    width: column.width,
-                })),
+                columns: pickTableColumns({
+                    autoSizeColumns: [TableColumn.ALBUM_ARTIST],
+                    columns: SONG_TABLE_COLUMNS,
+                    columnWidths: {
+                        [TableColumn.ALBUM_GROUP]: 200,
+                        [TableColumn.RELEASE_DATE]: 120,
+                        [TableColumn.RELEASE_YEAR]: 100,
+                    },
+                    enabledColumns: [
+                        TableColumn.ROW_INDEX,
+                        TableColumn.TITLE_COMBINED,
+                        TableColumn.DURATION,
+                        TableColumn.ALBUM,
+                        TableColumn.GENRE,
+                        TableColumn.RELEASE_YEAR,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
+                        TableColumn.USER_FAVORITE,
+                    ],
+                    pinnedLeftColumns: [TableColumn.ALBUM_GROUP],
+                }),
                 enableAlternateRowColors: false,
-                enableHeader: false,
+                enableHeader: true,
                 enableHorizontalBorders: false,
                 enableRowHoverHighlight: true,
                 enableVerticalBorders: false,
@@ -1556,15 +1544,8 @@ const initialState: SettingsState = {
         [ItemListKey.PLAYLIST_ALBUM]: {
             detail: {
                 columns: pickTableColumns({
-                    autoSizeColumns: [],
                     columns: SONG_TABLE_COLUMNS,
-                    columnWidths: {
-                        [TableColumn.ACTIONS]: 60,
-                        [TableColumn.DURATION]: 100,
-                        [TableColumn.TITLE]: 400,
-                        [TableColumn.TRACK_NUMBER]: 50,
-                        [TableColumn.USER_FAVORITE]: 60,
-                    },
+                    columnWidths: { [TableColumn.TITLE]: 400, [TableColumn.TRACK_NUMBER]: 50 },
                     enabledColumns: [
                         TableColumn.TRACK_NUMBER,
                         TableColumn.TITLE,
@@ -1619,14 +1600,18 @@ const initialState: SettingsState = {
             pagination: ListPaginationType.INFINITE,
             table: {
                 autoFitColumns: true,
-                columns: ALBUM_TABLE_COLUMNS.map((column) => ({
-                    align: column.align,
-                    autoSize: column.autoSize,
-                    id: column.value,
-                    isEnabled: column.isEnabled,
-                    pinned: column.pinned,
-                    width: column.width,
-                })),
+                columns: pickTableColumns({
+                    autoSizeColumns: [TableColumn.ALBUM_ARTIST],
+                    columns: ALBUM_TABLE_COLUMNS,
+                    enabledColumns: [
+                        TableColumn.ROW_INDEX,
+                        TableColumn.TITLE_COMBINED,
+                        TableColumn.DURATION,
+                        TableColumn.GENRE,
+                        TableColumn.RELEASE_YEAR,
+                        TableColumn.USER_FAVORITE,
+                    ],
+                }),
                 enableAlternateRowColors: false,
                 enableHeader: true,
                 enableHorizontalBorders: false,
@@ -1638,15 +1623,8 @@ const initialState: SettingsState = {
         [LibraryItem.ALBUM]: {
             detail: {
                 columns: pickTableColumns({
-                    autoSizeColumns: [],
                     columns: SONG_TABLE_COLUMNS,
-                    columnWidths: {
-                        [TableColumn.ACTIONS]: 60,
-                        [TableColumn.DURATION]: 100,
-                        [TableColumn.TITLE]: 400,
-                        [TableColumn.TRACK_NUMBER]: 50,
-                        [TableColumn.USER_FAVORITE]: 60,
-                    },
+                    columnWidths: { [TableColumn.TITLE]: 400, [TableColumn.TRACK_NUMBER]: 50 },
                     enabledColumns: [
                         TableColumn.TRACK_NUMBER,
                         TableColumn.TITLE,
@@ -1701,14 +1679,22 @@ const initialState: SettingsState = {
             pagination: ListPaginationType.INFINITE,
             table: {
                 autoFitColumns: true,
-                columns: ALBUM_TABLE_COLUMNS.map((column) => ({
-                    align: column.align,
-                    autoSize: column.autoSize,
-                    id: column.value,
-                    isEnabled: column.isEnabled,
-                    pinned: column.pinned,
-                    width: column.width,
-                })),
+                columns: pickTableColumns({
+                    autoSizeColumns: [TableColumn.ALBUM_ARTIST],
+                    columns: ALBUM_TABLE_COLUMNS,
+                    columnWidths: {
+                        [TableColumn.RELEASE_DATE]: 120,
+                        [TableColumn.RELEASE_YEAR]: 100,
+                    },
+                    enabledColumns: [
+                        TableColumn.ROW_INDEX,
+                        TableColumn.TITLE_COMBINED,
+                        TableColumn.DURATION,
+                        TableColumn.GENRE,
+                        TableColumn.RELEASE_YEAR,
+                        TableColumn.USER_FAVORITE,
+                    ],
+                }),
                 enableAlternateRowColors: false,
                 enableHeader: true,
                 enableHorizontalBorders: false,
@@ -1919,20 +1905,31 @@ const initialState: SettingsState = {
             pagination: ListPaginationType.INFINITE,
             table: {
                 autoFitColumns: true,
-                columns: PLAYLIST_SONG_TABLE_COLUMNS.map((column) => ({
-                    align: column.align,
-                    autoSize: column.autoSize,
-                    id: column.value,
-                    isEnabled: column.isEnabled,
-                    pinned: column.pinned,
-                    width: column.width,
-                })),
+                columns: pickTableColumns({
+                    autoSizeColumns: [TableColumn.ALBUM_ARTIST],
+                    columns: PLAYLIST_SONG_TABLE_COLUMNS,
+                    columnWidths: {
+                        [TableColumn.ALBUM_GROUP]: 200,
+                        [TableColumn.RELEASE_DATE]: 120,
+                        [TableColumn.RELEASE_YEAR]: 100,
+                    },
+                    enabledColumns: [
+                        TableColumn.ROW_INDEX,
+                        TableColumn.TITLE_COMBINED,
+                        TableColumn.DURATION,
+                        TableColumn.ALBUM,
+                        TableColumn.PLAY_COUNT,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
+                        TableColumn.USER_FAVORITE,
+                    ],
+                    pinnedLeftColumns: [TableColumn.ALBUM_GROUP],
+                }),
                 enableAlternateRowColors: false,
                 enableHeader: true,
                 enableHorizontalBorders: false,
                 enableRowHoverHighlight: true,
                 enableVerticalBorders: false,
-                size: 'default',
+                size: 'compact',
             },
         },
         [LibraryItem.QUEUE_SONG]: {
@@ -1948,14 +1945,26 @@ const initialState: SettingsState = {
             pagination: ListPaginationType.INFINITE,
             table: {
                 autoFitColumns: true,
-                columns: SONG_TABLE_COLUMNS.map((column) => ({
-                    align: column.align,
-                    autoSize: column.autoSize,
-                    id: column.value,
-                    isEnabled: column.isEnabled,
-                    pinned: column.pinned,
-                    width: column.width,
-                })),
+                columns: pickTableColumns({
+                    autoSizeColumns: [TableColumn.ALBUM_ARTIST],
+                    columns: SONG_TABLE_COLUMNS,
+                    columnWidths: {
+                        [TableColumn.ALBUM_GROUP]: 200,
+                        [TableColumn.RELEASE_DATE]: 120,
+                        [TableColumn.RELEASE_YEAR]: 100,
+                    },
+                    enabledColumns: [
+                        TableColumn.ROW_INDEX,
+                        TableColumn.TITLE_COMBINED,
+                        TableColumn.DURATION,
+                        TableColumn.ALBUM,
+                        TableColumn.GENRE,
+                        TableColumn.RELEASE_YEAR,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
+                        TableColumn.USER_FAVORITE,
+                    ],
+                    pinnedLeftColumns: [TableColumn.ALBUM_GROUP],
+                }),
                 enableAlternateRowColors: false,
                 enableHeader: true,
                 enableHorizontalBorders: false,
@@ -1994,23 +2003,35 @@ const initialState: SettingsState = {
                 size: 'default',
             },
             itemsPerPage: 100,
-            pagination: ListPaginationType.PAGINATED,
+            pagination: ListPaginationType.INFINITE,
             table: {
                 autoFitColumns: true,
-                columns: SONG_TABLE_COLUMNS.map((column) => ({
-                    align: column.align,
-                    autoSize: column.autoSize,
-                    id: column.value,
-                    isEnabled: column.isEnabled,
-                    pinned: column.pinned,
-                    width: column.width,
-                })),
+                columns: pickTableColumns({
+                    autoSizeColumns: [TableColumn.IMAGE, TableColumn.ALBUM_ARTIST],
+                    columns: SONG_TABLE_COLUMNS,
+                    columnWidths: {
+                        [TableColumn.ALBUM_GROUP]: 200,
+                        [TableColumn.IMAGE]: 50,
+                        [TableColumn.RELEASE_DATE]: 120,
+                        [TableColumn.RELEASE_YEAR]: 100,
+                        [TableColumn.ROW_INDEX]: 50,
+                    },
+                    enabledColumns: [
+                        TableColumn.ROW_INDEX,
+                        TableColumn.TITLE_COMBINED,
+                        TableColumn.DURATION,
+                        TableColumn.ALBUM,
+                        TableColumn.PLAY_COUNT,
+                        ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
+                    ],
+                    pinnedLeftColumns: [TableColumn.ALBUM_GROUP],
+                }),
                 enableAlternateRowColors: false,
                 enableHeader: true,
                 enableHorizontalBorders: false,
                 enableRowHoverHighlight: true,
                 enableVerticalBorders: false,
-                size: 'default',
+                size: 'compact',
             },
         },
         ['sideQueue']: {
@@ -2029,6 +2050,11 @@ const initialState: SettingsState = {
                 columns: pickTableColumns({
                     autoSizeColumns: [TableColumn.TITLE_COMBINED],
                     columns: SONG_TABLE_COLUMNS,
+                    columnWidths: {
+                        [TableColumn.ALBUM_GROUP]: 200,
+                        [TableColumn.RELEASE_DATE]: 120,
+                        [TableColumn.RELEASE_YEAR]: 100,
+                    },
                     enabledColumns: [
                         TableColumn.ROW_INDEX,
                         TableColumn.TITLE_COMBINED,
@@ -2036,13 +2062,14 @@ const initialState: SettingsState = {
                         ...(isElectron() ? [TableColumn.DOWNLOAD_STATUS] : []),
                         TableColumn.USER_FAVORITE,
                     ],
+                    pinnedLeftColumns: [TableColumn.ALBUM_GROUP],
                 }),
                 enableAlternateRowColors: false,
                 enableHeader: true,
                 enableHorizontalBorders: false,
                 enableRowHoverHighlight: true,
                 enableVerticalBorders: false,
-                size: 'default',
+                size: 'compact',
             },
         },
     },
@@ -2067,10 +2094,10 @@ const initialState: SettingsState = {
     },
     lyricsDisplay: {
         default: {
-            fontSize: 24,
+            fontSize: 41,
             fontSizeUnsync: 24,
-            gap: 24,
-            gapUnsync: 24,
+            gap: 23,
+            gapUnsync: 20,
             opacityNonActive: 0.2,
             paddingLeft: 0,
             paddingRight: 0,
@@ -2201,29 +2228,29 @@ const initialState: SettingsState = {
         audiomotionanalyzer: {
             alphaBars: false,
             ansiBands: false,
-            barSpace: 0.7,
+            barSpace: 0,
             channelLayout: 'single',
             colorMode: 'gradient',
             customGradients: [],
             fadePeaks: true,
-            fftSize: 16384,
-            fillAlpha: 0,
+            fftSize: 8192,
+            fillAlpha: 1,
             frequencyScale: 'log',
             gradient: 'prism',
             gravity: 11,
-            ledBars: false,
+            ledBars: true,
             linearAmplitude: false,
             linearBoost: 4,
-            lineWidth: 1.9,
+            lineWidth: 0,
             loRes: false,
             lumiBars: false,
-            maxDecibels: -15,
+            maxDecibels: -25,
             maxFPS: 0,
-            maxFreq: 22050,
+            maxFreq: 8000,
             minDecibels: -85,
             minFreq: 20,
             mirror: 0,
-            mode: 10,
+            mode: 5,
             noteLabels: false,
             opacity: 1,
             outlineBars: false,
@@ -2234,17 +2261,17 @@ const initialState: SettingsState = {
             radial: false,
             radialInvert: false,
             radius: 0.7,
-            reflexAlpha: 0.1,
+            reflexAlpha: 0.5,
             reflexBright: 1,
             reflexFit: false,
-            reflexRatio: 0.5,
+            reflexRatio: 0,
             roundBars: false,
             showFPS: false,
             showPeaks: false,
-            showScaleX: false,
+            showScaleX: true,
             showScaleY: false,
-            smoothing: 0.6,
-            spinSpeed: 0,
+            smoothing: 0.7,
+            spinSpeed: 0.5,
             splitGradient: false,
             trueLeds: false,
             volume: 1,
@@ -2273,7 +2300,7 @@ const initialState: SettingsState = {
         releaseChannel: 'latest',
         startMinimized: false,
         tray: true,
-        windowBarStyle: platformDefaultWindowBarStyle,
+        windowBarStyle: Platform.WEB,
         windowBarTrackinfo: true,
     },
 };
