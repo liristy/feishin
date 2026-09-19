@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 
 let searchParams = new URLSearchParams();
+let pathname = '/songs';
 const storage = new Map();
 const server = { id: 'navidrome-test', type: 'navidrome' };
 const mocks = {
@@ -22,6 +23,7 @@ const mocks = {
     },
     react: { useCallback: (fn) => fn, useMemo: (fn) => fn() },
     'react-router': {
+        useMatch: (route) => (pathname === route ? {} : null),
         useSearchParams: () => [
             searchParams,
             (update) => {
@@ -85,4 +87,43 @@ searchParams = new URLSearchParams();
 assert.deepEqual(sort(favorites), [SongListSort.NAME, SortOrder.DESC]);
 console.log(
     'Favorites defaults, Navidrome date mapping, independent persistence and URL overrides passed.',
+);
+
+const { PlaylistListSort } = load('/@/shared/types/domain-types');
+const { usePlaylistListFilters } = load(
+    '/@/renderer/features/playlists/hooks/use-playlist-list-filters',
+);
+const { useSidebarPlaylistSort } = load(
+    '/@/renderer/features/sidebar/hooks/use-sidebar-playlist-sort',
+);
+const sidebarSort = () => {
+    const { sortBy, sortOrder } = useSidebarPlaylistSort();
+    return [sortBy, sortOrder];
+};
+const librarySort = () => {
+    const { query } = usePlaylistListFilters();
+    return [query.sortBy, query.sortOrder ?? SortOrder.ASC];
+};
+pathname = '/playlists';
+assert.deepEqual(sidebarSort(), librarySort());
+assert.deepEqual(sidebarSort(), [PlaylistListSort.NAME, SortOrder.ASC]);
+setSort(ItemListKey.PLAYLIST, PlaylistListSort.UPDATED_AT, SortOrder.DESC);
+assert.deepEqual(sidebarSort(), librarySort());
+assert.deepEqual(sidebarSort(), [PlaylistListSort.UPDATED_AT, SortOrder.DESC]);
+searchParams = new URLSearchParams({
+    sortBy: PlaylistListSort.SONG_COUNT,
+    sortOrder: SortOrder.ASC,
+});
+assert.deepEqual(sidebarSort(), librarySort());
+for (const route of ['/songs', '/albums', '/playlists/example/songs']) {
+    pathname = route;
+    searchParams = new URLSearchParams({ sortBy: SongListSort.ALBUM, sortOrder: SortOrder.ASC });
+    assert.deepEqual(sidebarSort(), [PlaylistListSort.UPDATED_AT, SortOrder.DESC]);
+}
+server.id = 'other-server';
+assert.deepEqual(sidebarSort(), [PlaylistListSort.NAME, SortOrder.ASC]);
+server.id = 'navidrome-test';
+assert.deepEqual(sidebarSort(), [PlaylistListSort.UPDATED_AT, SortOrder.DESC]);
+console.log(
+    'Sidebar playlist sorting matches the library, follows saved changes and ignores unrelated routes/servers.',
 );

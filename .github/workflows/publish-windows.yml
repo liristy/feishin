@@ -2,6 +2,13 @@ name: Publish Windows (Manual)
 
 on: workflow_dispatch
 
+permissions:
+    contents: write
+
+concurrency:
+    group: publish-windows-${{ github.ref }}
+    cancel-in-progress: false
+
 jobs:
     publish:
         runs-on: ${{ matrix.os }}
@@ -18,7 +25,21 @@ jobs:
               uses: pnpm/action-setup@v4
 
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
+
+            - name: Prepare release draft
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  NOTES="docs/releases/${VERSION}.md"
+                  test -f "$NOTES"
+                  if gh release view "v${VERSION}" --json targetCommitish,isDraft > release-state.json; then
+                      node -e "const r=require('./release-state.json'); if (!r.isDraft || r.targetCommitish !== process.env.GITHUB_SHA) throw new Error('Release already published or targets a different commit')"
+                  else
+                      gh release create "v${VERSION}" --target "$GITHUB_SHA" --draft --title "Feishin ${VERSION}" --notes-file "$NOTES"
+                  fi
 
             - name: Build and Publish releases
               env:
@@ -31,3 +52,11 @@ jobs:
                   command: |
                       pnpm run publish:win
                   on_retry_command: pnpm cache delete
+
+            - name: Publish completed release
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  gh release edit "v${VERSION}" --draft=false --latest --title "Feishin ${VERSION}" --notes-file "docs/releases/${VERSION}.md"

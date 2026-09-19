@@ -16,7 +16,7 @@ export interface FullScreenPlayerSlice extends FullScreenPlayerState {
 export type FullScreenPlayerTitleDisplayType = 'multiLine' | 'scroll';
 
 interface FullScreenPlayerState {
-    activeTab: 'lyrics' | 'queue' | 'related' | string;
+    activeTab: 'lyrics' | 'queue' | string;
     coverArtSize: number;
     dynamicBackground?: boolean;
     dynamicImageBlur: number;
@@ -78,14 +78,19 @@ export const useFullScreenPlayerStore = createWithEqualityFn<FullScreenPlayerSli
                     }
                 }
 
-                return persistedState;
+                const state = persistedState as FullScreenPlayerState;
+                if (state.activeTab === 'related') {
+                    state.activeTab = 'lyrics';
+                }
+
+                return state;
             },
             name: 'store_full_screen_player',
             // `visualizerReturnToPlayer` is transient navigation intent used only to route
             // the "shrink visualizer" action back to the full-screen player; it isn't
             // meaningful across app restarts, so it's excluded from persistence.
             partialize: (state) => omit(state, ['visualizerReturnToPlayer']),
-            version: 5,
+            version: 6,
         },
     ),
 );

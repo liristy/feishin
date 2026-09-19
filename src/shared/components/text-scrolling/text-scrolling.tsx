@@ -47,10 +47,12 @@ export const BaseTextScrolling = ({ children, gap, pause, speed, ...rest }: Text
             setScrollDistance(textWidth);
         };
 
+        const observer = new ResizeObserver(checkOverflow);
+        if (containerRef.current) observer.observe(containerRef.current);
+        if (textRef.current) observer.observe(textRef.current);
         checkOverflow();
-        window.addEventListener('resize', checkOverflow);
 
-        return () => window.removeEventListener('resize', checkOverflow);
+        return () => observer.disconnect();
     }, [children]);
 
     useEffect(() => {
@@ -106,6 +108,7 @@ export const BaseTextScrolling = ({ children, gap, pause, speed, ...rest }: Text
                 );
 
                 await animation.finished.catch(() => {});
+                animation.cancel();
             }
         };
 

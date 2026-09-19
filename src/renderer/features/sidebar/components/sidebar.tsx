@@ -11,7 +11,6 @@ import {
     useIsRadioActive,
     useRadioPlayer,
 } from '/@/renderer/features/radio/hooks/use-radio-player';
-import { openSettingsModal } from '/@/renderer/features/settings/utils/open-settings-modal';
 import { ActionBar } from '/@/renderer/features/sidebar/components/action-bar';
 import { SidebarCollectionList } from '/@/renderer/features/sidebar/components/sidebar-collection-list';
 import { SidebarIcon } from '/@/renderer/features/sidebar/components/sidebar-icon';
@@ -25,7 +24,6 @@ import {
 import {
     useAppStore,
     useAppStoreActions,
-    useCurrentServer,
     useFullScreenPlayerStore,
     useGeneralSettings,
     useImagePlaceholderPriority,
@@ -46,7 +44,6 @@ import { Group } from '/@/shared/components/group/group';
 import { Icon } from '/@/shared/components/icon/icon';
 import { ImageUnloader } from '/@/shared/components/image/image';
 import { ScrollArea } from '/@/shared/components/scroll-area/scroll-area';
-import { Stack } from '/@/shared/components/stack/stack';
 import { Text } from '/@/shared/components/text/text';
 import { Tooltip } from '/@/shared/components/tooltip/tooltip';
 import { useImageHashUrl } from '/@/shared/hooks/use-image-hash-url';
@@ -66,7 +63,6 @@ const SidebarPlaylistSection = () => {
 
 export const Sidebar = () => {
     const { t } = useTranslation();
-    const server = useCurrentServer();
 
     const sidebarPlaylistList = useSidebarPlaylistList();
 
@@ -179,24 +175,6 @@ export const Sidebar = () => {
                     {sidebarPlaylistList && <SidebarPlaylistSection />}
                 </Accordion>
             </ScrollArea>
-            <Group className={styles.footer} gap="sm" wrap="nowrap">
-                <Icon color="primary" icon="disc" size="xl" />
-                <Stack gap={2} miw={0} style={{ flex: 1 }}>
-                    <Text fw={600} size="sm" truncate>
-                        {server?.name || 'Feishin'}
-                    </Text>
-                    <Text isMuted size="xs" truncate>
-                        {t('page.sidebar.myLibrary')}
-                    </Text>
-                </Stack>
-                <ActionIcon
-                    aria-label={t('page.sidebar.settings')}
-                    icon="settings2"
-                    onClick={() => openSettingsModal()}
-                    tooltip={{ label: t('page.sidebar.settings') }}
-                    variant="subtle"
-                />
-            </Group>
             <AnimatePresence initial={false} mode="popLayout">
                 {showImage && <SidebarImage />}
             </AnimatePresence>

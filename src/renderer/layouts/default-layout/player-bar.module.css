@@ -10,3 +10,16 @@
         background: var(--theme-colors-surface);
     }
 }
+
+.fullscreen {
+    composes: palette from '../../features/player/components/full-screen-player.module.css';
+
+    &,
+    &:hover {
+        background: transparent;
+    }
+
+    > div {
+        border-top-color: transparent;
+    }
+}

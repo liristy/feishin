@@ -10,7 +10,7 @@ import {
     TableGroupHeader,
 } from '/@/renderer/components/item-list/item-table-list/item-table-list';
 import { ItemTableListColumn } from '/@/renderer/components/item-list/item-table-list/item-table-list-column';
-import { ItemListHandle } from '/@/renderer/components/item-list/types';
+import { ItemListHandle, ItemTableListColumnConfig } from '/@/renderer/components/item-list/types';
 import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { useIsPlayerFetching, usePlayer } from '/@/renderer/features/player/context/player-context';
 import { searchLibraryItems } from '/@/renderer/features/shared/utils';
@@ -34,7 +34,19 @@ import { useFocusWithin } from '/@/shared/hooks/use-focus-within';
 import { useMergedRef } from '/@/shared/hooks/use-merged-ref';
 import { Folder, LibraryItem, QueueSong, Song } from '/@/shared/types/domain-types';
 import { DragTarget } from '/@/shared/types/drag-and-drop';
-import { ItemListKey, Play } from '/@/shared/types/types';
+import { ItemListKey, Play, TableColumn } from '/@/shared/types/types';
+
+const fullscreenColumns: ItemTableListColumnConfig[] = [
+    { align: 'center', id: TableColumn.ROW_INDEX, isEnabled: true, pinned: 'left', width: 44 },
+    {
+        align: 'start',
+        id: TableColumn.TITLE_COMBINED,
+        isEnabled: true,
+        pinned: null,
+        width: 240,
+    },
+    { align: 'end', id: TableColumn.DURATION, isEnabled: true, pinned: 'right', width: 64 },
+];
 
 type QueueProps = {
     enableScrollShadow?: boolean;
@@ -44,7 +56,21 @@ type QueueProps = {
 
 export const PlayQueue = forwardRef<ItemListHandle, QueueProps>(
     ({ enableScrollShadow = true, listKey, searchTerm }, ref) => {
-        const { table } = useListSettings(listKey) || {};
+        const { table: savedTable } = useListSettings(listKey) || {};
+        const isFullscreen = listKey === ItemListKey.FULL_SCREEN;
+        const table = isFullscreen
+            ? {
+                  ...savedTable,
+                  autoFitColumns: true,
+                  columns: fullscreenColumns,
+                  enableAlternateRowColors: false,
+                  enableHeader: false,
+                  enableHorizontalBorders: false,
+                  enableRowHoverHighlight: true,
+                  enableVerticalBorders: false,
+                  size: 'compact' as const,
+              }
+            : savedTable;
 
         const isFetching = useIsPlayerFetching();
         const tableRef = useRef<ItemListHandle>(null);
@@ -54,7 +80,7 @@ export const PlayQueue = forwardRef<ItemListHandle, QueueProps>(
 
         const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 200);
 
-        const [data, setData] = useState<QueueSong[]>([]);
+        const [data, setData] = useState<QueueSong[]>(() => getQueue()?.items ?? []);
         const [groups, setGroups] = useState<TableGroupHeader[]>([]);
 
         useEffect(() => {
@@ -175,7 +201,7 @@ export const PlayQueue = forwardRef<ItemListHandle, QueueProps>(
 
         return (
             <div className={styles.container} ref={containerFocusRef}>
-                <LoadingOverlay pos="absolute" visible={isFetching} />
+                <LoadingOverlay pos="absolute" visible={isFetching && (!isFullscreen || isEmpty)} />
                 <ItemTableList
                     activeRowId={currentSongUniqueId}
                     autoFitColumns={table.autoFitColumns}
@@ -200,8 +226,8 @@ export const PlayQueue = forwardRef<ItemListHandle, QueueProps>(
                         type: 'offset',
                     }}
                     itemType={LibraryItem.QUEUE_SONG}
-                    onColumnReordered={handleColumnReordered}
-                    onColumnResized={handleColumnResized}
+                    onColumnReordered={isFullscreen ? undefined : handleColumnReordered}
+                    onColumnResized={isFullscreen ? undefined : handleColumnResized}
                     ref={mergedRef}
                     size={table.size}
                 />

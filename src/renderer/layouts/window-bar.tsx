@@ -142,7 +142,7 @@ export const WindowBar = () => {
     const privateMode = useAppStore((state) => state.privateMode);
     const handleMinimize = () => minimize();
 
-    const { currentSong, index, queueLength } = usePlayerData();
+    const { currentSong, queueLength } = usePlayerData();
     const { isPlaying: isRadioPlaying, metadata, stationName } = useRadioPlayer();
     const isRadioActive = Boolean(stationName || metadata);
     const [max, setMax] = useState(localSettings?.env.START_MAXIMIZED || false);
@@ -187,17 +187,15 @@ export const WindowBar = () => {
 
         // Show regular song information
         const statusString = playerStatus === PlayerStatus.PAUSED ? t('page.windowBar.paused') : '';
-        const queueString = queueLength ? `(${index + 1} / ${queueLength}) ` : '';
         const title = `${
             queueLength
-                ? `${statusString}${queueString}${currentSong?.name}${currentSong?.artistName ? ` — ${currentSong?.artistName} — Feishin` : ''}`
+                ? `${statusString}${currentSong?.name}${currentSong?.artistName ? ` - ${currentSong?.artistName} - Feishin` : ''}`
                 : 'Feishin'
         }${privateMode ? ` ${privateModeString}` : ''}`;
         return title;
     }, [
         currentSong?.artistName,
         currentSong?.name,
-        index,
         isRadioActive,
         isRadioPlaying,
         metadata,

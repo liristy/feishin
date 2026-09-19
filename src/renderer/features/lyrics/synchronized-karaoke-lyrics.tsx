@@ -79,6 +79,7 @@ export const SynchronizedKaraokeLyrics = ({
         scrollAnimStateRef,
         settings,
         showScrollbar,
+        userScrollingRef,
     } = useSynchronizedLyricsBase(settingsKey, offsetMs);
 
     const effectiveFontSize = preview ? PREVIEW_FONT_SIZE : settings.fontSize;
@@ -114,6 +115,7 @@ export const SynchronizedKaraokeLyrics = ({
         paddingLeft: effectivePaddingLeft,
         paddingRight: effectivePaddingRight,
         scrollContainerId: LYRICS_SCROLL_CONTAINER_ID,
+        userScrollingRef,
     });
 
     const handleContainerClick = useCallback(
@@ -309,8 +311,6 @@ export const SynchronizedKaraokeLyrics = ({
             }
 
             if (isSeek) {
-                resumeAutoscroll();
-                resumeEngineAutoscroll();
                 syncAtTime(timeInMs, true, {
                     eventCreationTime: playbackAnchorRef.current.eventCreationTime,
                     forceReset: true,
@@ -320,7 +320,7 @@ export const SynchronizedKaraokeLyrics = ({
         });
 
         return unsubscribe;
-    }, [delayMsRef, resumeAutoscroll, resumeEngineAutoscroll, syncAtTime, updatePlaybackAnchor]);
+    }, [delayMsRef, syncAtTime, updatePlaybackAnchor]);
 
     const getOverlayText = (
         overlayLyrics: null | SynchronizedLyricsData | undefined,
@@ -365,6 +365,7 @@ export const SynchronizedKaraokeLyrics = ({
                 {settings.showMatch && (
                     <LyricLine
                         alignment={settings.alignment}
+                        data-lyrics-match
                         fontSize={effectiveFontSize}
                         text={`${name} — ${artist}`}
                     />

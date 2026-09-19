@@ -254,6 +254,7 @@ export const SleepTimerButton = () => {
         <Popover onChange={setOpened} opened={opened} position="top" withArrow>
             <Popover.Target>
                 <ActionIcon
+                    aria-pressed={active}
                     icon={active ? 'sleepTimer' : 'sleepTimerOff'}
                     iconProps={{
                         color: active ? 'primary' : undefined,

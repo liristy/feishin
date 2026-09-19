@@ -1,11 +1,13 @@
 .layout {
+    --player-bar-height: 90px;
+
     display: grid;
     grid-template-areas:
         'window-bar'
         'main-content'
         'player';
-    grid-template-rows: 0 calc(100vh - 90px) 90px;
-    grid-template-rows: 0 calc(100dvh - 90px) 90px;
+    grid-template-rows: 0 calc(100vh - var(--player-bar-height)) var(--player-bar-height);
+    grid-template-rows: 0 calc(100dvh - var(--player-bar-height)) var(--player-bar-height);
     grid-template-columns: 1fr;
     gap: 0;
     height: 100%;
@@ -13,11 +15,11 @@
 }
 
 .windows {
-    grid-template-rows: 30px calc(100vh - 120px) 90px;
-    grid-template-rows: 30px calc(100dvh - 120px) 90px;
+    grid-template-rows: 30px calc(100vh - 30px - var(--player-bar-height)) var(--player-bar-height);
+    grid-template-rows: 30px calc(100dvh - 30px - var(--player-bar-height)) var(--player-bar-height);
 }
 
 .macos {
-    grid-template-rows: 30px calc(100vh - 120px) 90px;
-    grid-template-rows: 30px calc(100dvh - 120px) 90px;
+    grid-template-rows: 30px calc(100vh - 30px - var(--player-bar-height)) var(--player-bar-height);
+    grid-template-rows: 30px calc(100dvh - 30px - var(--player-bar-height)) var(--player-bar-height);
 }

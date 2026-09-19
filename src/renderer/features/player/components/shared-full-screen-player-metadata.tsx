@@ -71,7 +71,9 @@ export const SharedFullscreenPlayerMetadata = ({
         release_type: currentSong?.tags?.releasetype && (
             <Badge>{currentSong?.tags?.releasetype[0]}</Badge>
         ),
-        release_year: currentSong?.releaseYear && <Badge>{currentSong?.releaseYear}</Badge>,
+        release_year: (currentSong?.releaseYear || currentSong?.year) && (
+            <Badge>{currentSong?.releaseYear || currentSong?.year}</Badge>
+        ),
         sample_rate: currentSong?.sampleRate && <Badge>{currentSong?.sampleRate / 1000} kHz</Badge>,
         track_number: currentSong?.trackNumber && (
             <Badge>

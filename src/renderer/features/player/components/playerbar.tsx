@@ -43,13 +43,21 @@ export const Playerbar = () => {
             onClick={playerbarOpenDrawer ? handleToggleFullScreenPlayer : undefined}
         >
             <div className={styles.controlsGrid}>
-                <div className={styles.leftGridItem}>
+                <div
+                    className={clsx(styles.leftGridItem, {
+                        [styles.hidden]: isFullScreenPlayerExpanded,
+                    })}
+                >
                     <LeftControls />
                 </div>
                 <div className={styles.centerGridItem}>
                     <CenterControls />
                 </div>
-                <div className={styles.rightGridItem}>
+                <div
+                    className={clsx(styles.rightGridItem, {
+                        [styles.revealOnHover]: isFullScreenPlayerExpanded,
+                    })}
+                >
                     <RightControls />
                 </div>
             </div>

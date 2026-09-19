@@ -1,242 +1,101 @@
 import clsx from 'clsx';
 import { AnimatePresence, motion, Variants } from 'motion/react';
-import {
-    CSSProperties,
-    memo,
-    ReactNode,
-    useEffect,
-    useLayoutEffect,
-    useRef,
-    useState,
-} from 'react';
+import { CSSProperties, memo, ReactNode, useLayoutEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 
 import styles from './full-screen-player.module.css';
 
 import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
+import { CoverFlowCanvas } from '/@/renderer/features/player/components/cover-flow-canvas';
 import { FullScreenPlayerImage } from '/@/renderer/features/player/components/full-screen-player-image';
 import {
     FullScreenPlayerControls,
     FullScreenPlayerQueue,
 } from '/@/renderer/features/player/components/full-screen-player-queue';
 import { SharedFullscreenPlayerSettings } from '/@/renderer/features/player/components/shared-full-screen-player-settings';
+import { useCoverFlowImage } from '/@/renderer/features/player/hooks/use-cover-flow-image';
 import {
     useIsRadioActive,
     useRadioPlayer,
 } from '/@/renderer/features/radio/hooks/use-radio-player';
+import { WindowControls } from '/@/renderer/features/window-controls/components/window-controls';
 import { useFastAverageColor } from '/@/renderer/hooks';
 import {
     useFullScreenPlayerStore,
     useFullScreenPlayerStoreActions,
     useImagePlaceholderPriority,
-    usePlayerData,
     usePlayerSong,
 } from '/@/renderer/store';
 import { Group } from '/@/shared/components/group/group';
 import { useImageHashUrl } from '/@/shared/hooks/use-image-hash-url';
-import { ExplicitStatus, LibraryItem, QueueSong } from '/@/shared/types/domain-types';
+import { ExplicitStatus, LibraryItem } from '/@/shared/types/domain-types';
 
 const mainBackground = 'var(--theme-colors-background)';
 
-const backgroundImageVariants: Variants = {
-    closed: {
-        opacity: 0,
-        transition: {
-            duration: 0.8,
-            ease: 'linear',
-        },
-    },
-    initial: {
-        opacity: 0,
-    },
-    open: (custom) => {
-        const { isOpen } = custom;
-        return {
-            opacity: isOpen ? 1 : 0,
-            transition: {
-                duration: 0.4,
-                ease: 'linear',
-            },
-        };
-    },
-};
-
 interface BackgroundImageProps {
     dynamicBackground: boolean | undefined;
+    dynamicImageBlur: number | undefined;
     dynamicIsImage: boolean | undefined;
 }
 
-const BackgroundImage = memo(({ dynamicBackground, dynamicIsImage }: BackgroundImageProps) => {
-    const currentSong = usePlayerSong();
-    const { nextSong } = usePlayerData();
-
-    const currentImageUrl = useItemImageUrl({
-        id: currentSong?.imageId || undefined,
-        itemType: LibraryItem.SONG,
-        type: 'itemCard',
-    });
-
-    const nextImageUrl = useItemImageUrl({
-        id: nextSong?.imageId || undefined,
-        itemType: LibraryItem.SONG,
-        type: 'itemCard',
-    });
-
-    // Hash previews are free (no network fetch), so they are preferred for the background
-    const imagePlaceholderPriority = useImagePlaceholderPriority();
-    const currentHashUrl = useImageHashUrl(
-        currentSong?.thumbHash,
-        currentSong?.blurHash,
-        imagePlaceholderPriority,
-    );
-    const nextHashUrl = useImageHashUrl(
-        nextSong?.thumbHash,
-        nextSong?.blurHash,
-        imagePlaceholderPriority,
-    );
-
-    const [imageState, setImageState] = useState({
-        bottomHash: nextHashUrl,
-        bottomImage: nextImageUrl,
-        current: 0,
-        topHash: currentHashUrl,
-        topImage: currentImageUrl,
-    });
-
-    const previousSongRef = useRef<string | undefined>(currentSong?._uniqueId);
-    const imageStateRef = useRef(imageState);
-
-    // Keep ref in sync
-    useEffect(() => {
-        imageStateRef.current = imageState;
-    }, [imageState]);
-
-    // Update images when song changes
-    useEffect(() => {
-        if (currentSong?._uniqueId === previousSongRef.current) {
-            return;
-        }
-
-        const isTop = imageStateRef.current.current === 0;
-
-        setImageState({
-            bottomHash: isTop ? currentHashUrl : nextHashUrl,
-            bottomImage: isTop ? currentImageUrl : nextImageUrl,
-            current: isTop ? 1 : 0,
-            topHash: isTop ? nextHashUrl : currentHashUrl,
-            topImage: isTop ? nextImageUrl : currentImageUrl,
+const BackgroundImage = memo(
+    ({ dynamicBackground, dynamicImageBlur, dynamicIsImage }: BackgroundImageProps) => {
+        const currentSong = usePlayerSong();
+        const imageUrl = useItemImageUrl({
+            id: currentSong?.imageId || undefined,
+            imageUrl: currentSong?.imageUrl,
+            itemType: LibraryItem.SONG,
+            type: 'itemCard',
         });
+        const imagePlaceholderPriority = useImagePlaceholderPriority();
+        const hashUrl = useImageHashUrl(
+            currentSong?.thumbHash,
+            currentSong?.blurHash,
+            null,
+            imagePlaceholderPriority,
+        );
+        const sourceUrl =
+            currentSong?.explicitStatus !== ExplicitStatus.EXPLICIT && hashUrl ? hashUrl : imageUrl;
+        const flowUrl = useCoverFlowImage(
+            dynamicBackground && !dynamicIsImage ? imageUrl || sourceUrl : null,
+            dynamicImageBlur ?? 0,
+            sourceUrl,
+        );
+        const backgroundUrl = dynamicIsImage ? sourceUrl : flowUrl;
 
-        previousSongRef.current = currentSong?._uniqueId;
-    }, [
-        currentSong?._uniqueId,
-        currentHashUrl,
-        currentImageUrl,
-        nextSong?._uniqueId,
-        nextHashUrl,
-        nextImageUrl,
-    ]);
-
-    if (!dynamicBackground || !dynamicIsImage) {
-        return null;
-    }
-
-    const getBackgroundImageUrl = (
-        imageUrl: string | undefined,
-        songId: string | undefined,
-        albumId: string | undefined,
-    ) => {
-        if (!imageUrl || !songId || !albumId) {
-            return imageUrl;
-        }
-        return imageUrl.replace(songId, albumId);
-    };
-
-    // Explicit songs keep the fetched background; everyone else gets the instant hash preview
-    const getBackgroundStyle = (
-        song: QueueSong | undefined,
-        hashUrl: null | string,
-        imageUrl: string | undefined,
-    ) => {
-        if (hashUrl && song?.explicitStatus !== ExplicitStatus.EXPLICIT) {
-            return { backgroundImage: `url("${hashUrl}")` } as CSSProperties;
-        }
-
-        return {
-            backgroundImage: imageUrl
-                ? `url("${getBackgroundImageUrl(imageUrl, song?.id, song?.albumId)}"), url("${imageUrl}")`
-                : undefined,
-        } as CSSProperties;
-    };
-
-    // Determine which song IDs to use for keys and image URLs
-    const topSongId = imageState.current === 0 ? currentSong?._uniqueId : nextSong?._uniqueId;
-    const bottomSongId = imageState.current === 0 ? nextSong?._uniqueId : currentSong?._uniqueId;
-    const topSong = imageState.current === 0 ? currentSong : nextSong;
-    const bottomSong = imageState.current === 0 ? nextSong : currentSong;
-
-    return (
-        <AnimatePresence initial={false} mode="sync">
-            {imageState.current === 0 && (imageState.topHash || imageState.topImage) && (
-                <motion.div
-                    animate="open"
-                    className={styles.backgroundImage}
-                    custom={{ isOpen: imageState.current === 0 }}
-                    exit="closed"
-                    initial="closed"
-                    key={`top-${topSongId || 'none'}`}
-                    style={getBackgroundStyle(topSong, imageState.topHash, imageState.topImage)}
-                    variants={backgroundImageVariants}
-                />
-            )}
-
-            {imageState.current === 1 && (imageState.bottomHash || imageState.bottomImage) && (
-                <motion.div
-                    animate="open"
-                    className={styles.backgroundImage}
-                    custom={{ isOpen: imageState.current === 1 }}
-                    exit="closed"
-                    initial="closed"
-                    key={`bottom-${bottomSongId || 'none'}`}
-                    style={getBackgroundStyle(
-                        bottomSong,
-                        imageState.bottomHash,
-                        imageState.bottomImage,
-                    )}
-                    variants={backgroundImageVariants}
-                />
-            )}
-        </AnimatePresence>
-    );
-});
-
-BackgroundImage.displayName = 'BackgroundImage';
-
-interface BackgroundImageOverlayProps {
-    dynamicBackground: boolean | undefined;
-    dynamicImageBlur: number | undefined;
-}
-
-const BackgroundImageOverlay = memo(
-    ({ dynamicBackground, dynamicImageBlur }: BackgroundImageOverlayProps) => {
-        if (!dynamicBackground) {
-            return null;
-        }
+        if (!dynamicBackground) return null;
 
         return (
-            <div
-                className={styles.backgroundImageOverlay}
-                style={
-                    {
-                        '--image-blur': `${dynamicImageBlur ?? 0}rem`,
-                    } as CSSProperties
-                }
-            />
+            <AnimatePresence initial={false}>
+                {backgroundUrl && (
+                    <motion.div
+                        animate={{ opacity: 1 }}
+                        className={styles.backgroundImage}
+                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0 }}
+                        key={currentSong?._uniqueId || currentSong?.id || 'none'}
+                        style={{ '--image-blur': `${dynamicImageBlur ?? 0}rem` } as CSSProperties}
+                        transition={{ duration: 1.5, ease: 'easeInOut' }}
+                    >
+                        {dynamicIsImage ? (
+                            <div
+                                className={styles.backgroundArtwork}
+                                style={{ backgroundImage: `url(${JSON.stringify(backgroundUrl)})` }}
+                            />
+                        ) : (
+                            <CoverFlowCanvas
+                                className={styles.backgroundFlow}
+                                source={backgroundUrl}
+                            />
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         );
     },
 );
 
-BackgroundImageOverlay.displayName = 'BackgroundImageOverlay';
+BackgroundImage.displayName = 'BackgroundImage';
 
 interface BackgroundOverlayProps {
     dynamicBackground: boolean | undefined;
@@ -286,12 +145,19 @@ const containerVariants: Variants = {
 interface PlayerContainerProps {
     children: ReactNode;
     dynamicBackground: boolean | undefined;
+    dynamicImageBlur: number | undefined;
     dynamicIsImage: boolean | undefined;
     opacity: number;
 }
 
 const PlayerContainer = memo(
-    ({ children, dynamicBackground, dynamicIsImage, opacity }: PlayerContainerProps) => {
+    ({
+        children,
+        dynamicBackground,
+        dynamicImageBlur,
+        dynamicIsImage,
+        opacity,
+    }: PlayerContainerProps) => {
         const currentSong = usePlayerSong();
         const isRadioActive = useIsRadioActive();
         const { currentStationArt: currentRadioStationArt } = useRadioPlayer();
@@ -323,11 +189,22 @@ const PlayerContainer = memo(
                 transition={{ duration: 2 }}
                 variants={containerVariants}
             >
-                <BackgroundImage
-                    dynamicBackground={dynamicBackground}
-                    dynamicIsImage={dynamicIsImage}
-                />
-                <BackgroundOverlay dynamicBackground={dynamicBackground} opacity={opacity} />
+                <div className={styles.background}>
+                    <BackgroundImage
+                        dynamicBackground={dynamicBackground}
+                        dynamicImageBlur={dynamicImageBlur}
+                        dynamicIsImage={dynamicIsImage}
+                    />
+                    <BackgroundOverlay dynamicBackground={dynamicBackground} opacity={opacity} />
+                    {dynamicBackground && (
+                        <div
+                            className={clsx(
+                                styles.backgroundImageOverlay,
+                                !dynamicIsImage && styles.flowOverlay,
+                            )}
+                        />
+                    )}
+                </div>
                 {children}
             </motion.div>
         );
@@ -341,10 +218,7 @@ export const FullScreenPlayer = () => {
         useFullScreenPlayerStore();
     const { setStore } = useFullScreenPlayerStoreActions();
     const hasActiveModule =
-        activeTab === 'queue' ||
-        activeTab === 'related' ||
-        activeTab === 'lyrics' ||
-        activeTab === 'visualizer';
+        activeTab === 'queue' || activeTab === 'lyrics' || activeTab === 'visualizer';
 
     const isRadioActive = useIsRadioActive();
     const { isPlaying: isRadioPlaying } = useRadioPlayer();
@@ -366,11 +240,15 @@ export const FullScreenPlayer = () => {
     return (
         <PlayerContainer
             dynamicBackground={effectiveDynamicBackground}
+            dynamicImageBlur={dynamicImageBlur}
             dynamicIsImage={dynamicIsImage}
             opacity={opacity}
         >
+            <div className={styles.windowControls}>
+                <WindowControls />
+            </div>
             <Group
-                className="full-screen-player-controls-container"
+                className={clsx(styles.headerControls, 'full-screen-player-controls-container')}
                 gap="sm"
                 p="0.5rem"
                 pos="absolute"
@@ -382,10 +260,6 @@ export const FullScreenPlayer = () => {
             >
                 <SharedFullscreenPlayerSettings />
             </Group>
-            <BackgroundImageOverlay
-                dynamicBackground={effectiveDynamicBackground}
-                dynamicImageBlur={dynamicImageBlur}
-            />
             <div className={styles.responsiveContainer}>
                 <div
                     className={clsx(styles.imageColumn, {

@@ -7,8 +7,7 @@ import styles from './full-screen-player-queue.module.css';
 
 import { Lyrics } from '/@/renderer/features/lyrics/lyrics';
 import { PlayQueue } from '/@/renderer/features/now-playing/components/play-queue';
-import { FullScreenSimilarSongs } from '/@/renderer/features/player/components/full-screen-similar-songs';
-import { useListSettings, usePlaybackSettings, useSettingsStore } from '/@/renderer/store';
+import { usePlaybackSettings, useSettingsStore } from '/@/renderer/store';
 import {
     useFullScreenPlayerStore,
     useFullScreenPlayerStoreActions,
@@ -31,16 +30,13 @@ const ButterchurnVisualizer = lazy(() =>
 );
 
 const isDesktopPanelOpen = (activeTab: string, webAudio: boolean) =>
-    activeTab === 'queue' ||
-    activeTab === 'related' ||
-    activeTab === 'lyrics' ||
-    (activeTab === 'visualizer' && webAudio);
+    activeTab === 'queue' || activeTab === 'lyrics' || (activeTab === 'visualizer' && webAudio);
 
 const moduleContentVariants: Variants = {
     animate: {
         opacity: 1,
         transition: {
-            duration: 0.4,
+            duration: 0.15,
             ease: 'easeOut',
         },
         x: 0,
@@ -48,14 +44,14 @@ const moduleContentVariants: Variants = {
     exit: {
         opacity: 0,
         transition: {
-            duration: 0.4,
+            duration: 0,
             ease: 'easeOut',
         },
-        x: '10%',
+        x: 0,
     },
     initial: {
         opacity: 0,
-        x: '10%',
+        x: 0,
     },
 };
 
@@ -83,12 +79,6 @@ const Controls = () => {
                 icon: 'queue',
                 label: t('page.fullscreenPlayer.upNext'),
                 onClick: () => toggleTab('queue'),
-            },
-            {
-                active: activeTab === 'related',
-                icon: 'related',
-                label: t('page.fullscreenPlayer.related'),
-                onClick: () => toggleTab('related'),
             },
             {
                 active: activeTab === 'lyrics',
@@ -121,6 +111,7 @@ const Controls = () => {
             {headerItems.map((item) => (
                 <div key={`tab-${item.label}`}>
                     <ActionIcon
+                        aria-pressed={item.active}
                         icon={item.icon}
                         iconProps={{
                             color: item.active ? 'primary' : undefined,
@@ -142,10 +133,6 @@ export const FullScreenPlayerQueue = () => {
     const { activeTab } = useFullScreenPlayerStore();
     const { webAudio } = usePlaybackSettings();
     const visualizerType = useSettingsStore((store) => store.visualizer.type);
-    const { table } = useListSettings(ItemListKey.FULL_SCREEN) || {};
-    const queueContainerClassName = clsx(styles.queueContainer, {
-        [styles.queueContainerFadeTopBottom]: !table?.enableHeader,
-    });
     const isPanelOpen = isDesktopPanelOpen(activeTab, webAudio);
     const isCollapsed = !isPanelOpen;
 
@@ -159,7 +146,7 @@ export const FullScreenPlayerQueue = () => {
                 {activeTab === 'queue' ? (
                     <motion.div
                         animate="animate"
-                        className={queueContainerClassName}
+                        className={styles.queueContainer}
                         exit="exit"
                         initial="initial"
                         key="queue"
@@ -170,17 +157,6 @@ export const FullScreenPlayerQueue = () => {
                             listKey={ItemListKey.FULL_SCREEN}
                             searchTerm={undefined}
                         />
-                    </motion.div>
-                ) : activeTab === 'related' ? (
-                    <motion.div
-                        animate="animate"
-                        className={queueContainerClassName}
-                        exit="exit"
-                        initial="initial"
-                        key="related"
-                        variants={moduleContentVariants}
-                    >
-                        <FullScreenSimilarSongs />
                     </motion.div>
                 ) : activeTab === 'lyrics' ? (
                     <motion.div

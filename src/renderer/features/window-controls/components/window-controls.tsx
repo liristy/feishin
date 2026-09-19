@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import isElectron from 'is-electron';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import styles from './window-controls.module.css';
@@ -13,24 +12,14 @@ const close = () => browser?.exit();
 
 const minimize = () => browser?.minimize();
 
-const maximize = () => browser?.maximize();
-
-const unmaximize = () => browser?.unmaximize();
+const toggleMaximize = () => browser?.toggleMaximize();
 
 export const WindowControls = () => {
     const { t } = useTranslation();
-    const [max, setMax] = useState(false);
 
     const handleMinimize = () => minimize();
 
-    const handleMaximize = () => {
-        if (max) {
-            unmaximize();
-        } else {
-            maximize();
-        }
-        setMax(!max);
-    };
+    const handleMaximize = () => toggleMaximize();
 
     const handleClose = () => close();
 

@@ -22,10 +22,24 @@
     overflow: visible;
 }
 
+.reveal-on-hover {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    &:hover,
+    &:has(:focus-visible) {
+        opacity: 1;
+    }
+}
+
 .left-grid-item {
     width: 100%;
     height: 100%;
     overflow: hidden;
+}
+
+.hidden {
+    visibility: hidden;
 }
 
 .center-grid-item {

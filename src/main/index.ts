@@ -503,8 +503,15 @@ export const sendToastToRenderer = ({
 };
 
 const createWinThumbarButtons = () => {
-    if (isWindows()) {
-        getMainWindow()?.setThumbarButtons([
+    const window = getMainWindow();
+    if (
+        isWindows() &&
+        window &&
+        !window.isDestroyed() &&
+        (window.isVisible() || window.isMinimized())
+    ) {
+        const isPlaying = currentPlaybackStatus === PlayerStatus.PLAYING;
+        const added = window.setThumbarButtons([
             {
                 click: () => getMainWindow()?.webContents.send('renderer-player-previous'),
                 icon: nativeImage.createFromPath(getAssetPath('skip-previous.png')),
@@ -512,8 +519,10 @@ const createWinThumbarButtons = () => {
             },
             {
                 click: () => getMainWindow()?.webContents.send('renderer-player-play-pause'),
-                icon: nativeImage.createFromPath(getAssetPath('play-circle.png')),
-                tooltip: 'Play/Pause',
+                icon: nativeImage.createFromPath(
+                    getAssetPath(isPlaying ? 'pause-circle.png' : 'play-circle.png'),
+                ),
+                tooltip: isPlaying ? 'Pause' : 'Play',
             },
             {
                 click: () => getMainWindow()?.webContents.send('renderer-player-next'),
@@ -521,6 +530,7 @@ const createWinThumbarButtons = () => {
                 tooltip: 'Next Track',
             },
         ]);
+        if (!added) log.debug('Windows taskbar is not ready for thumbnail controls');
     }
 };
 
@@ -690,6 +700,11 @@ async function createWindow(first = true): Promise<void> {
         mainWindow?.maximize();
     });
 
+    ipcMain.on('window-toggle-maximize', () => {
+        if (mainWindow?.isMaximized()) mainWindow.unmaximize();
+        else mainWindow?.maximize();
+    });
+
     ipcMain.on('window-unmaximize', () => {
         mainWindow?.unmaximize();
     });
@@ -752,6 +767,15 @@ async function createWindow(first = true): Promise<void> {
     }
 
     const startWindowMinimized = store.get('window_start_minimized', false) as boolean;
+
+    // Hidden windows have no taskbar button. Register only after showing, including
+    // when returning from the tray; playback updates while hidden must not register.
+    let thumbarRefresh: ReturnType<typeof setTimeout> | undefined;
+    mainWindow.on('show', () => {
+        clearTimeout(thumbarRefresh);
+        thumbarRefresh = setTimeout(createWinThumbarButtons, 250);
+    });
+    mainWindow.on('closed', () => clearTimeout(thumbarRefresh));
 
     mainWindow.on('ready-to-show', () => {
         // mainWindow.show()
@@ -1248,6 +1272,7 @@ if (!ipcMain.eventNames().includes('open-application-directory')) {
 
 ipcMain.on('update-playback', (_event, status: PlayerStatus) => {
     currentPlaybackStatus = status;
+    createWinThumbarButtons();
 
     if (!isMacOS()) return;
 

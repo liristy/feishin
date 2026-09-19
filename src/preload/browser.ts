@@ -8,6 +8,10 @@ const maximize = () => {
     ipcRenderer.send('window-maximize');
 };
 
+const toggleMaximize = () => {
+    ipcRenderer.send('window-toggle-maximize');
+};
+
 const minimize = () => {
     ipcRenderer.send('window-minimize');
 };
@@ -35,6 +39,7 @@ export const browser = {
     maximize,
     minimize,
     quit,
+    toggleMaximize,
     unmaximize,
 };
 

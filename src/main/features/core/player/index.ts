@@ -247,6 +247,16 @@ const createMpv = async (data: {
     };
 
     mpv.on('status', (status) => {
+        // Modern mpv reports external/SMTC pause changes as observed properties,
+        // not the deprecated pause/unpause events used by node-mpv.
+        if (
+            status.property === 'pause' &&
+            typeof status.value === 'boolean' &&
+            previousPlaylistPos !== undefined &&
+            previousPlaylistPos >= 0
+        ) {
+            sendIfCurrent(status.value ? 'renderer-player-pause' : 'renderer-player-play');
+        }
         if (status.property === 'playlist-pos') {
             const currentPos = typeof status.value === 'number' ? status.value : undefined;
 
@@ -284,19 +294,9 @@ const createMpv = async (data: {
         }
     });
 
-    // Automatically updates the play button when the player is playing
-    mpv.on('resumed', () => {
-        sendIfCurrent('renderer-player-play');
-    });
-
     // Automatically updates the play button when the player is stopped
     mpv.on('stopped', () => {
         sendIfCurrent('renderer-player-stop');
-    });
-
-    // Automatically updates the play button when the player is paused
-    mpv.on('paused', () => {
-        sendIfCurrent('renderer-player-pause');
     });
 
     // Event output every interval set by time_update, used to update the current time
@@ -943,10 +943,7 @@ process.on('uncaughtException', async (error) => {
     });
 });
 
-// Handle unhandled rejections - cleanup mpv
-process.on('unhandledRejection', async (reason) => {
+// Background task failures (e.g. update downloads) must not stop the active player.
+process.on('unhandledRejection', (reason) => {
     log.error('Unhandled rejection:', reason);
-    await cleanupMpv(true).catch(() => {
-        // Ignore cleanup errors
-    });
 });

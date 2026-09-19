@@ -29,6 +29,7 @@ export interface UseLyricsAnimationEngineOptions {
     paddingLeft?: number;
     paddingRight?: number;
     scrollContainerId: string;
+    userScrollingRef?: React.RefObject<boolean>;
 }
 
 export const useLyricsAnimationEngine = ({
@@ -46,6 +47,7 @@ export const useLyricsAnimationEngine = ({
     paddingLeft,
     paddingRight,
     scrollContainerId,
+    userScrollingRef,
 }: UseLyricsAnimationEngineOptions) => {
     const internalAnimStateRef = useRef<AnimEngineState>(createAnimEngineState());
     const animStateRef = externalAnimStateRef ?? internalAnimStateRef;
@@ -125,7 +127,7 @@ export const useLyricsAnimationEngine = ({
             return tickLyricsAnimation(animStateRef.current, {
                 currentTimeMs,
                 eventCreationTime: options?.eventCreationTime ?? Date.now(),
-                follow: followRef?.current ?? true,
+                follow: (followRef?.current ?? true) && !userScrollingRef?.current,
                 followScrollAlignment: followScrollAlignmentRef?.current ?? 0,
                 forceResync: options?.forceResync ?? false,
                 isPlaying,

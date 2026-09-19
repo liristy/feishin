@@ -24,6 +24,7 @@ import {
     usePlaylistFolderViewState,
     usePlaylistNavigationState,
 } from '/@/renderer/features/sidebar/components/playlist-folder-tree';
+import { useSidebarPlaylistSort } from '/@/renderer/features/sidebar/hooks/use-sidebar-playlist-sort';
 import { useDragDrop } from '/@/renderer/hooks/use-drag-drop';
 import { useDragMonitor } from '/@/renderer/hooks/use-drag-monitor';
 import { AppRoute } from '/@/renderer/router/routes';
@@ -48,13 +49,7 @@ import { Icon } from '/@/shared/components/icon/icon';
 import { LoadingOverlay } from '/@/shared/components/loading-overlay/loading-overlay';
 import { Text } from '/@/shared/components/text/text';
 import { useLocalStorage } from '/@/shared/hooks/use-local-storage';
-import {
-    LibraryItem,
-    Playlist,
-    PlaylistListSort,
-    Song,
-    SortOrder,
-} from '/@/shared/types/domain-types';
+import { LibraryItem, Playlist, Song } from '/@/shared/types/domain-types';
 import { DragData, DragOperation, DragTarget } from '/@/shared/types/drag-and-drop';
 import { Play } from '/@/shared/types/types';
 
@@ -388,6 +383,7 @@ export const SidebarPlaylistList = () => {
     const player = usePlayer();
     const { t } = useTranslation();
     const server = useCurrentServer();
+    const playlistSort = useSidebarPlaylistSort();
     const sidebarPlaylistSorting = useSidebarPlaylistSorting();
     const { setSettings } = useSettingsStoreActions();
     const filterRegex = useSidebarPlaylistListFilterRegex();
@@ -395,8 +391,7 @@ export const SidebarPlaylistList = () => {
     const playlistsQuery = useQuery(
         playlistsQueries.list({
             query: {
-                sortBy: PlaylistListSort.NAME,
-                sortOrder: SortOrder.ASC,
+                ...playlistSort,
                 startIndex: 0,
             },
             serverId: server?.id,
@@ -668,14 +663,14 @@ export const SidebarSharedPlaylistList = () => {
     const player = usePlayer();
     const { t } = useTranslation();
     const server = useCurrentServer();
+    const playlistSort = useSidebarPlaylistSort();
     const sidebarPlaylistSorting = useSidebarPlaylistSorting();
     const filterRegex = useSidebarPlaylistListFilterRegex();
 
     const playlistsQuery = useQuery(
         playlistsQueries.list({
             query: {
-                sortBy: PlaylistListSort.NAME,
-                sortOrder: SortOrder.ASC,
+                ...playlistSort,
                 startIndex: 0,
             },
             serverId: server?.id,

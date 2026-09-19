@@ -22,7 +22,7 @@ const utils = isElectron() ? window.api.utils : null;
 const mpris = isElectron() && utils?.isLinux() ? window.api.mpris : null;
 
 export const LYRICS_SCROLL_CONTAINER_ID = 'sychronized-lyrics-scroll-container';
-export const MANUAL_SCROLL_PAUSE_MS = 2000;
+export const MANUAL_SCROLL_PAUSE_MS = 1000;
 const MANUAL_SCROLL_DRIFT_PX = 3;
 
 export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: number) => {
@@ -127,6 +127,9 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
     );
 
     const resumeAutoscroll = useCallback(() => {
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+        }
         userScrollingRef.current = false;
         resumeLyricsAutoscroll(scrollAnimStateRef.current);
     }, []);
@@ -140,9 +143,11 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
         }
 
         scrollTimeoutRef.current = setTimeout(() => {
-            userScrollingRef.current = false;
+            if (!containerRef.current?.matches(':hover')) {
+                resumeAutoscroll();
+            }
         }, MANUAL_SCROLL_PAUSE_MS);
-    }, []);
+    }, [resumeAutoscroll]);
 
     const containerStyle = useMemo(
         () =>
@@ -157,7 +162,10 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
     const hideScrollbar = useCallback(() => {
         const doc = document.getElementById(LYRICS_SCROLL_CONTAINER_ID) as HTMLElement;
         doc?.classList.add('hide-scrollbar');
-    }, []);
+        if (userScrollingRef.current) {
+            pauseManualScrollFollow();
+        }
+    }, [pauseManualScrollFollow]);
 
     const showScrollbar = useCallback(() => {
         const doc = document.getElementById(LYRICS_SCROLL_CONTAINER_ID) as HTMLElement;
@@ -203,6 +211,12 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
             pauseManualScrollFollow();
         };
 
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (['ArrowDown', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp'].includes(event.key)) {
+                pauseManualScrollFollow();
+            }
+        };
+
         const handleScroll = () => {
             const scrollState = scrollAnimStateRef.current.scroll;
             const isProgrammatic = Date.now() < scrollState.programmaticScrollUntil;
@@ -237,11 +251,15 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
 
         container.addEventListener('wheel', handleWheel, { passive: true });
         container.addEventListener('touchstart', handleTouchStart, { passive: true });
+        container.addEventListener('pointerdown', handleTouchStart, { passive: true });
+        container.addEventListener('keydown', handleKeyDown);
         container.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => {
             container.removeEventListener('wheel', handleWheel);
             container.removeEventListener('touchstart', handleTouchStart);
+            container.removeEventListener('pointerdown', handleTouchStart);
+            container.removeEventListener('keydown', handleKeyDown);
             container.removeEventListener('scroll', handleScroll);
 
             if (scrollTimeoutRef.current) {

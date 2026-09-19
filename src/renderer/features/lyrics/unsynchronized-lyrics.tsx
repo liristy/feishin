@@ -75,6 +75,7 @@ export const UnsynchronizedLyrics = ({
                 {settings.showMatch && (
                     <LyricLine
                         alignment={settings.alignment}
+                        data-lyrics-match
                         fontSize={settings.fontSizeUnsync}
                         text={`${name} — ${artist}`}
                     />

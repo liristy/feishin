@@ -21,6 +21,7 @@ export const PlayerButton = forwardRef<HTMLButtonElement, PlayerButtonProps>(
             return (
                 <Tooltip {...tooltip}>
                     <ActionIcon
+                        aria-pressed={isActive}
                         className={clsx({
                             [styles.active]: isActive,
                         })}
@@ -40,6 +41,7 @@ export const PlayerButton = forwardRef<HTMLButtonElement, PlayerButtonProps>(
 
         return (
             <ActionIcon
+                aria-pressed={isActive}
                 className={clsx(styles.playerButton, styles[variant], {
                     [styles.active]: isActive,
                 })}

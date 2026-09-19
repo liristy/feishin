@@ -374,6 +374,7 @@ export const DlnaCastButton = () => {
         <Popover onChange={setShowPopover} opened={showPopover} position="top">
             <Popover.Target>
                 <ActionIcon
+                    aria-pressed={isConnected}
                     icon="cast"
                     iconProps={{ color: isConnected ? 'primary' : undefined, size: 'lg' }}
                     onClick={(e) => {

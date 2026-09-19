@@ -9,8 +9,10 @@ import styles from './playerbar-waveform.module.css';
 import { useSongUrl } from '/@/renderer/features/player/audio-player/hooks/use-stream-url';
 import { PlayerbarSeekSlider } from '/@/renderer/features/player/components/playerbar-seek-slider';
 import { usePlayer } from '/@/renderer/features/player/context/player-context';
+import { setPlayerWaveform } from '/@/renderer/features/player/utils/player-waveform';
 import {
     BarAlign,
+    useFullScreenPlayerStore,
     usePlaybackSettings,
     usePlayerbarSlider,
     usePlayerSong,
@@ -45,7 +47,9 @@ export const PlayerbarWaveform = () => {
     });
 
     const { color } = useAppThemeColors();
+    const expanded = useFullScreenPlayerStore((state) => state.expanded);
     const primaryColor = (color['--theme-colors-primary'] as string) || 'rgb(53, 116, 252)';
+    const progressColor = expanded ? 'rgb(255, 255, 255)' : primaryColor;
 
     const colorScheme = useColorScheme();
 
@@ -75,6 +79,10 @@ export const PlayerbarWaveform = () => {
         waveColor,
     });
 
+    useEffect(() => {
+        wavesurfer?.setOptions({ progressColor });
+    }, [progressColor, wavesurfer]);
+
     // Reset loading state when stream URL changes and ensure media is muted
     useEffect(() => {
         setIsLoading(true);
@@ -94,11 +102,17 @@ export const PlayerbarWaveform = () => {
         // track and hide the seek bar over an empty/stale waveform).
         let cancelled = false;
         let loadStarted = false;
+        let releaseWaveform: (() => void) | undefined;
 
         const handleReady = () => {
             if (cancelled || !loadStarted) return;
             setIsLoading(false);
             setHasError(false);
+            const audio = wavesurfer.getDecodedData();
+            if (audio && currentSong?._uniqueId) {
+                releaseWaveform?.();
+                releaseWaveform = setPlayerWaveform(currentSong._uniqueId, audio);
+            }
             const mediaElement = wavesurfer.getMediaElement();
             if (mediaElement) {
                 mediaElement.muted = true;
@@ -116,6 +130,7 @@ export const PlayerbarWaveform = () => {
             if (error instanceof Error && error.name === 'AbortError') return;
             setIsLoading(false);
             setHasError(true);
+            releaseWaveform?.();
         };
 
         wavesurfer.on('ready', handleReady);
@@ -125,24 +140,19 @@ export const PlayerbarWaveform = () => {
             () => {
                 if (cancelled) return;
                 loadStarted = true;
-                wavesurfer.load(streamUrl).catch((error: unknown) => {
-                    if (cancelled || (error instanceof Error && error.name === 'AbortError')) {
-                        return;
-                    }
-                    setIsLoading(false);
-                    setHasError(true);
-                });
+                wavesurfer.load(streamUrl).catch(handleError);
             },
             playerbarSlider?.loadingDelay ? playerbarSlider.loadingDelay * 1000 : 2000,
         );
 
         return () => {
             cancelled = true;
+            releaseWaveform?.();
             wavesurfer.un('ready', handleReady);
             wavesurfer.un('error', handleError);
             clearTimeout(waveformTimeout);
         };
-    }, [wavesurfer, streamUrl, playerbarSlider.loadingDelay]);
+    }, [wavesurfer, streamUrl, playerbarSlider.loadingDelay, currentSong?._uniqueId]);
 
     useEffect(() => {
         if (!wavesurfer) return;
@@ -358,7 +368,7 @@ export const PlayerbarWaveform = () => {
             const ratio = currentTime / duration;
             wavesurfer.seekTo(ratio);
         }
-    }, [wavesurfer, currentTime, songDuration, isDragging]);
+    }, [wavesurfer, currentTime, songDuration, isDragging, isLoading, progressColor]);
 
     // Show disabled slider when there's no current song
     if (!currentSong) {

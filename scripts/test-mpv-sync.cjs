@@ -91,7 +91,7 @@ function loadSource(file, mocks, extra = '') {
     const source = fs.readFileSync(path.join(root, file), 'utf8') + extra;
     const code = compile(source, file);
     const module = { exports: {} };
-    const fakeProcess = { ...process, on() {}, resourcesPath: root };
+    const fakeProcess = { ...process, on() {}, resourcesPath: root, ...mocks.process };
     vm.runInNewContext(
         code,
         {
@@ -113,8 +113,9 @@ function loadSource(file, mocks, extra = '') {
 
 async function mainTests() {
     const events = [],
-        handlers = new Map();
-    loadSource('src/main/features/core/player/index.ts', {
+        handlers = new Map(),
+        processHandlers = new Map();
+    const player = loadSource('src/main/features/core/player/index.ts', {
         '../../../index': {
             getMainWindow: () => ({
                 webContents: { send: (...args) => events.push(structuredClone(args)) },
@@ -130,10 +131,16 @@ async function mainTests() {
             powerMonitor: { on() {} },
         },
         'node-mpv': FakeMpv,
+        process: { on: (name, handler) => processHandlers.set(name, handler) },
     });
     const call = (name, ...args) => handlers.get(name)({}, ...args);
     await call('player-initialize', {});
     const mpv = FakeMpv.instance;
+    mpv.emit('status', { property: 'pause', value: false });
+    assert.ok(
+        !events.some((e) => e[0] === 'renderer-player-play'),
+        'Idle initial pause property must not start playback',
+    );
     assert.equal(mpv.options.binary, path.join(root, 'assets/mpv', process.arch, 'mpv.exe'));
     const slow = deferred();
     mpv.delays.set('A', slow);
@@ -146,6 +153,14 @@ async function mainTests() {
     await first;
     slow.resolve();
     assert.deepEqual(mpv.list, ['B', 'B-next']);
+    const beforePause = events.length;
+    mpv.emit('status', { property: 'pause', value: true });
+    mpv.emit('status', { property: 'pause', value: false });
+    assert.deepEqual(
+        events.slice(beforePause).map((e) => e[0]),
+        ['renderer-player-pause', 'renderer-player-play'],
+        'External pause/resume must update the renderer without legacy events',
+    );
     assert.ok(!mpv.calls.some((c) => c[1] === 'A-next'));
     await Promise.all([
         call('player-set-queue-next', 'C', 'C'),
@@ -190,6 +205,10 @@ async function mainTests() {
     );
     await call('player-set-queue', 'recovered', undefined, true);
     assert.deepEqual(mpv.list, ['recovered']);
+    await processHandlers.get('unhandledRejection')(new Error('net::ERR_NETWORK_CHANGED'));
+    assert.equal(player.getMpvInstance(), mpv, 'update failures must not tear down MPV');
+    await call('player-set-queue', 'after-update-failure', undefined, false);
+    assert.deepEqual(mpv.list, ['after-update-failure']);
     mpv.socket.emit('message', { event: 'end-file', reason: 'eof' });
     await tick();
     assert.equal(events.filter((e) => e[0] === 'renderer-player-track-ended').length, ending);
@@ -204,6 +223,13 @@ async function mainTests() {
     await call('player-set-queue', 'manual-stop', undefined, true);
     mpv.socket.emit('message', { event: 'end-file', reason: 'stop' });
     await call('player-stop');
+    const stoppedEvents = events.length;
+    mpv.emit('status', { property: 'pause', value: false });
+    assert.equal(
+        events.length,
+        stoppedEvents,
+        'Idle property changes must not resume a stopped player',
+    );
     assert.equal(events.filter((e) => e[0] === 'renderer-player-track-ended').length, ending + 1);
     console.log(
         'MPV IPC: latest replacement, serialized next edits, advance deduplication, failure and recovery passed.',

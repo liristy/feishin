@@ -85,12 +85,6 @@
     padding-bottom: var(--theme-spacing-sm);
 }
 
-.footer {
-    flex-shrink: 0;
-    padding: var(--theme-spacing-sm) var(--theme-spacing-md);
-    border-top: 1px solid color-mix(in srgb, var(--theme-colors-foreground) 5%, transparent);
-}
-
 .accordion-content {
     padding: 0;
     background: var(--theme-colors-background-alternate);

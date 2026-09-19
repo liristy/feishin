@@ -14,6 +14,7 @@ import {
 import {
     PlayerItem,
     useFullScreenPlayerStore,
+    useFullScreenPlayerStoreActions,
     useGeneralSettings,
     useNativeAspectRatio,
     usePlayerData,
@@ -96,7 +97,8 @@ const ImageWithPlaceholder = ({
 
 export const FullScreenPlayerImage = () => {
     const { t } = useTranslation();
-    const mainImageRef = useRef<HTMLImageElement | null>(null);
+    const mainImageRef = useRef<HTMLButtonElement | null>(null);
+    const { setStore } = useFullScreenPlayerStoreActions();
     const [imageContainerWidth, setImageContainerWidth] = useState<null | number>(null);
 
     const isRadioActive = useIsRadioActive();
@@ -172,7 +174,9 @@ export const FullScreenPlayerImage = () => {
         release_type: currentSong?.tags?.releasetype && (
             <Badge>{currentSong?.tags?.releasetype[0]}</Badge>
         ),
-        release_year: currentSong?.releaseYear && <Badge>{currentSong?.releaseYear}</Badge>,
+        release_year: (currentSong?.releaseYear || currentSong?.year) && (
+            <Badge>{currentSong?.releaseYear || currentSong?.year}</Badge>
+        ),
         sample_rate: currentSong?.sampleRate && <Badge>{currentSong?.sampleRate / 1000} kHz</Badge>,
         track_number: currentSong?.trackNumber && (
             <Badge>
@@ -263,13 +267,22 @@ export const FullScreenPlayerImage = () => {
             p="1rem"
             w="100%"
         >
-            <div
+            <button
+                aria-label={t('common.minimize')}
                 className={styles.imageContainer}
+                onClick={() =>
+                    setStore({
+                        expanded: false,
+                        visualizerExpanded: false,
+                        visualizerReturnToPlayer: false,
+                    })
+                }
                 ref={mainImageRef}
                 style={{
                     marginBottom: showMetadata ? '2rem' : undefined,
                     maxHeight: `${coverArtSize}%`,
                 }}
+                type="button"
             >
                 <AnimatePresence initial={false} mode="sync">
                     {!isRadioActive && imageState.current === 0 && (
@@ -320,7 +333,7 @@ export const FullScreenPlayerImage = () => {
                         />
                     )}
                 </AnimatePresence>
-            </div>
+            </button>
             <SharedFullscreenPlayerMetadata imageContainerWidth={imageContainerWidth} />
         </Flex>
     );

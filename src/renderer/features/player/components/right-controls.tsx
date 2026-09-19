@@ -294,6 +294,7 @@ const AutoDJButton = () => {
         <Popover position="top-end" withArrow>
             <Popover.Target>
                 <Button
+                    aria-pressed={settings.enabled}
                     onClick={(e) => {
                         e.stopPropagation();
                     }}
@@ -357,6 +358,7 @@ const QueueButton = () => {
     if (sideQueueType === 'sideQueue') {
         return (
             <ActionIcon
+                aria-pressed={isSidebarRightExpanded}
                 icon={isSidebarRightExpanded ? 'panelRightClose' : 'panelRightOpen'}
                 iconProps={{ size: 'lg' }}
                 onClick={(e) => {
@@ -392,6 +394,7 @@ const LyricsButton = () => {
 
     return (
         <ActionIcon
+            aria-pressed={activeTab === 'lyrics' && isFullScreenPlayerExpanded}
             icon="microphone"
             iconProps={{
                 color: activeTab === 'lyrics' && isFullScreenPlayerExpanded ? 'primary' : undefined,
@@ -461,6 +464,7 @@ const FavoriteButton = () => {
     ]);
     return (
         <ActionIcon
+            aria-pressed={Boolean(currentSong?.userFavorite)}
             icon="favorite"
             iconProps={{ fill: currentSong?.userFavorite ? 'primary' : undefined, size: 'lg' }}
             onClick={(e) => {

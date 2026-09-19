@@ -44,6 +44,7 @@ export const PopoverPlayQueue = ({
         >
             <Popover.Target>
                 <ActionIcon
+                    aria-pressed={opened}
                     icon="arrowUpToLine"
                     iconProps={{
                         size: 'lg',

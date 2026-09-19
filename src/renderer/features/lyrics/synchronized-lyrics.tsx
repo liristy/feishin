@@ -70,6 +70,7 @@ export const SynchronizedLyrics = ({
         scrollAnimStateRef,
         settings,
         showScrollbar,
+        userScrollingRef,
     } = useSynchronizedLyricsBase(settingsKey, offsetMs);
 
     const effectiveFontSize = preview ? PREVIEW_FONT_SIZE : settings.fontSize;
@@ -100,6 +101,7 @@ export const SynchronizedLyrics = ({
         paddingLeft: effectivePaddingLeft,
         paddingRight: effectivePaddingRight,
         scrollContainerId: LYRICS_SCROLL_CONTAINER_ID,
+        userScrollingRef,
     });
 
     const syncAtTime = useCallback(
@@ -135,8 +137,6 @@ export const SynchronizedLyrics = ({
             const timeInMs = timestamp * 1000 + delayMsRef.current;
 
             if (Math.abs(timeInMs - lastSyncedTimeRef.current) > SEEK_DETECT_THRESHOLD_MS) {
-                resumeAutoscroll();
-                resumeEngineAutoscroll();
                 syncAtTime(timeInMs, true, true);
             } else {
                 syncAtTime(timeInMs, true);
@@ -146,7 +146,7 @@ export const SynchronizedLyrics = ({
         };
 
         rafRef.current = requestAnimationFrame(runTick);
-    }, [delayMsRef, resumeAutoscroll, resumeEngineAutoscroll, stopRaf, syncAtTime]);
+    }, [delayMsRef, stopRaf, syncAtTime]);
 
     const syncFromCurrentTimestamp = useCallback(() => {
         const timestamp = useTimestampStoreBase.getState().timestamp;
@@ -216,20 +216,20 @@ export const SynchronizedLyrics = ({
             }
 
             if (Math.abs(timeInMs - lastSyncedTimeRef.current) > SEEK_DETECT_THRESHOLD_MS) {
-                resumeAutoscroll();
-                resumeEngineAutoscroll();
                 syncAtTime(timeInMs, true, true);
             }
         });
 
         return unsubscribe;
-    }, [delayMsRef, resumeAutoscroll, resumeEngineAutoscroll, syncAtTime]);
+    }, [delayMsRef, syncAtTime]);
 
     const handleContainerClick = useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
-            resumeAutoscroll();
-            resumeEngineAutoscroll();
-            handleLineClick(event);
+            if ((event.target as HTMLElement).closest('[data-lyric-time]')) {
+                resumeAutoscroll();
+                resumeEngineAutoscroll();
+                handleLineClick(event);
+            }
         },
         [handleLineClick, resumeAutoscroll, resumeEngineAutoscroll],
     );
@@ -277,6 +277,7 @@ export const SynchronizedLyrics = ({
                 {settings.showMatch && (
                     <LyricLine
                         alignment={settings.alignment}
+                        data-lyrics-match
                         fontSize={effectiveFontSize}
                         text={`${name} — ${artist}`}
                     />
