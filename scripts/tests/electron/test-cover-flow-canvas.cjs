@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Run: pnpm exec electron scripts/test-cover-flow-canvas.cjs
+// Run: pnpm exec electron scripts/tests/electron/test-cover-flow-canvas.cjs
 const { app, BrowserWindow } = require('electron');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

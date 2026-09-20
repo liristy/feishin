@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
-// Run: node scripts/test-fullscreen-interaction.cjs
+// Run: node scripts/tests/unit/test-fullscreen-interaction.cjs
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');

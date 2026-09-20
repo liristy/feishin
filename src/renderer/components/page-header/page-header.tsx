@@ -102,7 +102,10 @@ const BasePageHeader = ({
     return (
         <>
             <Flex
-                className={clsx(styles.container, withTopSpacing && styles.withTopSpacing)}
+                className={clsx(styles.container, {
+                    [styles.scrollHeader]: !!scrollContainerRef,
+                    [styles.withTopSpacing]: withTopSpacing,
+                })}
                 data-visible="false"
                 ref={ref}
                 style={{ height, position: position as CSSProperties['position'] }}

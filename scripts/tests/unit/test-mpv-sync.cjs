@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-empty-function */
-// Run with: node scripts/test-mpv-sync.cjs
+// Run with: node scripts/tests/unit/test-mpv-sync.cjs
 // Exercise the production IPC handlers and renderer URL resolution with controlled async races.
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
@@ -17,7 +17,7 @@ const compile = (source, fileName) =>
         },
         fileName,
     }).outputText;
-const root = path.resolve(__dirname, '..');
+const root = path.resolve(__dirname, '../../..');
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 const deferred = () => {
     let reject, resolve;

@@ -13,7 +13,7 @@ const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 async function prepare(context) {
     if (context && context.electronPlatformName !== 'win32') return;
     if (context && require('electron-builder').Arch[context.arch] !== 'x64') return;
-    const root = path.resolve(__dirname, '..');
+    const root = path.resolve(__dirname, '../..');
     const destination = path.join(root, 'assets/mpv/x64');
     const binary = path.join(destination, 'mpv.exe');
     if (

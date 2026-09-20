@@ -16,6 +16,38 @@
     opacity: 1;
 }
 
+.scroll-header {
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s;
+
+    .title-wrapper {
+        padding-top: var(--theme-spacing-sm);
+        transform: translateY(4px);
+        transition: transform 0.2s ease;
+    }
+
+    .title-wrapper :is(h1, h2, h3, h4, h5, h6) {
+        font-size: var(--theme-font-size-xl);
+        line-height: 1.4;
+    }
+
+    &[data-visible='true'] .title-wrapper {
+        transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        &,
+        .title-wrapper {
+            transition: none;
+        }
+
+        .title-wrapper {
+            transform: none;
+        }
+    }
+}
+
 .container.with-top-spacing {
     height: 89px;
 

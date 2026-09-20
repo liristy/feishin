@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
 // Build first: pnpm build:electron
-// Run: node node_modules/electron/cli.js scripts/test-playerbar-layout-electron.cjs
+// Run: node node_modules/electron/cli.js scripts/tests/electron/test-playerbar-layout-electron.cjs
 // Real app in an isolated profile; all external requests are blocked.
 const { app, session } = require('electron');
 const assert = require('node:assert/strict');

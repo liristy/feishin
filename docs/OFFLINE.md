@@ -18,8 +18,8 @@ MPV 和内置播放器优先使用本地歌曲。内置播放器能否解码原�
 ## 验证
 
 ```sh
-node scripts/test-offline.cjs
-node node_modules/electron/cli.js scripts/test-offline-electron.cjs
+node scripts/tests/unit/test-offline.cjs
+node node_modules/electron/cli.js scripts/tests/electron/test-offline-electron.cjs
 pnpm build:electron
 pnpm build:web
 ```

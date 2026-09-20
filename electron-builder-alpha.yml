@@ -2,7 +2,7 @@ appId: org.jeffvli.feishin
 productName: Feishin
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 electronVersion: 43.4.1
-beforePack: scripts/prepare-mpv.cjs
+beforePack: scripts/build/prepare-mpv.cjs
 directories:
     buildResources: assets
 files:

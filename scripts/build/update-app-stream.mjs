@@ -11,7 +11,7 @@ const replaceIfVersionMissing = flags.includes('--replace-if-version-missing');
 
 if (positionalArgs.length > 3) {
     console.error(
-        'Usage: node update-app-stream.js [package-file] [date] [metainfo-file] [--replace-if-version-missing]',
+        'Usage: node scripts/build/update-app-stream.mjs [package-file] [date] [metainfo-file] [--replace-if-version-missing]',
     );
     process.exit(1);
 }
@@ -24,7 +24,8 @@ const version = packageJson.version;
 
 const time = Math.floor((Date.parse(positionalArgs[1]) || Date.now()) / 1000);
 const metainfoFile =
-    positionalArgs[2] || path.resolve(process.cwd(), 'org.jeffvli.feishin.metainfo.xml');
+    positionalArgs[2] ||
+    path.resolve(process.cwd(), 'build/linux/org.jeffvli.feishin.metainfo.xml');
 
 const parser = new XMLParser({ ignoreAttributes: false });
 const metainfoContent = fs.readFileSync(metainfoFile, 'utf8');

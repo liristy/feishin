@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-empty-function */
-// Run: node scripts/test-offline.cjs
+// Run: node scripts/tests/unit/test-offline.cjs
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');

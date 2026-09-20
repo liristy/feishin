@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
-// Run with: node scripts/test-favorites-sorting.cjs
+// Run with: node scripts/tests/unit/test-favorites-sorting.cjs
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -37,7 +37,7 @@ function load(id) {
     if (mocks[id]) return mocks[id];
     if (!id.startsWith('/@/')) return require(id);
     if (cache.has(id)) return cache.get(id).exports;
-    const file = path.resolve(__dirname, '../src', id.slice(3)) + '.ts';
+    const file = path.resolve(__dirname, '../../../src', id.slice(3)) + '.ts';
     const module = { exports: {} };
     cache.set(id, module);
     const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {

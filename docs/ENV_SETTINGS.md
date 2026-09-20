@@ -1,6 +1,6 @@
 # Environment variables for settings (web / Docker)
 
-These variables override app settings **on first run** when no persisted settings exist. They are injected via `settings.js` (from `settings.js.template`) and only apply to the **web** build.
+These variables override app settings **on first run** when no persisted settings exist. They are injected via `settings.js` (from [`build/docker/settings.js.template`](../build/docker/settings.js.template)) and only apply to the **web** build.
 
 **Format:** All values are strings; booleans use `true`/`false`, numbers are numeric strings. Leave unset or empty to use the default.
 

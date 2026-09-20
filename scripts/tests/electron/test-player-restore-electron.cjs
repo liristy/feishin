@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
-// Build first, then node scripts/test-player-restore-electron.cjs.
+// Build first, then node scripts/tests/electron/test-player-restore-electron.cjs.
 // Three separate app processes share only this test's temporary profile and silent WAV.
 const assert = require('node:assert/strict'),
     fs = require('node:fs'),

@@ -132,6 +132,21 @@ pnpm dev
 
 Windows x64 打包过程会准备并校验内置 MPV。开发环境下的准备方法及第三方许可见 [MPV 说明](assets/mpv/README.md)。
 
+## 仓库导航
+
+| 目录 | 内容 |
+| --- | --- |
+| `src/` | 桌面主进程、预加载接口、播放器界面、远程控制页面及共享代码 |
+| `assets/`、`resources/` | 应用运行资源、图标及 MPV 配置 |
+| `build/` | Docker 模板、Linux AppStream 元数据及 macOS 权限声明 |
+| `scripts/build/` | 构建和发布辅助脚本 |
+| `scripts/tests/` | 按 Node.js、Electron 和 Windows 工具分类的回归检查 |
+| `docs/` | 使用说明、开发约定和历史发布说明 |
+| `media/` | README 截图、标识及设计源文件 |
+| `.github/workflows/` | 检查、打包与发布工作流 |
+
+文档入口见[文档索引](docs/README.md)，测试与构建脚本的运行方法见[脚本说明](scripts/README.md)。`out/`、`dist/`、`node_modules/` 和 `.scratch/` 为本地产物或工作目录，不纳入 Git；临时截图、日志和安装备份统一保存在 `.scratch/`。
+
 ## 反馈、来源与许可
 
 本分支的问题请提交至[本仓库 Issues](https://github.com/liristy/feishin/issues)，并提供版本号、操作系统、服务器类型及复现步骤。提交日志或截图前，请移除密码、访问令牌、服务器地址及其他不宜公开的信息。

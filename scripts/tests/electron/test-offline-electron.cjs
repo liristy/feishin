@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-empty-function */
-// Run: node node_modules/electron/cli.js scripts/test-offline-electron.cjs
+// Run: node node_modules/electron/cli.js scripts/tests/electron/test-offline-electron.cjs
 // Uses an isolated temporary profile and Music directory, never the user's library.
 const { app, BrowserWindow } = require('electron');
 const assert = require('node:assert/strict');

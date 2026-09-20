@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
-// Build first, then: node node_modules/electron/cli.js scripts/test-download-management-electron.cjs
+// Build first, then: node node_modules/electron/cli.js scripts/tests/electron/test-download-management-electron.cjs
 // Real UI and IPC; deletion is restricted to this temporary profile's fixture files.
 const { app, session } = require('electron');
 const assert = require('node:assert/strict');

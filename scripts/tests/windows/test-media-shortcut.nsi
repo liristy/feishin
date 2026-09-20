@@ -1,4 +1,4 @@
-; makensis /DTEST_DIR=<absolute scratch directory> scripts/test-media-shortcut.nsi
+; makensis /DTEST_DIR=<absolute scratch directory> scripts/tests/windows/test-media-shortcut.nsi
 ; Run media-shortcut-test.exe silently; exit code 0 means all checks passed.
 !include LogicLib.nsh
 !define FEISHIN_MEDIA_SHORTCUT_DIR "$INSTDIR\start-menu\Feishin"

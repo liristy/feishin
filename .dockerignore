@@ -1,3 +1,12 @@
 node_modules
+out
+dist
+release
+.git
+.scratch
+.agents
+.claude
+.vscode
+*.log*
 Dockerfile
 docker-compose.*

@@ -14,12 +14,15 @@ Bug fixes are likely to be accepted without discussion.
 
 Feishin is built and tested with Node.js `v23.11.0` and pnpm `11.5.2`. Newer versions of Node.js are also supported.
 
+See the [documentation index](docs/README.md) and [build and test scripts](scripts/README.md) for repository navigation and regression checks.
+
 Useful development commands include:
 
 - `pnpm run dev` - Start the electron app development environment
 - `pnpm run dev:watch` - Start the electron app development environment with main process autoreloading
 - `pnpm run package:dev` - Quick unpacked production build
 - `pnpm run build:remote` - Manually rebuild the remote app if you make changes
+- `pnpm test` - Run Node.js regression checks
 
 ## AI Disclosure
 

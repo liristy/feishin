@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Run: node scripts/test-player-waveform.cjs
+// Run: node scripts/tests/unit/test-player-waveform.cjs
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');

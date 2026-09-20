@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type, react/prop-types */
-// Run with: node scripts/test-fullscreen-background.cjs
+// Run with: node scripts/tests/unit/test-fullscreen-background.cjs
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -79,7 +79,7 @@ const mocks = {
 };
 const file = path.resolve(
     __dirname,
-    '../src/renderer/features/player/components/full-screen-player.tsx',
+    '../../../src/renderer/features/player/components/full-screen-player.tsx',
 );
 const moduleUnderTest = { exports: {} };
 vm.runInNewContext(

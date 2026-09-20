@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
-// Run: pnpm exec electron scripts/test-text-scrolling.cjs
+// Run: pnpm exec electron scripts/tests/electron/test-text-scrolling.cjs
 const { app, BrowserWindow } = require('electron');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
