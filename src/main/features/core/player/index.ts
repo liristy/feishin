@@ -203,6 +203,11 @@ const createMpv = async (data: {
         ...DEFAULT_MPV_PARAMETERS(normalizedExtraParameters),
         ...normalizedExtraParameters,
     ]);
+    if (isWindows() && process.arch === 'x64' && resolvedBinaryPath) {
+        params.push(
+            `--script=${path.join(path.dirname(resolvedBinaryPath), '..', 'windows-app-id.lua')}`,
+        );
+    }
 
     const mpv = new MpvAPI(
         {

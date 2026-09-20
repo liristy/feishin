@@ -46,4 +46,6 @@ pnpm exec electron scripts/tests/electron/test-playerbar-layout-electron.cjs
 
 `tests/windows/test-media-shortcut.nsi` 是 NSIS 快捷方式检查脚本，需要安装 `makensis`，并通过 `/DTEST_DIR` 指定独立临时目录。具体调用方法见文件顶部说明。
 
+`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/tests/windows/test-media-identity.ps1` 使用内置 x64 mpv 和静音音频，验证 Windows 媒体会话使用 Feishin 的应用 ID。
+
 临时脚本、截图、日志及安装备份放入 `.scratch/`。需要长期保留的回归检查放入对应测试目录，并在本说明中补充运行方法。

@@ -31,10 +31,11 @@ const logger = { debug() {}, error() {}, info() {}, warn() {} };
 
 class FakeMpv extends EventEmitter {
     static instance;
-    constructor(options) {
+    constructor(options, params) {
         super();
         this.socket = new EventEmitter();
         this.options = options;
+        this.params = params;
         this.list = [];
         this.pos = -1;
         this.calls = [];
@@ -142,6 +143,10 @@ async function mainTests() {
         'Idle initial pause property must not start playback',
     );
     assert.equal(mpv.options.binary, path.join(root, 'assets/mpv', process.arch, 'mpv.exe'));
+    assert.ok(
+        mpv.params.includes(`--script=${path.join(root, 'assets/mpv/windows-app-id.lua')}`),
+        'Bundled MPV must use the Feishin application identity script',
+    );
     const slow = deferred();
     mpv.delays.set('A', slow);
     const first = call('player-set-queue', 'A', 'A-next', false, {

@@ -4,13 +4,9 @@
 !endif
 
 !macro customInstall
-  ; SMTC resolves the MPV process through a shortcut to its actual executable.
-  ; Leave the AppUserModelID unset so Windows can match the executable path.
-  ${If} ${FileExists} "$INSTDIR\resources\assets\mpv\x64\mpv.exe"
-    CreateDirectory "${FEISHIN_MEDIA_SHORTCUT_DIR}"
-    CreateShortCut "${FEISHIN_MEDIA_SHORTCUT_DIR}\Feishin.lnk" \
-      "$INSTDIR\resources\assets\mpv\x64\mpv.exe" "" "$INSTDIR\Feishin.exe" 0
-  ${EndIf}
+  ; Remove the legacy MPV shortcut. MPV now shares the real application's ID.
+  Delete "${FEISHIN_MEDIA_SHORTCUT_DIR}\Feishin.lnk"
+  RMDir "${FEISHIN_MEDIA_SHORTCUT_DIR}"
 !macroend
 
 !macro customUnInstall
