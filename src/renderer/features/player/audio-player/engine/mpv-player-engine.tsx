@@ -5,6 +5,7 @@ import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { playerHandoff } from './player-handoff';
 
+import { getItemImageRequest } from '/@/renderer/components/item-image/item-image';
 import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { OfflineSongUnavailableError } from '/@/renderer/features/offline/offline';
 import { usePlayerEvents } from '/@/renderer/features/player/audio-player/hooks/use-player-events';
@@ -23,8 +24,10 @@ import {
 } from '/@/renderer/store';
 import { logger } from '/@/renderer/utils/logger';
 import { toast } from '/@/shared/components/toast/toast';
+import { LibraryItem, QueueSong } from '/@/shared/types/domain-types';
 import { MpvQueueIdentity } from '/@/shared/types/mpv';
 import { PlayerStatus } from '/@/shared/types/types';
+import { cachedImage } from '/@/shared/utils/offline-cache';
 
 export interface MpvPlayerEngineHandle extends AudioPlayer {}
 
@@ -462,6 +465,7 @@ async function handleMpvAutoNext(transcode: {
                 ? latest.nextSong?._uniqueId
                 : undefined,
         );
+        void updateMpvArtwork(latest.currentSong, request);
         if (latest.nextSong?._uniqueId !== playerData.nextSong?._uniqueId) {
             await updateMpvNextSong(transcode);
         }
@@ -510,6 +514,7 @@ async function replaceMpvQueue(transcode: {
                 nextId: sameNext && nextSongUrl ? latest.nextSong?._uniqueId : undefined,
             },
         );
+        void updateMpvArtwork(latest.currentSong, request);
         if (!sameNext) await updateMpvNextSong(transcode);
     } catch (error) {
         if (!isCurrentQueueRequest(request, playerData.currentSong?._uniqueId)) return;
@@ -518,6 +523,27 @@ async function replaceMpvQueue(transcode: {
         usePlayerStore.getState().mediaPause();
         logger.error('Failed to resolve the selected MPV track', { error });
         if (error instanceof Error) toast.error({ message: error.message });
+    }
+}
+
+async function updateMpvArtwork(song: QueueSong | undefined, request: number) {
+    if (!song || !window.api?.utils.isWindows()) return;
+    try {
+        const imageRequest = getItemImageRequest({
+            id: song.imageId,
+            imageUrl: song.imageUrl,
+            itemType: LibraryItem.SONG,
+            serverId: song._serverId,
+            type: 'itemCard',
+        });
+        if (!imageRequest) return;
+        const blob = await cachedImage(imageRequest);
+        const data = new Uint8Array(await blob.arrayBuffer());
+        if (isCurrentQueueRequest(request, song._uniqueId)) {
+            await mpvPlayer?.setArtwork(song._uniqueId, data);
+        }
+    } catch {
+        logger.warn('Failed to synchronize MPV media artwork', { songId: song.id });
     }
 }
 

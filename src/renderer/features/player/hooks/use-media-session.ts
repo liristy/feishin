@@ -2,7 +2,7 @@ import isElectron from 'is-electron';
 import { debounce } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { getItemImageUrl } from '/@/renderer/components/item-image/item-image';
+import { getItemImageRequest } from '/@/renderer/components/item-image/item-image';
 import { usePlayerEvents } from '/@/renderer/features/player/audio-player/hooks/use-player-events';
 import { usePlayer } from '/@/renderer/features/player/context/player-context';
 import {
@@ -18,8 +18,10 @@ import {
     useSkipButtons,
     useTimestampStoreBase,
 } from '/@/renderer/store';
+import { logger } from '/@/renderer/utils/logger';
 import { LibraryItem, QueueSong } from '/@/shared/types/domain-types';
 import { PlayerStatus, PlayerType } from '/@/shared/types/types';
+import { cachedImage } from '/@/shared/utils/offline-cache';
 
 const mediaSession = navigator.mediaSession;
 
@@ -39,6 +41,17 @@ export const useMediaSession = () => {
     const radioMetadataRef = useRef(radioMetadata);
     const stationNameRef = useRef(stationName);
     const isMediaSessionEnabledRef = useRef(false);
+    const artworkAbortRef = useRef<AbortController | null>(null);
+    const artworkUrlRef = useRef<null | string>(null);
+
+    const clearArtwork = useCallback(() => {
+        artworkAbortRef.current?.abort();
+        artworkAbortRef.current = null;
+        if (artworkUrlRef.current) {
+            URL.revokeObjectURL(artworkUrlRef.current);
+            artworkUrlRef.current = null;
+        }
+    }, []);
 
     // Update refs whenever values change, but don't trigger effects
     useEffect(() => {
@@ -177,6 +190,8 @@ export const useMediaSession = () => {
                 return;
             }
 
+            clearArtwork();
+
             // Handle radio metadata when radio is active and playing
             if (isRadioActiveRef.current && isRadioPlayingRef.current) {
                 const title = radioMetadataRef.current?.title || stationNameRef.current || 'Radio';
@@ -193,25 +208,49 @@ export const useMediaSession = () => {
 
             // Handle regular song metadata
             if (!song) {
+                mediaSession.metadata = null;
                 return;
             }
 
-            const imageUrl = getItemImageUrl({
+            const imageRequest = getItemImageRequest({
                 id: song?.imageId || undefined,
                 imageUrl: song?.imageUrl,
                 itemType: LibraryItem.SONG,
+                serverId: song._serverId,
                 type: 'itemCard',
             });
 
             mediaSession.metadata = new MediaMetadata({
                 album: song?.album ?? '',
                 artist: song?.artistName ?? '',
-                artwork: imageUrl ? [{ src: imageUrl, type: 'image/png' }] : [],
+                artwork: [],
                 title: song?.name ?? '',
             });
+
+            if (!imageRequest) return;
+
+            const metadata = mediaSession.metadata;
+            const abortController = new AbortController();
+            artworkAbortRef.current = abortController;
+            const updateArtwork = (blob: Blob) => {
+                if (abortController.signal.aborted || mediaSession.metadata !== metadata) return;
+                const previousUrl = artworkUrlRef.current;
+                const src = URL.createObjectURL(blob);
+                artworkUrlRef.current = src;
+                metadata.artwork = [{ src }];
+                if (previousUrl) URL.revokeObjectURL(previousUrl);
+            };
+
+            void cachedImage(imageRequest, { signal: abortController.signal }, updateArtwork)
+                .then(updateArtwork)
+                .catch(() => {
+                    if (!abortController.signal.aborted) {
+                        logger.warn('Failed to load media session artwork', { songId: song.id });
+                    }
+                });
         },
         // All values are read from refs — stable callback, no stale closure risk
-        [],
+        [clearArtwork],
     );
 
     // Debounced version to handle rapid skipping — only the last skip in a burst commits
@@ -227,19 +266,29 @@ export const useMediaSession = () => {
     useEffect(() => {
         return () => {
             debouncedUpdateMetadata.cancel();
+            clearArtwork();
         };
-    }, [debouncedUpdateMetadata]);
+    }, [clearArtwork, debouncedUpdateMetadata]);
 
     // Update metadata when radio metadata changes
     useEffect(() => {
         if (!isMediaSessionEnabled) {
+            debouncedUpdateMetadata.cancel();
+            clearArtwork();
+            mediaSession.metadata = null;
             return;
         }
 
-        if (isRadioActiveRef.current && isRadioPlayingRef.current) {
-            debouncedUpdateMetadata(undefined);
-        }
-    }, [radioMetadata, isRadioPlaying, isMediaSessionEnabled, debouncedUpdateMetadata]);
+        debouncedUpdateMetadata(usePlayerStore.getState().getCurrentSong());
+    }, [
+        radioMetadata,
+        stationName,
+        isRadioActive,
+        isRadioPlaying,
+        isMediaSessionEnabled,
+        debouncedUpdateMetadata,
+        clearArtwork,
+    ]);
 
     // Subscribe directly to the player store instead of using usePlayerEvents.
     // usePlayerEvents receives inline handler objects that cause it to re-subscribe on every

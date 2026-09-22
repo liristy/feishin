@@ -27,6 +27,10 @@ const setProperties = (data: Record<string, any>) => {
     ipcRenderer.send('player-set-properties', data);
 };
 
+const setArtwork = (songId: string, data: Uint8Array) => {
+    return ipcRenderer.invoke('player-set-artwork', songId, data);
+};
+
 const autoNext = (url?: string, nextId?: string) => {
     ipcRenderer.send('player-auto-next', url, nextId);
 };
@@ -215,6 +219,7 @@ export const mpvPlayer = {
     restart,
     seek,
     seekTo,
+    setArtwork,
     setProperties,
     setQueue,
     setQueueNext,

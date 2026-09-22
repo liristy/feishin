@@ -1,7 +1,9 @@
-import { app, ipcMain, powerMonitor } from 'electron';
-import { access, rm } from 'fs/promises';
+import { app, ipcMain, nativeImage, powerMonitor } from 'electron';
+import { access, rm, writeFile } from 'fs/promises';
 import uniq from 'lodash/uniq';
 import MpvAPI from 'node-mpv';
+import { Buffer } from 'node:buffer';
+import { createHash } from 'node:crypto';
 import { pid } from 'node:process';
 import path from 'path';
 import process from 'process';
@@ -43,6 +45,7 @@ let queueRevision = 0;
 let queueIdentity: MpvQueueIdentity = {};
 let queueOperation = Promise.resolve();
 let cancelQueueLoad: (() => void) | undefined;
+let artworkFile: string | undefined;
 
 const invalidateQueue = () => {
     queueRevision += 1;
@@ -369,6 +372,10 @@ const quit = async (instance?: MpvAPI | null) => {
             }
         }
     }
+    if (artworkFile) {
+        await rm(artworkFile, { force: true }).catch(() => {});
+        artworkFile = undefined;
+    }
 };
 
 const setAudioPlayerFallback = (isError: boolean) => {
@@ -377,6 +384,55 @@ const setAudioPlayerFallback = (isError: boolean) => {
     }
     getMainWindow()?.webContents.send('renderer-player-fallback', isError);
 };
+
+ipcMain.handle('player-set-artwork', async (_event, songId: string, data: Uint8Array) => {
+    if (!isWindows()) return;
+    if (!ArrayBuffer.isView(data) || !data.byteLength || data.byteLength > 10 * 1024 * 1024) {
+        throw new Error('Invalid MPV artwork data');
+    }
+    try {
+        await updateMpvQueue(async (mpv, isCurrent) => {
+            if (queueIdentity.currentId !== songId || !isCurrent()) return;
+            if (Number(await mpv.getProperty('playlist-pos')) !== 0 || !isCurrent()) return;
+            const image = nativeImage.createFromBuffer(Buffer.from(data));
+            if (image.isEmpty()) throw new Error('Invalid MPV artwork image');
+            const { height, width } = image.getSize();
+            const scale = Math.min(1, 512 / Math.max(width, height));
+            const png = image
+                .resize({
+                    height: Math.max(1, Math.round(height * scale)),
+                    width: Math.max(1, Math.round(width * scale)),
+                })
+                .toPNG();
+            const hash = createHash('sha256').update(png).digest('hex');
+            const file = path.join(app.getPath('temp'), `feishin-mpv-artwork-${pid}-${hash}.png`);
+            await writeFile(file, png);
+            if (!isCurrent()) {
+                if (file !== artworkFile) await rm(file, { force: true });
+                return;
+            }
+            const tracks = (await mpv.getProperty('track-list')) as {
+                id: number;
+                title?: string;
+            }[];
+            if (!isCurrent()) return;
+            for (const track of tracks) {
+                if (track.title === 'Feishin album art') {
+                    await mpv.command('video-remove', [String(track.id)]);
+                }
+            }
+            // MPV's native SMTC reads external artwork tracks, not navigator.mediaSession.
+            await mpv.command('video-add', [file, 'auto', 'Feishin album art', '', 'yes']);
+            const previousFile = artworkFile;
+            artworkFile = file;
+            if (previousFile && previousFile !== file) {
+                await rm(previousFile, { force: true });
+            }
+        });
+    } catch (error) {
+        log.warn('Failed to update MPV system media artwork', error);
+    }
+});
 
 ipcMain.on('player-set-properties', async (_event, data: Record<string, any>) => {
     mpvLog({ action: `Setting properties: ${JSON.stringify(data)}`, level: 'debug' });

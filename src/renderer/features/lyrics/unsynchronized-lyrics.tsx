@@ -57,7 +57,7 @@ export const UnsynchronizedLyrics = ({
     }, [romajiLyrics]);
 
     return (
-        <div className={clsx(styles.container, preview && styles.preview)}>
+        <div className={clsx(styles.container, preview && styles.preview, 'unsynchronized-lyrics')}>
             <LyricsScrollContent
                 bottomScrollPadding="6vh"
                 gap={settings.gapUnsync}

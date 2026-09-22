@@ -35,8 +35,8 @@ export async function cachedImage(
             headers: request.headers,
             ...init,
             signal: init?.signal
-                ? AbortSignal.any([init.signal, AbortSignal.timeout(4000)])
-                : AbortSignal.timeout(4000),
+                ? AbortSignal.any([init.signal, AbortSignal.timeout(30000)])
+                : AbortSignal.timeout(30000),
         });
         if (!response.ok) throw new Error(`Failed to load image: ${response.status}`);
         const blob = await response.blob();

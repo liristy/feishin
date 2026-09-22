@@ -48,6 +48,17 @@
         display: none;
     }
 
+    :global(.synchronized-lyrics),
+    :global(.synchronized-karaoke-lyrics),
+    :global(.unsynchronized-lyrics) {
+        &:not(:hover, :focus-within) {
+            &::-webkit-scrollbar-track,
+            &::-webkit-scrollbar-thumb {
+                background: transparent;
+            }
+        }
+    }
+
     :global(.lyric-line),
     :global(.lyric-line) *,
     :global(.karaoke-line),

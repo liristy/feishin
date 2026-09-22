@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 
+import styles from './use-fullscreen-toggle.module.css';
+
 import { useFullScreenPlayerStore } from '/@/renderer/store/full-screen-player.store';
 
 /**
@@ -11,6 +13,34 @@ import { useFullScreenPlayerStore } from '/@/renderer/store/full-screen-player.s
 export const VISUALIZER_FULLSCREEN_TARGET_ID = 'visualizer-fullscreen-target';
 
 export const useFullscreenToggle = () => {
+    const expanded = useFullScreenPlayerStore((state) => state.expanded);
+
+    useEffect(() => {
+        if (!expanded) return;
+
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const root = document.documentElement;
+        const showCursor = () => {
+            clearTimeout(timer);
+            root.classList.remove(styles.idleCursor);
+            if (document.fullscreenElement) {
+                timer = setTimeout(() => root.classList.add(styles.idleCursor), 3000);
+            }
+        };
+        const events = ['pointermove', 'pointerdown', 'keydown', 'wheel'] as const;
+
+        showCursor();
+        document.addEventListener('fullscreenchange', showCursor);
+        for (const event of events) window.addEventListener(event, showCursor, { passive: true });
+
+        return () => {
+            clearTimeout(timer);
+            root.classList.remove(styles.idleCursor);
+            document.removeEventListener('fullscreenchange', showCursor);
+            for (const event of events) window.removeEventListener(event, showCursor);
+        };
+    }, [expanded]);
+
     useEffect(() => {
         const toggleFullscreen = () => {
             // Already fullscreen: back out, regardless of what was fullscreened.

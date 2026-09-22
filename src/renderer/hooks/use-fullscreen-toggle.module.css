@@ -1,0 +1,4 @@
+.idle-cursor,
+.idle-cursor * {
+    cursor: none !important;
+}

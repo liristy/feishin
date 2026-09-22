@@ -39,17 +39,24 @@ class FakeMpv extends EventEmitter {
         this.list = [];
         this.pos = -1;
         this.calls = [];
+        this.tracks = [];
         this.delays = new Map();
         FakeMpv.instance = this;
     }
     async clearPlaylist() {
         this.list = [];
     }
+    async command(name, args) {
+        this.calls.push([name, ...args]);
+        if (name === 'video-add') this.tracks.push({ id: 3, title: args[2] });
+        if (name === 'video-remove') this.tracks = [];
+    }
     async getPlaylistSize() {
         await tick();
         return this.list.length;
     }
-    async getProperty() {
+    async getProperty(name) {
+        if (name === 'track-list') return this.tracks;
         return process.env.MPV_STRING_POSITION ? String(this.pos) : this.pos;
     }
     isRunning() {
@@ -116,6 +123,7 @@ async function mainTests() {
     const events = [],
         handlers = new Map(),
         processHandlers = new Map();
+    const artworkFiles = new Map();
     const player = loadSource('src/main/features/core/player/index.ts', {
         '../../../index': {
             getMainWindow: () => ({
@@ -127,9 +135,31 @@ async function mainTests() {
         '../settings': { store: { get: () => '/obsolete/external/mpv.exe' } },
         '/@/main/env': { isMacOS: () => false, isWindows: () => true },
         electron: {
-            app: { getAppPath: () => root, isPackaged: false, on() {}, quit() {} },
+            app: {
+                getAppPath: () => root,
+                getPath: () => root,
+                isPackaged: false,
+                on() {},
+                quit() {},
+            },
             ipcMain: { handle: (k, v) => handlers.set(k, v), on: (k, v) => handlers.set(k, v) },
+            nativeImage: {
+                createFromBuffer: (bytes) => ({
+                    getSize: () => ({ height: 600, width: 1000 }),
+                    isEmpty: () => false,
+                    resize: ({ height, width }) => {
+                        assert.equal(width, 512);
+                        assert.equal(height, 307);
+                        return { toPNG: () => bytes };
+                    },
+                }),
+            },
             powerMonitor: { on() {} },
+        },
+        'fs/promises': {
+            access: async () => {},
+            rm: async (file) => artworkFiles.delete(file),
+            writeFile: async (file, bytes) => artworkFiles.set(file, bytes),
         },
         'node-mpv': FakeMpv,
         process: { on: (name, handler) => processHandlers.set(name, handler) },
@@ -158,6 +188,22 @@ async function mainTests() {
     await first;
     slow.resolve();
     assert.deepEqual(mpv.list, ['B', 'B-next']);
+    const cover = Buffer.from('cover');
+    await call('player-set-artwork', 'A', cover);
+    assert.equal(artworkFiles.size, 0, 'A late cover cannot be attached to a different song');
+    await call('player-set-artwork', 'B', cover);
+    const artCommand = mpv.calls.find((c) => c[0] === 'video-add');
+    assert.ok(artworkFiles.has(artCommand[1]));
+    assert.deepEqual(artCommand.slice(2), ['auto', 'Feishin album art', '', 'yes']);
+    assert.deepEqual(
+        mpv.list,
+        ['B', 'B-next'],
+        'Attaching art must not replace audio or the next song',
+    );
+    await call('player-set-artwork', 'B', Buffer.from('updated-cover'));
+    assert.equal(artworkFiles.size, 1, 'Release the previous artwork file');
+    assert.equal(mpv.tracks.length, 1, 'Replace artwork rather than accumulating image tracks');
+    await assert.rejects(call('player-set-artwork', 'B', new Uint8Array()), /Invalid MPV artwork/);
     const beforePause = events.length;
     mpv.emit('status', { property: 'pause', value: true });
     mpv.emit('status', { property: 'pause', value: false });
@@ -246,6 +292,8 @@ async function rendererTests() {
         data = { status: 'PLAYING' },
         radio = {};
     const pending = new Map();
+    const artworkPending = new Map();
+    let windows = false;
     const song = (id) => ({ _serverId: 'test', _uniqueId: id, id: 'same-server-song' });
     const set = (current, next, status = 'PLAYING') => {
         data = { currentSong: song(current), nextSong: next ? song(next) : undefined, status };
@@ -259,12 +307,16 @@ async function rendererTests() {
     const store = { usePlayerStore: { getState: () => state } };
     const mpv = {
         autoNext: (...a) => calls.push(['advance', ...a]),
+        setArtwork: (...args) => calls.push(['artwork', ...args]),
         setQueue: (...a) => calls.push(['replace', ...a]),
         setQueueNext: (...a) => calls.push(['next', ...a]),
         stop: () => calls.push(['stop']),
     };
     const mocks = {
         './player-handoff': {},
+        '/@/renderer/components/item-image/item-image': {
+            getItemImageRequest: (args) => ({ url: args.id }),
+        },
         '/@/renderer/events/event-emitter': {},
         '/@/renderer/features/offline/offline': {
             OfflineSongUnavailableError: class extends Error {},
@@ -283,8 +335,12 @@ async function rendererTests() {
         '/@/renderer/store': store,
         '/@/renderer/utils/logger': { logger },
         '/@/shared/components/toast/toast': { toast: { error() {} } },
+        '/@/shared/types/domain-types': { LibraryItem: { SONG: 'song' } },
         '/@/shared/types/types': {
             PlayerStatus: { PAUSED: 'PAUSED', PLAYING: 'PLAYING', STOPPED: 'STOPPED' },
+        },
+        '/@/shared/utils/offline-cache': {
+            cachedImage: ({ url }) => artworkPending.get(url).promise,
         },
         'is-electron': () => true,
         react: {},
@@ -306,7 +362,7 @@ async function rendererTests() {
             if (!(id in mocks)) throw Error(id);
             return mocks[id];
         },
-        window: { api: { mpvPlayer: mpv } },
+        window: { api: { mpvPlayer: mpv, utils: { isWindows: () => windows } } },
     });
     const {
         handleMpvAutoNext: advance,
@@ -362,6 +418,23 @@ async function rendererTests() {
     radioLate.resolve('url:radio-late');
     await music;
     assert.equal(calls.length, 0);
+    windows = true;
+    radio = {};
+    set('cover-old');
+    data.currentSong.imageId = 'old';
+    artworkPending.set('old', deferred());
+    await replace(config);
+    assert.equal(calls[0][0], 'replace', 'Audio starts before cover fetching finishes');
+    set('cover-new');
+    data.currentSong.imageId = 'new';
+    artworkPending.set('new', deferred());
+    await replace(config);
+    artworkPending.get('old').resolve(new Blob(['old cover']));
+    artworkPending.get('new').resolve(new Blob(['new cover']));
+    await tick();
+    const artworkCalls = calls.filter((call) => call[0] === 'artwork');
+    assert.equal(artworkCalls.length, 1);
+    assert.equal(artworkCalls[0][1], 'cover-new');
     console.log(
         'MPV renderer: out-of-order URLs, stale next/auto-next, pause during load and radio handoff passed.',
     );

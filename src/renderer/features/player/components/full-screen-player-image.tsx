@@ -111,6 +111,7 @@ export const FullScreenPlayerImage = () => {
 
     const currentImageUrl = useItemImageUrl({
         id: currentSong?.imageId || undefined,
+        imageUrl: currentSong?.imageId ? undefined : currentSong?.imageUrl,
         itemType: LibraryItem.SONG,
         serverId: currentSong?._serverId,
         type: 'fullScreenPlayer',
@@ -118,6 +119,7 @@ export const FullScreenPlayerImage = () => {
 
     const nextImageUrl = useItemImageUrl({
         id: nextSong?.imageId || undefined,
+        imageUrl: nextSong?.imageId ? undefined : nextSong?.imageUrl,
         itemType: LibraryItem.SONG,
         serverId: nextSong?._serverId,
         type: 'fullScreenPlayer',
