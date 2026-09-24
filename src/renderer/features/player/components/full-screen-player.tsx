@@ -263,7 +263,7 @@ export const FullScreenPlayer = () => {
             <div className={styles.responsiveContainer}>
                 <div
                     className={clsx(styles.imageColumn, {
-                        [styles.imageColumnFull]: !hasActiveModule,
+                        [styles.imageColumnCentered]: !hasActiveModule,
                     })}
                 >
                     <FullScreenPlayerImage />
