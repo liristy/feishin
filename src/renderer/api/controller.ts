@@ -1,5 +1,15 @@
 import i18n from '/@/i18n/i18n';
 import { JellyfinController } from '/@/renderer/api/jellyfin/jellyfin-controller';
+import {
+    getListeningHistory,
+    getMalojaCharts,
+    getMalojaCount,
+    getMalojaInfo,
+    getMalojaPerformance,
+    getMalojaPulse,
+    getMalojaServer,
+    getMalojaTop,
+} from '/@/renderer/api/maloja/maloja-controller';
 import { NavidromeController } from '/@/renderer/api/navidrome/navidrome-controller';
 import { SubsonicController } from '/@/renderer/api/subsonic/subsonic-controller';
 import { mergeMusicFolderId } from '/@/renderer/api/utils-music-folder';
@@ -647,6 +657,7 @@ export const controller = {
             server.type,
         )?.(addContext({ ...args, apiClientProps: { ...args.apiClientProps, server } }));
     },
+    getListeningHistory,
     getLyrics(args) {
         const server = getServerById(args.apiClientProps.serverId);
 
@@ -659,6 +670,13 @@ export const controller = {
             server.type,
         )?.(addContext({ ...args, apiClientProps: { ...args.apiClientProps, server } }));
     },
+    getMalojaCharts,
+    getMalojaCount,
+    getMalojaInfo,
+    getMalojaPerformance,
+    getMalojaPulse,
+    getMalojaServer,
+    getMalojaTop,
     getMusicFolderList(args) {
         const server = getServerById(args.apiClientProps.serverId);
 

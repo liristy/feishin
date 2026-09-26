@@ -76,6 +76,7 @@ export const Sidebar = () => {
             Folders: t('page.sidebar.folders'),
             Genres: t('page.sidebar.genres'),
             Home: t('page.sidebar.home'),
+            'Listening History': t('listeningHistory.title'),
             'Now Playing': t('page.sidebar.nowPlaying'),
             Offline: t('offline.title'),
             Playlists: t('page.sidebar.playlists'),

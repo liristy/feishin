@@ -462,11 +462,14 @@ const normalizeAlbumArtist = (
         songCount = item.songCount;
     }
 
-    const imageId = navidromeImageIdWithCacheBust(
-        item.id,
-        item.uploadedImage,
-        item.updatedAt ?? item.externalInfoUpdatedAt,
-    );
+    const imageId =
+        item.imageAbsent && !item.uploadedImage
+            ? null
+            : navidromeImageIdWithCacheBust(
+                  item.id,
+                  item.uploadedImage,
+                  item.updatedAt ?? item.externalInfoUpdatedAt,
+              );
 
     return {
         _itemType: LibraryItem.ALBUM_ARTIST,

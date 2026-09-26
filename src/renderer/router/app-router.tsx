@@ -43,6 +43,9 @@ const NoNetworkRoute = lazy(
 
 const HomeRoute = lazy(() => import('/@/renderer/features/home/routes/home-route'));
 const OfflineRoute = lazy(() => import('/@/renderer/features/offline/offline-route'));
+const ListeningHistoryRoute = lazy(
+    () => import('/@/renderer/features/listening-history/routes/listening-history-route'),
+);
 
 const ArtistListRoute = lazy(() => import('/@/renderer/features/artists/routes/artist-list-route'));
 
@@ -229,6 +232,10 @@ export const AppRouter = () => {
                                     <Route element={<HomeRoute />} index />
                                     <Route element={<HomeRoute />} path={AppRoute.HOME} />
                                     <Route element={<OfflineRoute />} path={AppRoute.DOWNLOADS} />
+                                    <Route
+                                        element={<ListeningHistoryRoute />}
+                                        path={AppRoute.LISTENING_HISTORY}
+                                    />
                                     <Route
                                         element={<Navigate replace to={AppRoute.DOWNLOADS} />}
                                         path="/offline"

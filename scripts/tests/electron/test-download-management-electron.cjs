@@ -184,7 +184,7 @@ app.once('browser-window-created', (_event, win) => {
                 const header=[...document.querySelectorAll('main [class*=header-content]')].find(el=>el.textContent.trim().toLowerCase()==='status');
                 return {version:settings.version, columns, cellText:cell?.textContent.trim(), hasIcon:!!status?.querySelector('svg'), label:status?.getAttribute('aria-label'), aligned:!!header && Math.abs((header.parentElement.getBoundingClientRect().x+header.parentElement.getBoundingClientRect().width/2)-(cell.getBoundingClientRect().x+cell.getBoundingClientRect().width/2))<2};
             })()`);
-            assert.equal(columnCheck.version, 36);
+            assert.equal(columnCheck.version, 37);
             assert.deepEqual(
                 columnCheck.columns.map((column) => column.id),
                 ['titleCombined', 'duration', 'playCount', 'downloadStatus', 'userFavorite'],

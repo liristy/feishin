@@ -573,6 +573,22 @@ async function main() {
         'Prefer the largest available offline cover',
     );
     imageNavigator.onLine = true;
+    const fetchesBeforeReuse = imageFetches;
+    assert.equal(
+        await (
+            await imageCache.cachedImage({
+                cacheKey: 'subsonic:a::cover:400',
+                url: 'https://server/cover',
+            })
+        ).text(),
+        'sharp cover',
+    );
+    assert.equal(
+        imageFetches,
+        fetchesBeforeReuse,
+        'Fresh larger library artwork also serves smaller history thumbnails',
+    );
+    storage.get('image:subsonic:a::cover:800').savedAt = 1;
     let refreshed;
     const refreshDone = new Promise((resolve) => {
         refreshed = resolve;
@@ -590,7 +606,7 @@ async function main() {
     assert.equal(
         await (await refreshDone).text(),
         'image',
-        'Refresh the requested resolution even when another size is fresh',
+        'Refresh an expired cover while displaying the cached image',
     );
     assert.equal(await storage.get('image:subsonic:a::cover:400').blob.text(), 'image');
     const fetchesAfterRefresh = imageFetches;

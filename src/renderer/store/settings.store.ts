@@ -550,6 +550,7 @@ export const GeneralSettingsSchema = z.object({
     lastFM: z.boolean(),
     lastfmApiKey: z.string(),
     listenBrainz: z.boolean(),
+    malojaUrl: z.string().default(''),
     microtonalPitchControls: z.boolean(),
     musicBrainz: z.boolean(),
     nativeAspectRatio: z.boolean(),
@@ -1022,6 +1023,7 @@ export enum SidebarItem {
     FOLDERS = 'Folders',
     GENRES = 'Genres',
     HOME = 'Home',
+    LISTENING_HISTORY = 'Listening History',
     NOW_PLAYING = 'Now Playing',
     PLAYLISTS = 'Playlists',
     RADIO = 'Radio',
@@ -1242,6 +1244,12 @@ export const sidebarItems: SidebarItemType[] = [
         label: i18n.t('page.sidebar.collections'),
         route: '',
     },
+    {
+        disabled: false,
+        id: SidebarItem.LISTENING_HISTORY,
+        label: i18n.t('listeningHistory.title'),
+        route: AppRoute.LISTENING_HISTORY,
+    },
 ];
 
 const homeItems = [
@@ -1350,6 +1358,7 @@ const initialState: SettingsState = {
         lastFM: false,
         lastfmApiKey: '',
         listenBrainz: true,
+        malojaUrl: '',
         microtonalPitchControls: false,
         musicBrainz: false,
         nativeAspectRatio: true,
@@ -3030,10 +3039,19 @@ export const useSettingsStore = createWithEqualityFn<SettingsSlice>()(
                     }
                 }
 
+                if (version < 37) {
+                    const items = state.general.sidebarItems;
+                    if (items && !items.some((item) => item.id === SidebarItem.LISTENING_HISTORY)) {
+                        items.push(
+                            sidebarItems.find((item) => item.id === SidebarItem.LISTENING_HISTORY)!,
+                        );
+                    }
+                }
+
                 return persistedState;
             },
             name: 'store_settings',
-            version: 36,
+            version: 37,
         },
     ),
 );

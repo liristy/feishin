@@ -280,6 +280,15 @@ export const queryKeys: Record<
         },
         root: (serverId: string) => [serverId, 'genres'] as const,
     },
+    listeningHistory: {
+        artwork: (serverId: string, entity: unknown) =>
+            [serverId, 'listeningHistory', 'artwork', entity] as const,
+        data: (url: string, resource: string, args: unknown) =>
+            [url, 'listeningHistory', resource, args] as const,
+        list: (url: string, page: number, filter?: unknown) =>
+            [url, 'listeningHistory', 'scrobbles', page, filter] as const,
+        root: (url: string) => [url, 'listeningHistory'] as const,
+    },
     musicFolders: {
         list: (serverId: string) => [serverId, 'musicFolders', 'list'] as const,
     },

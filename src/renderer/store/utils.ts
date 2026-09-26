@@ -146,7 +146,7 @@ export const playerStoreStorage: PersistStorage<unknown> = {
 };
 
 /**
- * A custom deep merger that will replace all 'columns' items with the persistent
+ * A custom deep merger that will replace 'columns' and 'sidebarItems' with the persistent
  * state, instead of the default merge behavior. This is important to preserve the user's
  * order, and not lead to an inconsistent state (e.g. multiple 'Favorite' keys)
  * @param persistedState the persistent state
@@ -155,7 +155,7 @@ export const playerStoreStorage: PersistStorage<unknown> = {
  */
 export const mergeOverridingColumns = <T>(persistedState: unknown, currentState: T) => {
     return mergeWith(currentState, persistedState, (_original, persistent, key) => {
-        if (key === 'columns') {
+        if (key === 'columns' || key === 'sidebarItems') {
             return persistent;
         }
 

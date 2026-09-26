@@ -9,6 +9,8 @@ import {
     RiFolder3Line,
     RiHeartFill,
     RiHeartLine,
+    RiHistoryFill,
+    RiHistoryLine,
     RiHome6Fill,
     RiHome6Line,
     RiMusic2Fill,
@@ -68,6 +70,9 @@ export const SidebarIcon = ({ active, route, size }: SidebarIconProps) => {
             case AppRoute.LIBRARY_SONGS:
                 if (isActive) return <RiMusic2Fill size={size} />;
                 return <RiMusic2Line size={size} />;
+            case AppRoute.LISTENING_HISTORY:
+                if (isActive) return <RiHistoryFill size={size} />;
+                return <RiHistoryLine size={size} />;
             case AppRoute.NOW_PLAYING:
                 if (isActive) return <RiPlayFill size={size} />;
                 return <RiPlayLine size={size} />;
