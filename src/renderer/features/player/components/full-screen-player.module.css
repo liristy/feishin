@@ -177,4 +177,7 @@
 
 .flow-overlay {
     background: rgb(0 0 0 / 20%);
+
+    /* Static, near-transparent pixels break display color bands without enlarging canvas grain. */
+    background-image: url('../../../assets/gradient-dither.png');
 }

@@ -15,8 +15,16 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        const context = canvas?.getContext('2d');
+        const contextOptions = { alpha: false, colorType: 'float16' };
+        const context = canvas?.getContext('2d', contextOptions);
         if (!canvas || !context) return;
+
+        // Avoid magnifying 8-bit gradient dithering. Half as many pixels offsets the wider channels.
+        const attributes = context.getContextAttributes?.();
+        const highPrecision =
+            attributes && 'colorType' in attributes && attributes.colorType === 'float16';
+        canvas.width = highPrecision ? 224 : 320;
+        canvas.height = highPrecision ? 126 : 180;
 
         const artwork = new Image();
         const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -27,6 +35,7 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
         let energy = 0;
         let painted = false;
         let colors: number[][] = [];
+        let gradients: CanvasGradient[] = [];
         const isPlaying = () =>
             usePlayerStoreBase.getState().player.status === PlayerStatus.PLAYING;
 
@@ -47,10 +56,9 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
             }
             painted = true;
 
-            context.clearRect(0, 0, canvas.width, canvas.height);
             context.fillStyle = `rgb(${colors[0].join(',')})`;
             context.fillRect(0, 0, canvas.width, canvas.height);
-            for (let layer = 0; layer < colors.length; layer++) {
+            for (let layer = 0; layer < gradients.length; layer++) {
                 const phase = (layer * Math.PI) / 2 + Math.PI / 4;
                 const x = canvas.width * (0.5 + Math.sin(time * 0.75 + phase) * 0.45);
                 const y = canvas.height * (0.5 + Math.cos(time * 0.6 + phase) * 0.5);
@@ -58,14 +66,16 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
                     canvas.width *
                     (0.55 + Math.sin(time * 0.45 + phase) * 0.06) *
                     (1 + energy * 0.06);
-                const color = colors[layer].join(',');
-                const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
-                gradient.addColorStop(0, `rgba(${color},1)`);
-                gradient.addColorStop(0.25, `rgba(${color},0.95)`);
-                gradient.addColorStop(1, `rgba(${color},0)`);
-                context.fillStyle = gradient;
-                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.setTransform(radius, 0, 0, radius, x, y);
+                context.fillStyle = gradients[layer];
+                context.fillRect(
+                    -x / radius,
+                    -y / radius,
+                    canvas.width / radius,
+                    canvas.height / radius,
+                );
             }
+            context.resetTransform();
         };
         const restart = () => {
             cancelAnimationFrame(frame);
@@ -115,6 +125,17 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
                     Math.round(index % 2 === 0 ? channel * 0.65 : channel * 0.8 + 24),
                 ),
             );
+            // Reuse soft gradients; transform their unit radius instead of rebuilding each frame.
+            gradients = colors.map((channels) => {
+                const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1);
+                const color = channels.join(',');
+                for (let step = 0; step <= 4; step++) {
+                    const position = step / 4;
+                    const alpha = 1 - position * position * (3 - 2 * position);
+                    gradient.addColorStop(position, `rgba(${color},${alpha})`);
+                }
+                return gradient;
+            });
             restart();
         };
         artwork.src = source;
