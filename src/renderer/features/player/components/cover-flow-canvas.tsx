@@ -16,7 +16,10 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
     useEffect(() => {
         const canvas = canvasRef.current;
         const contextOptions = { alpha: false, colorType: 'float16' } as const;
-        const context = canvas?.getContext('2d', contextOptions);
+        const context = canvas?.getContext('2d', contextOptions) as
+            | CanvasRenderingContext2D
+            | null
+            | undefined;
         if (!canvas || !context) return;
 
         // Avoid magnifying 8-bit gradient dithering. Half as many pixels offsets the wider channels.
