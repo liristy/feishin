@@ -26,7 +26,7 @@ export const OfflinePlaybackHook = () => {
             return;
         let cancelled = false;
         const advance = async () => {
-            const snapshot = await offline.list();
+            const snapshot = await offline!.list();
             const state = usePlayerStore.getState();
             if (
                 cancelled ||

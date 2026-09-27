@@ -15,7 +15,7 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        const contextOptions = { alpha: false, colorType: 'float16' };
+        const contextOptions = { alpha: false, colorType: 'float16' } as const;
         const context = canvas?.getContext('2d', contextOptions);
         if (!canvas || !context) return;
 

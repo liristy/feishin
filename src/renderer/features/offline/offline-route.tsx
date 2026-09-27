@@ -226,7 +226,7 @@ export default function OfflineRoute() {
                                 action(
                                     'folder',
                                     t('offline.openFolder'),
-                                    () => void run(() => offline.openFolder()),
+                                    () => void run(() => offline!.openFolder()),
                                 )}
                             {offline && action('settings', t('offline.settings'), settings)}
                         </Group>
