@@ -131,7 +131,7 @@
         "savePlayQueue": "Sačuvaj listu za reprodukciju",
         "minimumScrobbleSeconds_description": "Minimalno trajanje pesme u sekundama koje mora biti reprodukovano pre nego što se zabeleži",
         "skipPlaylistPage_description": "Kada idete na plejlistu, idi na stranicu sa pesmama plejliste umesto na podrazumevanu stranicu",
-        "fontType_description": "Ugrađeni font bira jedan od fontova koje pruža Feishin. Sistemski font vam omogućava da izaberete bilo koji font koji nudi vaš operativni sistem. Prilagođeni vam omogućava da koristite svoj font",
+        "fontType_description": "Ugrađeni font bira jedan od fontova koje pruža qMusic. Sistemski font vam omogućava da izaberete bilo koji font koji nudi vaš operativni sistem. Prilagođeni vam omogućava da koristite svoj font",
         "playButtonBehavior": "Ponašanje dugmeta za reprodukciju",
         "volumeWheelStep": "Korak točkića za glasnoću",
         "sidebarPlaylistList_description": "Prikaži ili sakrij listu plejlista na bočnoj traci",

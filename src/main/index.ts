@@ -1,3 +1,5 @@
+import './app-paths';
+
 import type { UpdateCheckResult } from 'electron-updater';
 
 import { is } from '@electron-toolkit/utils';
@@ -606,7 +608,7 @@ const createTray = () => {
         });
     }
 
-    tray.setToolTip('Feishin');
+    tray.setToolTip('qMusic');
     tray.setContextMenu(contextMenu);
 };
 

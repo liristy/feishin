@@ -924,7 +924,7 @@
         "exportImportSettings_control_title": "இறக்குமதி / ஏற்றுமதி அமைப்புகள்",
         "exportImportSettings_destructiveWarning": "அமைப்புகளை இறக்குமதி செய்வது அழிவுகரமானது, கீழே உள்ள \"இறக்குமதி\" என்பதைக் சொடுக்கு செய்வதற்கு முன் மேலே உள்ளவற்றை மதிப்பாய்வு செய்யவும்!",
         "exportImportSettings_importBtn": "இறக்குமதி அமைப்புகள்",
-        "exportImportSettings_importModalTitle": "Feishin அமைப்புகளை இறக்குமதி செய்யவும்",
+        "exportImportSettings_importModalTitle": "qMusic அமைப்புகளை இறக்குமதி செய்யவும்",
         "exportImportSettings_importSuccess": "அமைப்புகள் வெற்றிகரமாக இறக்குமதி செய்யப்பட்டன!",
         "exportImportSettings_notValidJSON": "அனுப்பப்பட்ட கோப்பு சாதொபொகு செல்லுபடியாகாது",
         "exportImportSettings_offendingKeyError": "\"{{offendingKey}}\" தவறானது - {{reason}}",

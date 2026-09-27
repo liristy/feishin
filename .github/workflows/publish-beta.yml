@@ -321,10 +321,14 @@ jobs:
                       $betaInstructions = "To receive automatic beta updates, set the release channel to ``Beta`` under ``Advanced`` settings.`n`n"
                       $releaseNotes = $betaInstructions + $releaseNotes
 
-                      # Update the release with new title and notes
-                      Write-Host "Updating release with title 'Beta' and new notes..."
-                      gh release edit $tagVersion --title "Beta" --notes "$releaseNotes"
-                      Write-Host "Successfully updated release title to 'Beta' and added commit notes"
+                      # Prefer curated notes; use generated notes for versions without a release file
+                      $notesFile = "docs/releases/$versionWithBeta.md"
+                      if (-not (Test-Path $notesFile)) {
+                          $notesFile = Join-Path $env:RUNNER_TEMP 'beta-release-notes.md'
+                          Set-Content -Path $notesFile -Value $releaseNotes -Encoding utf8
+                      }
+                      gh release edit $tagVersion --title "qMusic $versionWithBeta" --notes-file $notesFile
+                      Write-Host "Updated qMusic $versionWithBeta release notes"
                   } else {
                       Write-Host "No release found with tag $tagVersion"
                   }
@@ -337,44 +341,5 @@ jobs:
                   $versionWithBeta = "${{ needs.prepare.outputs.version }}"
                   $tagVersion = "v" + $versionWithBeta
                   Write-Host "Setting release as prerelease for tag: $tagVersion"
-                  gh release edit $tagVersion --prerelease --draft=false
+                  gh release edit $tagVersion --prerelease --latest=false --draft=false
                   Write-Host "Successfully set release as prerelease"
-
-    cleanup:
-        needs: [prepare, publish, edit-release]
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout git repo
-              uses: actions/checkout@v6
-
-            - name: Delete existing prereleases
-              shell: pwsh
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  # Get the current version that was just created
-                  $versionWithBeta = "${{ needs.prepare.outputs.version }}"
-                  Write-Host "Current release version: $versionWithBeta"
-
-                  # Find and delete any old prereleases (excluding the current one)
-                  Write-Host "Deleting old prereleases..."
-                  Write-Host "Searching for releases with isPrerelease 'true'..."
-
-                  $betaReleases = gh release list --limit 100 --json tagName,isPrerelease,name | ConvertFrom-Json | Where-Object { $_.isPrerelease -eq $true }
-
-                  if ($betaReleases) {
-                      Write-Host "Found $($betaReleases.Count) release(s) with isPrerelease 'true':"
-                      foreach ($release in $betaReleases) {
-                          $tagName = $release.tagName
-                          # Skip the current release
-                          if ($tagName -ne "v$versionWithBeta") {
-                              Write-Host "  - Tag: $tagName, Title: $($release.name)"
-                              gh release delete $tagName --yes --cleanup-tag
-                              Write-Host "  Deleted release with tag: $tagName"
-                          } else {
-                              Write-Host "  - Skipping current release: $tagName"
-                          }
-                      }
-                  } else {
-                      Write-Host "No releases found with isPrerelease 'true'"
-                  }

@@ -36,7 +36,7 @@ export const ActionBar = () => {
                             }
                             variant="subtle"
                         >
-                            Feishin
+                            qMusic
                         </Button>
                     </DropdownMenu.Target>
                     <DropdownMenu.Dropdown>

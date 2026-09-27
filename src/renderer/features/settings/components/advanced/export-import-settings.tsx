@@ -14,7 +14,7 @@ export const ExportImportSettings = memo(() => {
     const settingForExport = useSettingsForExport();
 
     const onExportSettings = useCallback(() => {
-        const settingsFile = new File([JSON.stringify(settingForExport)], 'feishin-settings.json', {
+        const settingsFile = new File([JSON.stringify(settingForExport)], 'qMusic-settings.json', {
             type: 'application/json',
         });
 

@@ -38,7 +38,7 @@ jobs:
                   if gh release view "v${VERSION}" --json targetCommitish,isDraft > release-state.json; then
                       node -e "const r=require('./release-state.json'); if (!r.isDraft || r.targetCommitish !== process.env.GITHUB_SHA) throw new Error('Release already published or targets a different commit')"
                   else
-                      gh release create "v${VERSION}" --target "$GITHUB_SHA" --draft --title "Feishin ${VERSION}" --notes-file "$NOTES"
+                      gh release create "v${VERSION}" --target "$GITHUB_SHA" --draft --title "qMusic ${VERSION}" --notes-file "$NOTES"
                   fi
 
             - name: Build and Publish releases
@@ -59,4 +59,4 @@ jobs:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   VERSION=$(node -p "require('./package.json').version")
-                  gh release edit "v${VERSION}" --draft=false --latest --title "Feishin ${VERSION}" --notes-file "docs/releases/${VERSION}.md"
+                  gh release edit "v${VERSION}" --draft=false --latest --title "qMusic ${VERSION}" --notes-file "docs/releases/${VERSION}.md"

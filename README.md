@@ -1,15 +1,15 @@
-<img src="assets/icons/icon.png" alt="Feishin 图标" align="right" width="72" height="72" />
+<img src="assets/icons/icon.png" alt="qMusic for Windows 图标" align="right" width="72" height="72" />
 
-# Feishin · 2.0 Beta
+# qMusic for Windows · 2.0 Beta
 
-面向自托管音乐服务的跨平台播放器，支持 Navidrome、Jellyfin 和兼容 Subsonic / OpenSubsonic API 的服务器。本分支在 Feishin 的基础上，重点扩展**离线使用、下载管理和桌面播放体验**。
+qMusic for Windows 是面向自托管音乐服务的 Windows 音乐播放器，支持 Navidrome、Jellyfin 和兼容 Subsonic / OpenSubsonic API 的服务器。本分支在 Feishin 的基础上，重点扩展**离线使用、下载管理和桌面播放体验**。
 
 [![License](https://img.shields.io/github/license/liristy/feishin?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/liristy/feishin?include_prereleases&style=flat-square&label=release)](https://github.com/liristy/feishin/releases)
 
 [下载安装](https://github.com/liristy/feishin/releases) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md) · [上游项目](https://github.com/jeffvli/feishin)
 
-> 本仓库是独立维护的 Feishin 分支。`2.0.0-beta.1` 是本分支的版本号，不代表上游 Feishin 的官方版本。Beta 为预发布版本，安装文件及已知问题以本仓库 Release 说明为准。
+> qMusic for Windows 是基于 Feishin 独立维护的分支，软件内名称为 qMusic。`2.0.0-beta.4` 是本分支的版本号，不代表上游 Feishin 的官方版本。Beta 为预发布版本，安装文件及已知问题以本仓库 Release 说明为准。
 
 ## 2.0 新增功能
 
@@ -90,7 +90,7 @@
 2. 输入完整服务器地址及账号信息。本项目是音乐客户端，需要已有音乐服务器，不提供音乐内容服务。
 3. 在播放设置中选择 MPV 或内置播放器。内置播放器支持的音频格式取决于 Chromium；可使用 MPV 播放其支持的其他格式。
 4. 如需离线使用，先联网浏览所需内容，并下载歌曲。完整保存的歌曲会出现在“下载管理”的“已下载”列表中。
-5. 在下载管理的设置中查看保存目录，并根据需要开启或关闭“边听边存”。默认目录位于系统音乐文件夹下的 `Feishin` 目录。
+5. 在下载管理的设置中查看保存目录，并根据需要开启或关闭“边听边存”。为兼容已有下载，默认目录仍位于系统音乐文件夹下的 `Feishin` 目录。
 
 ### 使用范围与限制
 
@@ -107,8 +107,8 @@
 可从本仓库源码构建网页版或 Docker 镜像。上游的在线演示站点和 `ghcr.io/jeffvli/feishin` 镜像由上游维护，不包含本分支的全部改动。
 
 ```sh
-docker build -t feishin-local .
-docker run --name feishin -p 9180:9180 feishin-local
+docker build -t qmusic-local .
+docker run --name qmusic -p 9180:9180 qmusic-local
 ```
 
 服务器预配置可使用 `SERVER_NAME`、`SERVER_TYPE`、`SERVER_URL`；同时设置 `SERVER_LOCK=true` 可锁定服务器配置。设置覆盖项见[环境变量文档](docs/ENV_SETTINGS.md)。

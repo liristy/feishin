@@ -162,7 +162,7 @@ export const WindowBar = () => {
         const privateModeString = privateMode ? t('page.windowBar.privateMode') : '';
 
         if (!windowBarTrackinfo) {
-            return `Feishin${privateMode ? ` ${privateModeString}` : ''}`;
+            return `qMusic${privateMode ? ` ${privateModeString}` : ''}`;
         }
 
         // Show radio information if radio is active
@@ -174,23 +174,23 @@ export const WindowBar = () => {
             let radioMetadata = '';
             if (metadata) {
                 if (metadata.title && metadata.artist) {
-                    radioMetadata = ` — ${metadata.artist} — ${metadata.title}`;
+                    radioMetadata = ` - ${metadata.artist} - ${metadata.title}`;
                 } else if (metadata.title) {
-                    radioMetadata = ` — ${metadata.title}`;
+                    radioMetadata = ` - ${metadata.title}`;
                 } else if (metadata.artist) {
-                    radioMetadata = ` — ${metadata.artist}`;
+                    radioMetadata = ` - ${metadata.artist}`;
                 }
             }
 
-            return `${radioStatusString}${radioTitle}${radioMetadata} — Feishin${privateMode ? ` ${privateModeString}` : ''}`;
+            return `${radioStatusString}${radioTitle}${radioMetadata} - qMusic${privateMode ? ` ${privateModeString}` : ''}`;
         }
 
         // Show regular song information
         const statusString = playerStatus === PlayerStatus.PAUSED ? t('page.windowBar.paused') : '';
         const title = `${
             queueLength
-                ? `${statusString}${currentSong?.name}${currentSong?.artistName ? ` - ${currentSong?.artistName} - Feishin` : ''}`
-                : 'Feishin'
+                ? `${statusString}${currentSong?.name}${currentSong?.artistName ? ` - ${currentSong?.artistName} - qMusic` : ''}`
+                : 'qMusic'
         }${privateMode ? ` ${privateModeString}` : ''}`;
         return title;
     }, [

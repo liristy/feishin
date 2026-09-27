@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component type="desktop-application">
   <id>org.jeffvli.feishin</id>
-  <name>Feishin</name>
+  <name>qMusic</name>
   <summary>Jellyfin, Navidrome, and OpenSubsonic Compatible Music Player</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
@@ -51,6 +51,7 @@
     <category>Music</category>
   </categories>
   <releases>
+    <release date="2026-09-27" type="development" version="2.0.0-beta.4"></release>
     <release date="2026-09-19" type="development" version="2.0.0-beta.1"></release>
     <release date="2026-09-19" type="stable" version="1.16.0"></release>
     <release date="2026-09-18" type="stable" version="1.15.2"></release>
