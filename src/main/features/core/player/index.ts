@@ -411,7 +411,8 @@ ipcMain.handle('player-set-artwork', async (_event, songId: string, data: Uint8A
                 if (file !== artworkFile) await rm(file, { force: true });
                 return;
             }
-            const tracks = (await mpv.getProperty('track-list')) as {
+            // node-mpv declares all properties as strings, including structured JSON values.
+            const tracks = (await mpv.getProperty('track-list')) as unknown as {
                 id: number;
                 title?: string;
             }[];
