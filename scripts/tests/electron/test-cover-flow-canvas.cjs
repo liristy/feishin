@@ -164,8 +164,15 @@ app.whenReady()
         assert.equal(result.width, 320);
         assert.equal(result.height, 180);
         assert.equal(result.colorType, process.argv.includes('--unorm8') ? 'unorm8' : 'float16');
-        assert.ok(result.bufferBytes <= 320 * 180 * 4, 'The color buffer must stay within the original byte budget');
-        if (result.colorType === 'float16') assert.ok(result.grain < 0.002, 'Smooth gradients must not contain amplified dithering grain');
+        assert.ok(
+            result.bufferBytes <= 320 * 180 * 4,
+            'The color buffer must stay within the original byte budget',
+        );
+        if (result.colorType === 'float16')
+            assert.ok(
+                result.grain < 0.002,
+                'Smooth gradients must not contain amplified dithering grain',
+            );
         assert.ok(
             result.frames >= 40 && result.frames <= 49,
             'Painting must stay at or below 24 fps on 240 Hz displays',
@@ -175,7 +182,11 @@ app.whenReady()
             'Muted cover colors should drift gently within two seconds, including dark overlays',
         );
         assert.ok(result.edgeJump < 12, 'Flow must not expose hard edges');
-        assert.equal(result.animationGradientBuilds, 0, 'Animation must reuse the prepared gradients');
+        assert.equal(
+            result.animationGradientBuilds,
+            0,
+            'Animation must reuse the prepared gradients',
+        );
         assert.ok(result.hiddenStopped && result.resumed && result.reducedStopped);
         assert.ok(
             result.pauseStopped && result.resumeWithoutJump,
@@ -195,13 +206,13 @@ app.whenReady()
         }
         console.log(
             JSON.stringify({
-                averageColorChangeInTwoSeconds: result.difference,
-                framesInTwoSeconds: result.frames,
-                renderTimeMs: result.renderTimeMs,
-                colorType: result.colorType,
-                grain: result.grain,
                 animationGradientBuilds: result.animationGradientBuilds,
+                averageColorChangeInTwoSeconds: result.difference,
+                colorType: result.colorType,
+                framesInTwoSeconds: result.frames,
+                grain: result.grain,
                 pauseAndResume: 'passed',
+                renderTimeMs: result.renderTimeMs,
                 visibilityAndReducedMotion: 'passed',
             }),
         );

@@ -39,7 +39,7 @@ const {
 
 test('Restoring a custom sidebar keeps one history entry and its saved order', () => {
     const { mergeOverridingColumns } = load('/@/renderer/store/utils');
-    const saved = [{ id: 'Home' }, { id: 'Listening History', disabled: true }];
+    const saved = [{ id: 'Home' }, { disabled: true, id: 'Listening History' }];
     const merged = mergeOverridingColumns(
         { general: { sidebarItems: saved } },
         {
@@ -69,23 +69,23 @@ test('Maloja read-only history, pagination, validation and cancellation', async 
 
     const requests = [];
     let response = {
-        status: 'ok',
         list: Array.from({ length: MALOJA_PAGE_SIZE }, (_, index) => ({
-            time: 1750000000 - index,
-            track: {
-                title: `Song ${index}`,
-                artists: ['Artist A', 'Artist B'],
-                album: { albumtitle: 'Album' },
-            },
             duration: 180,
             extra: 'Future fields are allowed',
+            time: 1750000000 - index,
+            track: {
+                album: { albumtitle: 'Album' },
+                artists: ['Artist A', 'Artist B'],
+                title: `Song ${index}`,
+            },
         })),
+        status: 'ok',
     };
     const server = http.createServer((req, res) => {
         requests.push({
+            authorization: req.headers.authorization,
             method: req.method,
             url: req.url,
-            authorization: req.headers.authorization,
         });
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(response));
@@ -100,18 +100,18 @@ test('Maloja read-only history, pagination, validation and cancellation', async 
         assert.equal(first.items[0].artists.join(', '), 'Artist A, Artist B');
         assert.equal(first.items[49].title, 'Song 49');
         assert.deepEqual(requests[0], {
+            authorization: undefined,
             method: 'GET',
             url: '/music/apis/mlj_1/scrobbles?page=0&perpage=50',
-            authorization: undefined,
         });
 
         response = {
-            status: 'ok',
             list: [
-                { time: 1, track: { title: 'Legacy album', artists: [], album: 'Legacy' } },
-                { time: 0, track: { title: 'No album', artists: [], album: null } },
-                { time: 0, track: { title: 'Missing album', artists: [] } },
+                { time: 1, track: { album: 'Legacy', artists: [], title: 'Legacy album' } },
+                { time: 0, track: { album: null, artists: [], title: 'No album' } },
+                { time: 0, track: { artists: [], title: 'Missing album' } },
             ],
+            status: 'ok',
         };
         const second = await getListeningHistory({ page: 1, url });
         assert.equal(second.hasNextPage, false);
@@ -120,12 +120,12 @@ test('Maloja read-only history, pagination, validation and cancellation', async 
         assert.equal(second.items[2].album, '');
         assert.match(requests[1].url, /page=1&perpage=50$/);
 
-        response = { status: 'ok', list: [] };
+        response = { list: [], status: 'ok' };
         assert.equal((await getListeningHistory({ page: 2, url })).items.length, 0);
         for (const invalid of [
-            { status: 'error', list: [] },
+            { list: [], status: 'error' },
             { status: 'ok' },
-            { status: 'ok', list: [{ time: 'bad', track: { title: 'Bad', artists: [] } }] },
+            { list: [{ time: 'bad', track: { artists: [], title: 'Bad' } }], status: 'ok' },
             '<html>Login required</html>',
         ]) {
             response = invalid;
@@ -150,14 +150,14 @@ test('Maloja dashboard preserves ties, missing ranks, counts and exact entity/ti
         tostr: '2026/09/30',
     };
     const track = {
-        title: 'A & B',
-        artists: ['Artist One', '二号'],
         album: { albumtitle: 'Album', artists: null },
+        artists: ['Artist One', '二号'],
+        title: 'A & B',
     };
     const charts = {
-        artists: [{ artist: 'Artist One', artist_id: 7, rank: 1, scrobbles: 11 }],
         albums: [{ album: track.album, album_id: 8, rank: 1, scrobbles: 9 }],
-        tracks: [{ track, track_id: 9, rank: 1, scrobbles: 5 }],
+        artists: [{ artist: 'Artist One', artist_id: 7, rank: 1, scrobbles: 11 }],
+        tracks: [{ rank: 1, scrobbles: 5, track, track_id: 9 }],
     };
     let broken = false;
     const server = http.createServer((req, res) => {
@@ -165,26 +165,25 @@ test('Maloja dashboard preserves ties, missing ranks, counts and exact entity/ti
         requests.push({ method: req.method, url: request });
         const endpoint = request.pathname.replace('/prefix/apis/mlj_1/', '');
         const responses = {
-            'charts/artists': { status: 'ok', list: charts.artists },
-            'charts/albums': { status: 'ok', list: charts.albums },
-            'charts/tracks': { status: 'ok', list: charts.tracks },
-            numscrobbles: { status: 'ok', amount: 123 },
-            pulse: {
-                status: 'ok',
-                list: [
-                    { range, scrobbles: 12 },
-                    { range: { ...range, description: 'August 2026' }, scrobbles: 0 },
-                ],
-            },
+            'charts/albums': { list: charts.albums, status: 'ok' },
+            'charts/artists': { list: charts.artists, status: 'ok' },
+            'charts/tracks': { list: charts.tracks, status: 'ok' },
+            numscrobbles: { amount: 123, status: 'ok' },
             performance: {
-                status: 'ok',
                 list: [
                     { range, rank: 1 },
                     { range, rank: null },
                 ],
+                status: 'ok',
+            },
+            pulse: {
+                list: [
+                    { range, scrobbles: 12 },
+                    { range: { ...range, description: 'August 2026' }, scrobbles: 0 },
+                ],
+                status: 'ok',
             },
             'top/tracks': {
-                status: 'ok',
                 list: [
                     {
                         range,
@@ -194,14 +193,15 @@ test('Maloja dashboard preserves ties, missing ranks, counts and exact entity/ti
                         ],
                     },
                 ],
+                status: 'ok',
             },
             trackinfo: {
-                scrobbles: 55,
-                position: 2,
-                id: 9,
                 certification: 'gold',
+                id: 9,
+                medals: { bronze: ['2024'], gold: ['2025'], silver: [] },
+                position: 2,
+                scrobbles: 55,
                 topweeks: 3,
-                medals: { gold: ['2025'], silver: [], bronze: ['2024'] },
             },
         };
         res.setHeader('Content-Type', 'application/json');
@@ -210,46 +210,46 @@ test('Maloja dashboard preserves ties, missing ranks, counts and exact entity/ti
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     const url = `http://127.0.0.1:${server.address().port}/prefix`;
     try {
-        assert.equal(await getMalojaCount({ url, filter: { range: 'thismonth' } }), 123);
+        assert.equal(await getMalojaCount({ filter: { range: 'thismonth' }, url }), 123);
         assert.equal(requests.at(-1).url.searchParams.get('in'), 'thismonth');
         for (const kind of ['artists', 'albums', 'tracks']) {
-            const rows = await getMalojaCharts({ url, kind });
+            const rows = await getMalojaCharts({ kind, url });
             assert.equal(rows[0].entity.kind, kind);
             assert.equal(rows[0].rank, 1);
         }
-        const entity = (await getMalojaCharts({ url, kind: 'tracks' }))[0].entity;
+        const entity = (await getMalojaCharts({ kind: 'tracks', url }))[0].entity;
         const filter = {
+            cumulative: true,
             entity,
             from: '2026-09-01',
-            to: '2026-09-30',
             step: 'week',
+            to: '2026-09-30',
             trail: 2,
-            cumulative: true,
         };
-        const pulse = await getMalojaPulse({ url, filter, page: 2 });
+        const pulse = await getMalojaPulse({ filter, page: 2, url });
         assert.equal(pulse.items[0].plays, 0);
         assert.equal(pulse.items[1].plays, 12);
         const params = requests.at(-1).url.searchParams;
         assert.deepEqual(params.getAll('trackartist'), ['Artist One', '二号']);
         for (const [key, value] of Object.entries({
-            title: 'A & B',
-            from: '2026/09/01',
-            until: '2026/09/30',
-            step: 'week',
-            trail: '2',
             cumulative: 'yes',
+            from: '2026/09/01',
             page: '2',
             perpage: '60',
             reverse: 'yes',
+            step: 'week',
+            title: 'A & B',
+            trail: '2',
+            until: '2026/09/30',
         }))
             assert.equal(params.get(key), value);
-        const performance = await getMalojaPerformance({ url, filter, page: 0 });
+        const performance = await getMalojaPerformance({ filter, page: 0, url });
         assert.equal(performance.items[0].rank, null);
         assert.equal(performance.items[1].rank, 1);
-        const top = await getMalojaTop({ url, kind: 'tracks', filter });
+        const top = await getMalojaTop({ filter, kind: 'tracks', url });
         assert.equal(top[0].winners.length, 2);
         assert.equal(top[0].winners[1].entity.name, 'Tied winner');
-        const info = await getMalojaInfo({ url, entity, filter });
+        const info = await getMalojaInfo({ entity, filter, url });
         assert.equal(info.topweeks, 3);
         assert.equal(info.medals.gold[0], '2025');
         assert.equal(
@@ -258,7 +258,7 @@ test('Maloja dashboard preserves ties, missing ranks, counts and exact entity/ti
             'Details are explicitly lifetime statistics',
         );
         broken = true;
-        await assert.rejects(getMalojaCharts({ url, kind: 'tracks' }));
+        await assert.rejects(getMalojaCharts({ kind: 'tracks', url }));
         await assert.rejects(getMalojaCount({ url }), { message: 'listeningHistory.loadError' });
         assert.ok(requests.every((request) => request.method === 'GET'));
     } finally {

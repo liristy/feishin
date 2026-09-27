@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/explicit-function-return-type */
 // Run: pnpm exec electron scripts/tests/electron/test-flow-dither.cjs
 const { app, BrowserWindow } = require('electron');
 const assert = require('node:assert/strict');
@@ -19,10 +19,10 @@ app.whenReady()
             .match(/\.flow-overlay\s*\{([^}]+)\}/)[1]
             .replace(/url\([^)]+\)/, 'url("data:image/png;base64,' + texture + '")');
         const window = new BrowserWindow({
-            width: 1920,
             height: 1080,
             show: false,
             webPreferences: { offscreen: true },
+            width: 1920,
         });
         await window.loadURL(
             'data:text/html,<body style="margin:0"><canvas width="224" height="126" style="width:100vw;height:100vh"></canvas><div style="position:fixed;inset:0;background:rgba(0,0,0,.20833)"></div><div id="overlay" style="position:fixed;inset:0"></div>',
@@ -56,7 +56,7 @@ app.whenReady()
                 capture.toPNG(),
             );
             const pixels = capture.toBitmap();
-            const { width, height } = capture.getSize();
+            const { height, width } = capture.getSize();
             let runs = 0;
             for (let y = 0; y < height; y++)
                 for (let x = 1; x < width; x++) {
@@ -75,9 +75,9 @@ app.whenReady()
         difference /= captures[0].pixels.length / 4;
         console.log(
             JSON.stringify({
-                beforeRunLength: captures[0].runLength,
                 afterRunLength: captures[1].runLength,
                 averagePixelChange: difference,
+                beforeRunLength: captures[0].runLength,
                 maxPixelChange: maxDifference,
             }),
         );
