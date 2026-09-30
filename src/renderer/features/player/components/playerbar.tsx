@@ -50,7 +50,7 @@ export const Playerbar = () => {
                 >
                     <LeftControls />
                 </div>
-                <div className={styles.centerGridItem}>
+                <div className={styles.centerGridItem} data-player-controls>
                     <CenterControls />
                 </div>
                 <div

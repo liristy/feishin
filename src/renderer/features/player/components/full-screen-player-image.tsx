@@ -197,7 +197,7 @@ export const FullScreenPlayerImage = () => {
     useLayoutEffect(() => {
         const updateImageContainerWidth = () => {
             if (mainImageRef.current) {
-                const width = mainImageRef.current.getBoundingClientRect().width;
+                const width = mainImageRef.current.offsetWidth;
                 setImageContainerWidth(width);
             }
         };
@@ -211,7 +211,7 @@ export const FullScreenPlayerImage = () => {
     useLayoutEffect(() => {
         const updateImageContainerWidth = () => {
             if (mainImageRef.current) {
-                const width = mainImageRef.current.getBoundingClientRect().width;
+                const width = mainImageRef.current.offsetWidth;
                 setImageContainerWidth(width);
             }
         };
@@ -273,6 +273,7 @@ export const FullScreenPlayerImage = () => {
             <button
                 aria-label={t('common.minimize')}
                 className={styles.imageContainer}
+                data-player-cover="expanded"
                 onClick={() =>
                     setStore({
                         expanded: false,

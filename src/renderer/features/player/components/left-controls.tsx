@@ -128,6 +128,7 @@ export const LeftControls = () => {
                             <motion.div
                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                 className={styles.image}
+                                data-player-cover="compact"
                                 exit={{ opacity: 0, x: -50 }}
                                 initial={{ opacity: 0, x: -50 }}
                                 key="playerbar-image"

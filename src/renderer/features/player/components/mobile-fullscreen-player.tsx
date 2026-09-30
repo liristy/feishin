@@ -403,8 +403,8 @@ const MobilePlayerContainer = memo(
             <motion.div
                 animate="open"
                 className={styles.container}
-                exit="closed"
-                initial="closed"
+                data-fullscreen-player
+                initial={false}
                 style={{
                     backgroundColor: dynamicBackground ? 'transparent' : backgroundColor,
                 }}
@@ -431,19 +431,11 @@ const MobilePlayerContainer = memo(
 MobilePlayerContainer.displayName = 'MobilePlayerContainer';
 
 const mobileContainerVariants: Variants = {
-    closed: {
-        transition: {
-            duration: 0.5,
-            ease: 'easeInOut',
-        },
-        y: '100%',
-    },
     open: {
         transition: {
             duration: 0.5,
             ease: 'easeInOut',
         },
-        y: 0,
     },
 };
 

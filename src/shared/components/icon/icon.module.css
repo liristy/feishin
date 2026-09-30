@@ -87,6 +87,10 @@ img.size-5xl {
     fill: transparent;
 }
 
+.solid {
+    fill: currentcolor;
+}
+
 .fill-default {
     fill: var(--theme-colors-foreground);
 }

@@ -241,6 +241,7 @@ const SidebarImage = () => {
         <motion.div
             animate={{ opacity: 1, y: 0 }}
             className={styles.imageContainer}
+            data-player-cover="compact"
             exit={{ opacity: 0, y: 200 }}
             initial={{ opacity: 0, y: 200 }}
             key="sidebar-image"

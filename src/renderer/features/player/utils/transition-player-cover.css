@@ -1,0 +1,151 @@
+:root {
+    --player-transition-duration: 300ms;
+}
+
+:root:has([data-player-cover='expanded']) {
+    --player-transition-duration: 500ms;
+}
+
+[data-player-cover] {
+    view-transition-name: player-cover;
+}
+
+:root:has([data-player-cover='expanded']) [data-player-cover='compact'] {
+    view-transition-name: none;
+}
+
+[data-fullscreen-player] {
+    view-transition-name: fullscreen-player;
+}
+
+[data-player-controls] {
+    view-transition-name: player-controls;
+}
+
+/* Keep the persistent controls above the fullscreen background snapshots. */
+::view-transition-group(player-controls) {
+    z-index: 1;
+    animation: none;
+}
+
+::view-transition-old(player-controls) {
+    opacity: 0;
+}
+
+::view-transition-new(player-controls) {
+    mix-blend-mode: normal;
+    animation: none;
+}
+
+::view-transition-group(player-cover) {
+    z-index: 2;
+    animation-duration: var(--player-transition-duration);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-group(fullscreen-player) {
+    animation-duration: var(--player-transition-duration);
+}
+
+::view-transition-image-pair(player-cover) {
+    overflow: clip;
+    animation: player-cover-radius var(--player-transition-duration) cubic-bezier(0.22, 1, 0.36, 1)
+        both;
+}
+
+@keyframes player-cover-radius {
+    from {
+        border-radius: var(--player-cover-radius-from);
+    }
+
+    to {
+        border-radius: var(--player-cover-radius-to);
+    }
+}
+
+::view-transition-new(fullscreen-player) {
+    mix-blend-mode: normal;
+    animation: player-page-in var(--player-transition-duration) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-old(fullscreen-player) {
+    mix-blend-mode: normal;
+    animation: player-page-out var(--player-transition-duration) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes player-page-in {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes player-page-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+}
+
+::view-transition-old(player-cover),
+::view-transition-new(player-cover) {
+    height: 100%;
+    overflow: clip;
+    object-fit: fill;
+    mix-blend-mode: normal;
+    animation: none;
+}
+
+/* The compact snapshot already contains its rounded corners; don't show the old cover through them. */
+:root:not(:has([data-player-cover='expanded']))::view-transition-old(player-cover) {
+    opacity: 0;
+}
+
+/* Different aspect ratios need a crop transition, not a stretched destination snapshot. */
+:root[data-player-cover-preserve-aspect] {
+    &::view-transition-old(player-cover),
+    &::view-transition-new(player-cover) {
+        width: 100%;
+        object-fit: cover;
+        mix-blend-mode: plus-lighter;
+        animation: player-cover-fade var(--player-transition-duration)
+            cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    &::view-transition-old(player-cover) {
+        animation-name: player-cover-fade-out;
+    }
+}
+
+@keyframes player-cover-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes player-cover-fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+}

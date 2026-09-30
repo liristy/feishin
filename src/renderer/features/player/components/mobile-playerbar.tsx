@@ -81,6 +81,7 @@ export const MobilePlayerbar = () => {
                                 <motion.div
                                     animate={{ opacity: 1, scale: 1 }}
                                     className={styles.image}
+                                    data-player-cover="compact"
                                     exit={{ opacity: 0 }}
                                     initial={{ opacity: 0 }}
                                     key="mobile-playerbar-image"

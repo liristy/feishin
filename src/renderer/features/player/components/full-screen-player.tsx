@@ -121,23 +121,14 @@ const BackgroundOverlay = memo(({ dynamicBackground, opacity }: BackgroundOverla
 BackgroundOverlay.displayName = 'BackgroundOverlay';
 
 const containerVariants: Variants = {
-    closed: {
-        transition: {
-            duration: 0.5,
-            ease: 'easeOut',
-        },
-        y: '100%',
-    },
     open: (custom) => {
         const { background, dynamicBackground } = custom;
         return {
             backgroundColor: dynamicBackground ? background : mainBackground,
             transition: {
-                delay: 0.1,
                 duration: 0.5,
                 ease: 'easeOut',
             },
-            y: 0,
         };
     },
 };
@@ -184,8 +175,8 @@ const PlayerContainer = memo(
                 animate="open"
                 className={styles.container}
                 custom={{ background, dynamicBackground }}
-                exit="closed"
-                initial="closed"
+                data-fullscreen-player
+                initial={false}
                 transition={{ duration: 2 }}
                 variants={containerVariants}
             >

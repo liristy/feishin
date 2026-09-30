@@ -3,13 +3,6 @@
     padding: 0 var(--theme-spacing-lg);
 }
 
-.title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: var(--theme-font-size-xl);
-    white-space: nowrap;
-}
-
 .scroll {
     flex: 1;
     min-height: 0;

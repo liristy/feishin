@@ -5,6 +5,8 @@ import { immer } from 'zustand/middleware/immer';
 import { shallow } from 'zustand/shallow';
 import { createWithEqualityFn } from 'zustand/traditional';
 
+import { transitionPlayerCover } from '/@/renderer/features/player/utils/transition-player-cover';
+
 export type FullScreenPlayerItemAlignment = 'center' | 'left' | 'right';
 
 export interface FullScreenPlayerSlice extends FullScreenPlayerState {
@@ -37,7 +39,12 @@ export const useFullScreenPlayerStore = createWithEqualityFn<FullScreenPlayerSli
             immer((set, get) => ({
                 actions: {
                     setStore: (data) => {
-                        set({ ...get(), ...data });
+                        const update = () => set({ ...get(), ...data });
+                        if (data.expanded !== undefined && data.expanded !== get().expanded) {
+                            transitionPlayerCover(update);
+                        } else {
+                            update();
+                        }
                     },
                 },
                 activeTab: 'lyrics',

@@ -19,6 +19,7 @@ import {
 } from '/@/renderer/features/listening-history/components/maloja-panels';
 import { AnimatedPage } from '/@/renderer/features/shared/components/animated-page';
 import { LibraryContainer } from '/@/renderer/features/shared/components/library-container';
+import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
 import { useSettingsStore, useSettingsStoreActions } from '/@/renderer/store';
 import {
     MalojaEntity,
@@ -182,11 +183,9 @@ const Dashboard = ({ url }: { url: string }) => {
         });
     return (
         <LibraryContainer>
-            <PageHeader height="64px" withTopSpacing>
+            <PageHeader withTopSpacing>
                 <Group className={styles.header} justify="space-between" wrap="nowrap">
-                    <TextTitle className={styles.title} order={1}>
-                        {t('listeningHistory.title')}
-                    </TextTitle>
+                    <LibraryHeaderBar.Title>{t('listeningHistory.title')}</LibraryHeaderBar.Title>
                     <Group gap="xs" wrap="nowrap">
                         <ActionIcon
                             aria-label={t('common.refresh')}
@@ -278,9 +277,9 @@ export default function ListeningHistoryRoute() {
                 <LibraryContainer>
                     <PageHeader withTopSpacing>
                         <Group className={styles.header}>
-                            <TextTitle className={styles.title} order={1}>
+                            <LibraryHeaderBar.Title>
                                 {t('listeningHistory.title')}
-                            </TextTitle>
+                            </LibraryHeaderBar.Title>
                         </Group>
                     </PageHeader>
                     <ScrollArea className={styles.scroll}>

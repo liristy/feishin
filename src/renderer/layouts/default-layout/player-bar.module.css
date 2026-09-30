@@ -2,7 +2,6 @@
     z-index: 200;
     grid-area: player;
     background: var(--theme-colors-background-alternate);
-    transition: background 0.5s;
 }
 
 .open-drawer {

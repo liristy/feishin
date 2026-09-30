@@ -78,13 +78,11 @@ export const MobileLayout = ({ shell }: MobileLayoutProps) => {
                     <MobileSidebar />
                 </Drawer>
             )}
-            <AnimatePresence initial={false}>
-                {isFullScreenPlayerExpanded && (
-                    <div className={styles.fullScreenPlayerOverlay}>
-                        <MobileFullscreenPlayer />
-                    </div>
-                )}
-            </AnimatePresence>
+            {isFullScreenPlayerExpanded && (
+                <div className={styles.fullScreenPlayerOverlay}>
+                    <MobileFullscreenPlayer />
+                </div>
+            )}
             <AnimatePresence initial={false}>
                 {isFullScreenVisualizerExpanded && (
                     <div className={styles.fullScreenPlayerOverlay}>

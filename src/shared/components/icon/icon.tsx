@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { IconBaseProps } from 'react-icons';
 import { CgSpinnerTwoAlt } from 'react-icons/cg';
+import { IoPause, IoPlay, IoPlayBack, IoPlayForward, IoStop } from 'react-icons/io5';
 import {
     LuAlignCenter,
     LuAlignLeft,
@@ -98,11 +99,9 @@ import {
     LuPanelRight,
     LuPanelRightClose,
     LuPanelRightOpen,
-    LuPause,
     LuPencilLine,
     LuPin,
     LuPinOff,
-    LuPlay,
     LuPlus,
     LuRadio,
     LuRotateCw,
@@ -114,8 +113,6 @@ import {
     LuShieldAlert,
     LuShrink,
     LuShuffle,
-    LuSkipBack,
-    LuSkipForward,
     LuSlidersHorizontal,
     LuSparkle,
     LuSquare,
@@ -316,12 +313,12 @@ export const AppIcon = {
     listPaginated: LuArrowRightToLine,
     lock: LuLock,
     lockOpen: LuLockOpen,
-    mediaNext: LuSkipForward,
-    mediaPause: LuPause,
-    mediaPlay: LuPlay,
+    mediaNext: IoPlayForward,
+    mediaPause: IoPause,
+    mediaPlay: IoPlay,
     mediaPlayLast: LuChevronLast,
     mediaPlayNext: LuCornerUpRight,
-    mediaPrevious: LuSkipBack,
+    mediaPrevious: IoPlayBack,
     mediaRandom: RiPlayListAddLine,
     mediaRepeat: RiRepeat2Line,
     mediaRepeatOne: RiRepeatOneLine,
@@ -330,7 +327,7 @@ export const AppIcon = {
     mediaSpeed: LuGauge,
     mediaStepBackward: LuStepBack,
     mediaStepForward: LuStepForward,
-    mediaStop: LuSquare,
+    mediaStop: IoStop,
     menu: LuMenu,
     metadata: LuBookOpen,
     microphone: LuMicVocal,
@@ -424,12 +421,17 @@ const _Icon = forwardRef<HTMLDivElement, IconProps>((props, ref) => {
             clsx(className, {
                 [styles.fill]: true,
                 [styles.pulse]: animate === 'pulse',
+                [styles.solid]:
+                    !fill &&
+                    ['mediaNext', 'mediaPause', 'mediaPlay', 'mediaPrevious', 'mediaStop'].includes(
+                        icon,
+                    ),
                 [styles.spin]: animate === 'spin',
                 [styles[`color-${colorClassToken}`]]: colorClassToken,
                 [styles[`fill-${fill}`]]: fill,
                 [styles[`size-${size}`]]: true,
             }),
-        [animate, className, colorClassToken, fill, size],
+        [animate, className, colorClassToken, fill, icon, size],
     );
 
     return (

@@ -173,6 +173,7 @@ export const MobileFullscreenPlayerAlbumArt = () => {
                 className={clsx(styles.image, {
                     [styles.imageNativeAspectRatio]: useImageAspectRatio,
                 })}
+                data-player-cover="expanded"
             >
                 <AnimatePresence initial={false} mode="sync">
                     {isRadioActive ? (
