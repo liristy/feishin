@@ -29,19 +29,19 @@
   <screenshots>
     <screenshot type="default">
       <caption>Album library using demonstration data</caption>
-      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/library.png</image>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/master/media/screenshots/library.png</image>
     </screenshot>
     <screenshot>
       <caption>Browsing an album</caption>
-      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/album.png</image>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/master/media/screenshots/album.png</image>
     </screenshot>
     <screenshot>
       <caption>Download management</caption>
-      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/downloads.png</image>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/master/media/screenshots/downloads.png</image>
     </screenshot>
     <screenshot>
       <caption>Full-screen player and lyrics</caption>
-      <image type="source">https://raw.githubusercontent.com/liristy/feishin/development/media/screenshots/player.png</image>
+      <image type="source">https://raw.githubusercontent.com/liristy/feishin/master/media/screenshots/player.png</image>
     </screenshot>
   </screenshots>
   <categories>
