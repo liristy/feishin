@@ -29,7 +29,7 @@
 .header-actions {
     position: absolute;
     right: 0;
-    background: var(--theme-colors-background-alternate);
+    background: var(--sidebar-section-background, var(--theme-colors-background-alternate));
     opacity: 0;
     transition: opacity 150ms ease;
 }

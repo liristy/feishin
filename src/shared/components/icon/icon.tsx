@@ -128,9 +128,6 @@ import {
     LuUser,
     LuUserPen,
     LuUserRoundCog,
-    LuVolume1,
-    LuVolume2,
-    LuVolumeX,
     LuWifi,
     LuWifiOff,
     LuWrench,
@@ -140,6 +137,7 @@ import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
 import { PiMouseLeftClickFill, PiMouseRightClickFill } from 'react-icons/pi';
 import { RiPlayListAddLine, RiRepeat2Line, RiRepeatOneLine } from 'react-icons/ri';
 
+import appLogoIcon from '../../../../assets/icons/64x64.png';
 import styles from './icon.module.css';
 import lastfmLogoIcon from './lastfm_logo_icon.png';
 import listenbrainzLogoIcon from './listenbrainz_logo_icon.svg';
@@ -153,6 +151,7 @@ import {
 import musicbrainzLogoIcon from './musicbrainz_logo_icon.svg';
 import qobuzLogoIcon from './qobuz_logo_icon.png';
 import spotifyLogoIcon from './spotify_logo_icon.svg';
+import { VolumeIcon } from './volume-icon';
 
 export type AppIconSelection = keyof typeof AppIcon;
 
@@ -163,6 +162,19 @@ function logoImgStyle(size: number | string | undefined): CSSProperties | undefi
     const dim = typeof size === 'number' ? `${size}px` : size;
     return { height: dim, width: dim };
 }
+
+const AppLogoIcon = forwardRef<HTMLImageElement, LogoImgProps>(
+    ({ className, size, style, ...props }, ref) => (
+        <img
+            alt="qMusic"
+            className={className}
+            ref={ref}
+            src={appLogoIcon}
+            style={logoImgStyle(size) ?? style}
+            {...props}
+        />
+    ),
+);
 
 const ListenBrainzLogoIcon = forwardRef<HTMLImageElement, LogoImgProps>(
     ({ className, size, style, ...props }, ref) => (
@@ -235,6 +247,7 @@ export const AppIcon = {
     alignCenter: LuAlignCenter,
     alignLeft: LuAlignLeft,
     alignRight: LuAlignRight,
+    appLogo: AppLogoIcon,
     appWindow: LuAppWindow,
     arrowDown: LuArrowDown,
     arrowDownS: LuChevronDown,
@@ -383,9 +396,9 @@ export const AppIcon = {
     userManage: LuUserRoundCog,
     visibility: MdOutlineVisibility,
     visibilityOff: MdOutlineVisibilityOff,
-    volumeMax: LuVolume2,
-    volumeMute: LuVolumeX,
-    volumeNormal: LuVolume1,
+    volumeMax: VolumeIcon,
+    volumeMute: VolumeIcon,
+    volumeNormal: VolumeIcon,
     warn: LuTriangleAlert,
     wifiOff: LuWifiOff,
     wifiOn: LuWifi,
@@ -441,6 +454,9 @@ const _Icon = forwardRef<HTMLDivElement, IconProps>((props, ref) => {
 
     return (
         <IconComponent
+            {...(IconComponent === VolumeIcon
+                ? { level: icon === 'volumeMute' ? 0 : icon === 'volumeNormal' ? 1 : 2 }
+                : {})}
             className={classNames}
             fill={fill}
             ref={ref}

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 
 import styles from './action-bar.module.css';
 
-import { useScanStatus } from '/@/renderer/features/shared/hooks/use-scan-status';
 import { AppMenu } from '/@/renderer/features/titlebar/components/app-menu';
 import { useCommandPalette } from '/@/renderer/store';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
@@ -11,12 +10,10 @@ import { Button } from '/@/shared/components/button/button';
 import { DropdownMenu } from '/@/shared/components/dropdown-menu/dropdown-menu';
 import { Group } from '/@/shared/components/group/group';
 import { Icon } from '/@/shared/components/icon/icon';
-import { Text } from '/@/shared/components/text/text';
 
-export const ActionBar = () => {
+export const ActionBar = ({ searchVisible = true }: { searchVisible?: boolean }) => {
     const { t } = useTranslation();
     const { open } = useCommandPalette();
-    const { isScanning } = useScanStatus();
 
     return (
         <div className={styles.container}>
@@ -25,9 +22,9 @@ export const ActionBar = () => {
                     <DropdownMenu.Target>
                         <ActionIcon
                             aria-label={t('common.menu')}
-                            icon={isScanning ? 'spinner' : 'menu'}
-                            iconProps={{ animate: isScanning ? 'spin' : undefined, size: 'sm' }}
-                            size="xs"
+                            icon="appLogo"
+                            iconProps={{ size: 24 }}
+                            size="sm"
                             variant="subtle"
                         />
                     </DropdownMenu.Target>
@@ -40,12 +37,20 @@ export const ActionBar = () => {
                 </Group>
             </Group>
             <Button
-                classNames={{ inner: styles.searchInner, root: styles.search }}
-                leftSection={<Icon color="primary" icon="search" size="lg" />}
+                classNames={{
+                    inner: styles.searchInner,
+                    label: styles.searchLabel,
+                    root: styles.search,
+                }}
+                data-visible={searchVisible}
+                inert={!searchVisible}
                 onClick={open}
                 variant="subtle"
             >
-                <Text size="sm">{t('common.search')}</Text>
+                <Group gap="sm" wrap="nowrap">
+                    <Icon color="primary" icon="search" size={18} />
+                    {t('common.search')}
+                </Group>
             </Button>
         </div>
     );

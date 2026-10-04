@@ -6,6 +6,7 @@ import styles from './weekly-listening-charts.module.css';
 
 import { listeningHistoryQueries } from '/@/renderer/features/listening-history/api/listening-history-api';
 import { EntityArtwork } from '/@/renderer/features/listening-history/components/entity-artwork';
+import { TrackPlayButton } from '/@/renderer/features/listening-history/components/track-play-button';
 import { AppRoute } from '/@/renderer/router/routes';
 import { useSettingsStore } from '/@/renderer/store';
 import { MalojaEntity, MalojaKind } from '/@/shared/api/maloja/maloja-types';
@@ -37,10 +38,11 @@ const WeeklyChart = ({
                 type="button"
             >
                 <span className={styles.headingLabel}>
-                    <Icon icon={kind === 'artists' ? 'artist' : 'disc'} size="sm" />
+                    <Icon icon={kind === 'artists' ? 'artist' : 'disc'} size={18} />
                     {t(`listeningHistory.${kind}`)}
                 </span>
                 <span className={styles.headingArrow}>
+                    {t('listeningHistory.fullRanking')}
                     <Icon icon="arrowRightS" size="sm" />
                 </span>
             </button>
@@ -57,8 +59,8 @@ const WeeklyChart = ({
                 </Button>
             ) : query.data?.length ? (
                 <ol className={styles.list}>
-                    {query.data.slice(0, 5).map(({ entity, plays, rank }) => (
-                        <li key={JSON.stringify(entity)}>
+                    {query.data.slice(0, 5).map(({ entity, plays, rank }, index) => (
+                        <li className={styles.entry} key={JSON.stringify(entity)}>
                             <button
                                 className={styles.row}
                                 onClick={() => onOpen(kind, entity)}
@@ -67,7 +69,12 @@ const WeeklyChart = ({
                             >
                                 <span className={styles.rank}>{String(rank).padStart(2, '0')}</span>
                                 <span className={styles.artwork}>
-                                    <EntityArtwork entity={entity} size={40} url={url} />
+                                    <EntityArtwork
+                                        entity={entity}
+                                        large={index === 0}
+                                        size={index === 0 ? 40 : 32}
+                                        url={url}
+                                    />
                                 </span>
                                 <span className={styles.label}>
                                     <span className={styles.name}>{entity.name}</span>
@@ -81,9 +88,17 @@ const WeeklyChart = ({
                                     aria-label={t('listeningHistory.entries', { count: plays })}
                                     className={styles.plays}
                                 >
-                                    {plays.toLocaleString(i18n.language)}
+                                    <span>{plays.toLocaleString(i18n.language)}</span>
+                                    <span className={styles.playsLabel}>
+                                        {t('listeningHistory.listens')}
+                                    </span>
                                 </span>
                             </button>
+                            {kind === 'tracks' && (
+                                <span className={styles.play}>
+                                    <TrackPlayButton entity={entity} />
+                                </span>
+                            )}
                         </li>
                     ))}
                 </ol>
@@ -107,7 +122,7 @@ export const WeeklyListeningCharts = () => {
             },
         });
     return (
-        <Stack className={styles.section} gap="xs">
+        <Stack className={styles.section} gap="sm">
             <TextTitle order={2} size="md">
                 {t('listeningHistory.weeklyCharts')}
             </TextTitle>
@@ -118,7 +133,7 @@ export const WeeklyListeningCharts = () => {
                     ))}
                 </div>
             ) : (
-                <Group>
+                <Group className={styles.connect}>
                     <Button onClick={() => navigate(AppRoute.LISTENING_HISTORY)} variant="light">
                         {t('listeningHistory.connect')}
                     </Button>

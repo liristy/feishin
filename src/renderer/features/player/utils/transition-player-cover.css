@@ -14,8 +14,26 @@
     view-transition-name: none;
 }
 
+:root[data-player-transition] [data-player-cover='expanded'] img {
+    opacity: 1 !important;
+}
+
+/* Backdrop filters leave a rectangular backing layer in Chromium's bar snapshot. */
+:root[data-player-transition] #player-bar {
+    backdrop-filter: none;
+}
+
 [data-fullscreen-player] {
     view-transition-name: fullscreen-player;
+}
+
+:root:not(:has([data-fullscreen-player])) #player-bar,
+#default-layout:has([data-fullscreen-player]) {
+    view-transition-name: fullscreen-player;
+}
+
+#default-layout [data-fullscreen-player] {
+    view-transition-name: none;
 }
 
 [data-player-controls] {
@@ -25,7 +43,8 @@
 /* Keep the persistent controls above the fullscreen background snapshots. */
 ::view-transition-group(player-controls) {
     z-index: 1;
-    animation: none;
+    animation-duration: var(--player-transition-duration);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 ::view-transition-old(player-controls) {
@@ -45,6 +64,15 @@
 
 ::view-transition-group(fullscreen-player) {
     animation-duration: var(--player-transition-duration);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-image-pair(fullscreen-player) {
+    width: 100%;
+    height: 100%;
+    overflow: clip;
+    animation: player-page-radius var(--player-transition-duration) cubic-bezier(0.22, 1, 0.36, 1)
+        both;
 }
 
 ::view-transition-image-pair(player-cover) {
@@ -63,35 +91,63 @@
     }
 }
 
+@keyframes player-page-radius {
+    from {
+        border-radius: var(--player-page-radius-from);
+    }
+
+    to {
+        border-radius: var(--player-page-radius-to);
+    }
+}
+
+::view-transition-old(fullscreen-player),
 ::view-transition-new(fullscreen-player) {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
     mix-blend-mode: normal;
-    animation: player-page-in var(--player-transition-duration) cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: none;
 }
 
-::view-transition-old(fullscreen-player) {
-    mix-blend-mode: normal;
-    animation: player-page-out var(--player-transition-duration) cubic-bezier(0.22, 1, 0.36, 1) both;
+/* Scale the fullscreen panel, keeping the compact bar's text out of the enlarged snapshot. */
+:root:has([data-fullscreen-player])::view-transition-old(fullscreen-player) {
+    opacity: 0;
 }
 
-@keyframes player-page-in {
-    from {
-        transform: translateY(100%);
+/* Reveal the compact bar at its natural size instead of squashing fullscreen content into it. */
+:root:not(:has([data-fullscreen-player])) {
+    &::view-transition-old(fullscreen-player) {
+        animation: player-page-close-out var(--player-transition-duration) linear both;
     }
 
-    to {
-        transform: translateY(0);
+    &::view-transition-new(fullscreen-player) {
+        object-fit: none;
+        object-position: center bottom;
+        animation: player-bar-close-in var(--player-transition-duration) linear both;
     }
 }
 
-@keyframes player-page-out {
-    from {
+@keyframes player-page-close-out {
+    0% {
         opacity: 1;
-        transform: translateY(0);
     }
 
-    to {
+    50%,
+    100% {
         opacity: 0;
-        transform: translateY(100%);
+    }
+}
+
+@keyframes player-bar-close-in {
+    0%,
+    50% {
+        opacity: 0;
+    }
+
+    85%,
+    100% {
+        opacity: 1;
     }
 }
 
@@ -145,7 +201,26 @@
     }
 }
 
+/* Opening uses the decoded large image, never an enlarged compact-cover raster. */
+:root[data-player-transition]:has([data-player-cover='expanded']) {
+    &::view-transition-old(player-cover) {
+        opacity: 0;
+        animation: none;
+    }
+
+    &::view-transition-new(player-cover) {
+        mix-blend-mode: normal;
+        opacity: 1;
+        animation: none;
+    }
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
     animation: none;
+}
+
+/* The expanded layout leaves an empty root snapshot. Keep the original page behind it. */
+:root:has([data-fullscreen-player])::view-transition-new(root) {
+    opacity: 0;
 }

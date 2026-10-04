@@ -113,6 +113,6 @@
 
     .label {
         top: auto;
-        bottom: calc(100% + 40px);
+        bottom: calc(100% + var(--compact-playerbar-height, 48px) - 8px);
     }
 }

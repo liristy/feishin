@@ -1,3 +1,5 @@
+@value track as progress-track, slider-value-wrapper as progress-time from './playerbar-slider.module.css';
+
 .palette {
     --theme-colors-background: rgb(20 23 24);
     --theme-colors-background-alternate: rgb(20 23 24);
@@ -10,6 +12,14 @@
     --theme-colors-surface-foreground: rgb(255 255 255);
 
     color: var(--theme-colors-foreground);
+
+    .progress-track {
+        --slider-track-bg: rgb(255 255 255 / 24%);
+    }
+
+    .progress-time {
+        --theme-colors-foreground-muted: rgb(255 255 255 / 90%);
+    }
 
     button[aria-pressed='false'],
     button[aria-expanded='false']:not([aria-pressed]) {
@@ -42,6 +52,7 @@
     z-index: 200;
     display: flex;
     justify-content: center;
+    background: var(--theme-colors-background);
     isolation: isolate;
 
     [data-lyrics-match] {

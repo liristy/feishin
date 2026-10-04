@@ -1,7 +1,7 @@
 @value left-controls-container as metadata, image-wrapper as artwork-wrapper, image as artwork, metadata-stack as song-info, line-item as line, secondary from './left-controls.module.css';
 @value main as play from './player-button.module.css';
 @value slider-container as progress from './playerbar-slider.module.css';
-@value buttons-container as transport from './center-controls.module.css';
+@value buttons-container as transport, controls-container as transport-row from './center-controls.module.css';
 
 .container {
     width: 100%;
@@ -82,7 +82,7 @@
     }
 
     .metadata {
-        height: 32px;
+        height: 36px;
         padding: 0;
     }
 
@@ -93,8 +93,8 @@
     .artwork {
         --theme-radius-md: 4px;
 
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
     }
 
     .song-info {
@@ -108,11 +108,12 @@
 
     .line {
         max-width: 100%;
-        font-size: 12px;
-        line-height: 14px;
+        font-size: 13px;
+        line-height: 15px;
 
         a,
-        p {
+        p,
+        span {
             font-size: inherit;
             line-height: inherit;
         }
@@ -126,8 +127,8 @@
     }
 
     .left-grid-item:has(.artwork-wrapper) .progress {
-        left: 40px;
-        width: calc(100% - 40px);
+        left: 44px;
+        width: calc(100% - 44px);
     }
 
     .transport {
@@ -147,5 +148,38 @@
 @media (width < 1000px) {
     .compact {
         gap: 8px;
+    }
+}
+
+.controls-grid:not(.compact) {
+    .transport-row {
+        height: 48px;
+    }
+
+    .play {
+        width: 48px;
+        height: 48px;
+        background: transparent !important;
+        border: 0;
+
+        svg {
+            width: 32px;
+            height: 32px;
+            color: var(--theme-colors-foreground);
+            fill: var(--theme-colors-foreground);
+        }
+
+        &:hover {
+            background: color-mix(in srgb, var(--theme-colors-foreground) 8%, transparent) !important;
+        }
+
+        &:active {
+            background: color-mix(in srgb, var(--theme-colors-foreground) 14%, transparent) !important;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--theme-colors-foreground);
+            outline-offset: 2px;
+        }
     }
 }

@@ -1,6 +1,15 @@
 .wrapper {
     display: inline-flex;
     flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
     font-size: 18px;
     color: var(--theme-colors-primary-filled);
+}
+
+.wrapper > svg {
+    width: 100%;
+    height: 100%;
 }

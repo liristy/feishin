@@ -9,12 +9,13 @@
 
 .scroll-area {
     flex: 1;
+    height: 0;
     min-height: 0;
     padding: 0 var(--theme-spacing-md) var(--theme-spacing-md) var(--theme-spacing-md);
 }
 
 .accordion-root {
-    height: 100%;
+    height: auto;
 }
 
 .accordion-item {
@@ -22,6 +23,8 @@
 }
 
 .accordion-control {
+    --sidebar-section-background: var(--theme-colors-background);
+
     height: auto;
     min-height: 2.5rem;
     border-radius: var(--theme-radius-md);

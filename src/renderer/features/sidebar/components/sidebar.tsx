@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
-import { MouseEvent, useMemo } from 'react';
+import { MouseEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import styles from './sidebar.module.css';
@@ -46,6 +46,7 @@ import { ScrollArea } from '/@/shared/components/scroll-area/scroll-area';
 import { Text } from '/@/shared/components/text/text';
 import { Tooltip } from '/@/shared/components/tooltip/tooltip';
 import { useImageHashUrl } from '/@/shared/hooks/use-image-hash-url';
+import { useTimeout } from '/@/shared/hooks/use-timeout';
 import { ExplicitStatus, LibraryItem } from '/@/shared/types/domain-types';
 
 const SidebarPlaylistSection = () => {
@@ -61,6 +62,11 @@ const SidebarPlaylistSection = () => {
 
 export const Sidebar = () => {
     const { t } = useTranslation();
+    const [searchVisible, setSearchVisible] = useState(false);
+    const { clear: keepSearchVisible, start: hideSearchLater } = useTimeout(
+        () => setSearchVisible(false),
+        1500,
+    );
 
     const sidebarPlaylistList = useSidebarPlaylistList();
 
@@ -117,9 +123,37 @@ export const Sidebar = () => {
     );
 
     return (
-        <div className={styles.container} id="left-sidebar">
+        <div
+            className={styles.container}
+            id="left-sidebar"
+            onBlurCapture={(event) => {
+                if (
+                    !event.currentTarget.contains(event.relatedTarget) &&
+                    !event.currentTarget.matches(':hover')
+                ) {
+                    hideSearchLater();
+                }
+            }}
+            onFocusCapture={keepSearchVisible}
+            onMouseEnter={keepSearchVisible}
+            onMouseLeave={(event) => {
+                if (
+                    !event.currentTarget
+                        .querySelector('#global-search-container button[data-visible]')
+                        ?.contains(document.activeElement)
+                ) {
+                    hideSearchLater();
+                }
+            }}
+            onWheelCapture={(event) => {
+                if (event.deltaY < 0) {
+                    keepSearchVisible();
+                    setSearchVisible(true);
+                }
+            }}
+        >
             <Group grow id="global-search-container" style={{ flexShrink: 0 }}>
-                <ActionBar />
+                <ActionBar searchVisible={searchVisible} />
             </Group>
             <ScrollArea allowDragScroll className={styles.scrollArea}>
                 <div className={styles.primaryNavigation}>

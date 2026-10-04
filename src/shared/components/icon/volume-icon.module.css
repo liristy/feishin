@@ -1,0 +1,65 @@
+.root {
+    transition: transform 180ms cubic-bezier(0.34, 1.5, 0.64, 1);
+
+    &[data-volume-level='0'] {
+        .speaker {
+            transform: translateX(-1px);
+        }
+
+        .waves {
+            opacity: 0;
+            transform: scale(0.7);
+        }
+
+        .mute {
+            opacity: 1;
+            stroke-dashoffset: 0;
+        }
+    }
+
+    &[data-volume-level='1'] .outer-wave {
+        opacity: 0;
+        transform: translateX(-1.5px);
+        transition-delay: 0ms;
+    }
+}
+
+button:active .root {
+    transform: scale(0.88);
+}
+
+.speaker {
+    transition: transform 220ms ease-out;
+}
+
+.waves {
+    transform-origin: 12px 12px;
+    transition:
+        opacity 220ms ease-out,
+        transform 220ms ease-out;
+}
+
+.outer-wave {
+    transition:
+        opacity 220ms ease-out 60ms,
+        transform 220ms ease-out 60ms;
+}
+
+.mute {
+    opacity: 0;
+    stroke-dasharray: 10;
+    stroke-dashoffset: 10;
+    transition:
+        opacity 180ms ease-out,
+        stroke-dashoffset 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .root,
+    .speaker,
+    .waves,
+    .outer-wave,
+    .mute {
+        transition: none;
+    }
+}

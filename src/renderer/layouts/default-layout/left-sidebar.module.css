@@ -1,6 +1,8 @@
 .container {
     position: relative;
     grid-area: sidebar;
+    min-height: 0;
+    overflow: hidden;
     background: var(--theme-colors-background-alternate);
     border-right: 1px solid color-mix(in srgb, var(--theme-colors-foreground) 4%, transparent);
 }

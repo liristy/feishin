@@ -93,5 +93,12 @@ export const SidebarIcon = ({ active, route, size }: SidebarIconProps) => {
                 return <RiHome6Line size={size} />;
         }
     };
-    return <span className={styles.wrapper}>{renderIcon()}</span>;
+    return (
+        <span
+            className={styles.wrapper}
+            style={size ? { height: `${size}px`, width: `${size}px` } : undefined}
+        >
+            {renderIcon()}
+        </span>
+    );
 };

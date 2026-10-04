@@ -71,6 +71,7 @@ app.whenReady().then(async () => {
                 pixel(rect.x + 2, rect.y + rect.height - 3),
                 pixel(rect.x + rect.width - 3, rect.y + rect.height - 3),
             ],
+            home: pixel(10, 10),
             markerRatio: measureMarker
                 ? (marker.right - marker.left + 1) / (marker.bottom - marker.top + 1)
                 : null,
@@ -80,11 +81,13 @@ app.whenReady().then(async () => {
         await window.loadURL(
             `data:text/html,${encodeURIComponent(`<style>${css}${playerBarCss}
             :root { --theme-colors-background-alternate: white; }
-            body { background: white; }
+            * { box-sizing:border-box; }
+            body { background: black; }
             </style>
-            <div id="player-bar" class="container" style="position:fixed;inset:auto 0 0;height:90px">
+            <div id="default-layout" style="position:fixed;inset:0;background:white">
+            <div id="player-bar" class="container" style="position:fixed;left:200px;bottom:20px;width:640px;height:56px;margin:0">
             <div data-player-cover="compact" style="position:fixed;left:12px;bottom:12px;width:60px;height:60px;background:red;border-radius:12px"></div>
-            <div data-player-controls style="position:fixed;z-index:200;left:480px;bottom:12px;width:40px;height:40px;background:blue"></div></div>`)}`,
+            <div data-player-controls style="position:fixed;z-index:200;left:480px;bottom:12px;width:40px;height:40px;background:blue"></div></div></div>`)}`,
         );
         await readyToShow;
         await window.webContents.capturePage();
@@ -100,7 +103,7 @@ app.whenReady().then(async () => {
             const bar = document.querySelector('#player-bar');
             const open = () => {
                 bar.classList.add('fullscreen');
-                document.body.insertAdjacentHTML('beforeend', '<section data-fullscreen-player style="position:fixed;inset:0;background:#222"><div data-player-cover="expanded" style="position:fixed;left:200px;top:100px;width:400px;height:400px;background:red;border-radius:24px"></div></section>');
+                bar.parentElement.insertAdjacentHTML('beforeend', '<section data-fullscreen-player style="position:fixed;inset:0;background:#222"><div data-player-cover="expanded" style="position:fixed;left:200px;top:100px;width:400px;height:400px;background:red;border-radius:24px"></div></section>');
             };
             const close = () => {
                 bar.classList.remove('fullscreen');
@@ -117,7 +120,7 @@ app.whenReady().then(async () => {
                 const frames = animation.effect.getKeyframes();
                 const duration = animation.effect.getTiming().duration;
                 const samples = [];
-                const controlRect = document.querySelector('[data-player-controls]').getBoundingClientRect();
+            const controlRect = document.querySelector('[data-player-controls]').getBoundingClientRect();
                 const opening = !!document.querySelector('[data-player-cover="expanded"]');
                 for (const time of [0, 0.2, 0.5, 0.8, 0.98].map(fraction => fraction * duration)) {
                     animations.forEach(item => { item.currentTime = time; });
@@ -125,20 +128,25 @@ app.whenReady().then(async () => {
                     const group = getComputedStyle(document.documentElement, '::view-transition-group(player-cover)');
                     const transform = new DOMMatrix(group.transform);
                     const pair = getComputedStyle(document.documentElement, '::view-transition-image-pair(player-cover)');
-                    const page = getComputedStyle(document.documentElement, opening ? '::view-transition-new(fullscreen-player)' : '::view-transition-old(fullscreen-player)');
+                    const page = getComputedStyle(document.documentElement, '::view-transition-group(fullscreen-player)');
+                    const pageTransform = new DOMMatrix(page.transform);
+                    const oldPage = getComputedStyle(document.documentElement, '::view-transition-old(fullscreen-player)');
+                    const newPage = getComputedStyle(document.documentElement, '::view-transition-new(fullscreen-player)');
                     const oldCover = getComputedStyle(document.documentElement, '::view-transition-old(player-cover)');
                     const newCover = getComputedStyle(document.documentElement, '::view-transition-new(player-cover)');
+                    const controlGroup = getComputedStyle(document.documentElement, '::view-transition-group(player-controls)');
+                    const controlTransform = new DOMMatrix(controlGroup.transform);
                     const pixels = await window.require('electron').ipcRenderer.invoke('cover-frame-pixels', {
                         rect: {x:transform.e, y:transform.f, width:parseFloat(group.width), height:parseFloat(group.height)},
-                        control: {x:controlRect.x+20,y:controlRect.y+20},
+                        control: {x:controlTransform.e+20,y:controlTransform.f+20},
                         measureMarker,
                         viewport: {width:innerWidth,height:innerHeight},
                     });
-                    samples.push({...pixels, time, width:parseFloat(group.width), radius:parseFloat(pair.borderTopLeftRadius), pageY:new DOMMatrix(page.transform).f, pageHeight:parseFloat(page.height), oldOpacity:parseFloat(oldCover.opacity), newOpacity:parseFloat(newCover.opacity)});
+                    samples.push({...pixels, time, width:parseFloat(group.width), radius:parseFloat(pair.borderTopLeftRadius), pageX:pageTransform.e,pageY:pageTransform.f,pageWidth:parseFloat(page.width),pageHeight:parseFloat(page.height), oldPageOpacity:parseFloat(oldPage.opacity),newPageOpacity:parseFloat(newPage.opacity),oldOpacity:parseFloat(oldCover.opacity), newOpacity:parseFloat(newCover.opacity),controlTransform:controlGroup.transform});
                 }
                 animations.forEach(item => item.finish());
                 await current.finished;
-                return { frames: frames.map(f => ({width:f.width,transform:f.transform})), samples, duration, barBackground, preserveAspect, cleanedUp:!document.documentElement.hasAttribute('data-player-cover-preserve-aspect') };
+                return { frames: frames.map(f => ({width:f.width,transform:f.transform})), samples, duration, barBackground, preserveAspect, cleanedUp:!document.documentElement.hasAttribute('data-player-cover-preserve-aspect') && !document.documentElement.hasAttribute('data-player-transition') };
             };
             await new Promise(requestAnimationFrame);
             transition(open);
@@ -170,6 +178,20 @@ app.whenReady().then(async () => {
                 transition(close);
                 rectangular.push({width, height, nativeBox, expanding, collapsing:await inspect(true)});
             }
+            transition(() => {
+                open();
+                setTimeout(() => {
+                    const cover=document.querySelector('[data-player-cover="expanded"]');
+                    const image=new Image();
+                    image.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1600"><rect width="100%" height="100%" fill="lime"/></svg>');
+                    image.style.cssText='width:100%;height:100%;border-radius:24px';
+                    cover.append(image);
+                }, 70);
+            });
+            const loadingCover = await inspect(true);
+            const openingImageWidth=document.querySelector('[data-player-cover="expanded"] img')?.naturalWidth;
+            transition(close);
+            await current.finished;
             compact.replaceChildren();
             transition(open);
             transition(close);
@@ -181,15 +203,50 @@ app.whenReady().then(async () => {
             close();
             document.startViewTransition = undefined;
             transition(open);
-            return {opening,closing,rectangular,interruptedClosed,reducedMotionImmediate,unsupportedImmediate:!!document.querySelector('section')};
+            return {opening,closing,rectangular,loadingCover,openingImageWidth,interruptedClosed,reducedMotionImmediate,viewport:{width:innerWidth,height:innerHeight},unsupportedImmediate:!!document.querySelector('section')};
         })().catch(error => { throw new Error(error.stack || String(error)); })`);
         assert.equal(result.opening.frames[0].width, '60px');
+        fs.mkdirSync('.scratch/apple-music', { recursive: true });
+        fs.writeFileSync(
+            '.scratch/apple-music/transition-results.json',
+            JSON.stringify(result, null, 2),
+        );
         assert.equal(result.opening.frames.at(-1).width, '400px');
         assert.equal(result.closing.frames[0].width, '400px');
         assert.equal(result.closing.frames.at(-1).width, '60px');
         assert.equal(result.opening.duration, 500);
         assert.equal(result.closing.duration, 300);
         assert.equal(result.opening.preserveAspect, false);
+        assert.ok(result.loadingCover.cleanedUp);
+        assert.equal(result.openingImageWidth, 1600, 'Opening waits for the large cover to decode');
+        for (const sample of result.loadingCover.samples) {
+            assert.deepEqual(
+                sample.center,
+                [0, 255, 0],
+                'Loaded artwork stays visible during loading',
+            );
+            assert.equal(sample.oldOpacity, 0);
+            assert.equal(sample.newOpacity, 1);
+        }
+        for (const sample of result.opening.samples) {
+            assert.equal(
+                sample.oldPageOpacity,
+                0,
+                'Compact metadata is never stretched on opening',
+            );
+            assert.equal(sample.newPageOpacity, 1);
+        }
+        for (const sample of result.closing.samples) {
+            assert.equal(
+                sample.oldPageOpacity,
+                Math.max(0, 1 - (sample.time / result.closing.duration) * 2),
+            );
+        }
+        assert.equal(
+            result.closing.samples.at(-1).newPageOpacity,
+            1,
+            'The compact bar is already visible before closing ends',
+        );
         for (const fixture of result.rectangular) {
             for (const direction of [fixture.expanding, fixture.collapsing]) {
                 assert.ok(direction.preserveAspect && direction.cleanedUp);
@@ -202,21 +259,18 @@ app.whenReady().then(async () => {
                     assert.deepEqual(sample.center, [0, 255, 0]);
                     assert.deepEqual(sample.control, [255, 0, 0]);
                 }
-                assert.equal(direction.samples[0].newOpacity, 0);
+                assert.equal(
+                    direction.samples[0].newOpacity,
+                    direction === fixture.expanding ? 1 : 0,
+                );
                 assert.ok(direction.samples.at(-1).newOpacity > 0.999);
             }
         }
-        assert.equal(result.closing.barBackground, 'rgb(255, 255, 255)');
-        assert.equal(result.closing.samples[0].bottom[0], 34);
-        assert.ok(result.closing.samples[1].bottom[0] > 34);
-        assert.ok(result.closing.samples[1].bottom[0] < 253);
-        assert.ok(
-            result.closing.samples.at(-1).bottom.every((channel) => channel >= 253),
-            'The bottom must blend into the playback bar before the page disappears',
-        );
+        assert.ok(result.closing.barBackground.includes('1 1 1 / 0.88'));
         for (const sample of result.closing.samples) {
             const coverProgress = (400 - sample.width) / 340;
-            const pageProgress = sample.pageY / sample.pageHeight;
+            const pageProgress =
+                (result.viewport.height - sample.pageHeight) / (result.viewport.height - 56);
             assert.ok(
                 Math.abs(coverProgress - pageProgress) < 0.002,
                 'Page and cover must close at the same pace',
@@ -233,6 +287,13 @@ app.whenReady().then(async () => {
         );
         console.log(JSON.stringify(result));
         for (const sample of [...result.opening.samples, ...result.closing.samples]) {
+            if (sample.pageX > 10 || sample.pageY > 10) {
+                assert.deepEqual(
+                    sample.home,
+                    [255, 255, 255],
+                    'The home behind the moving player must not turn black',
+                );
+            }
             assert.deepEqual(
                 sample.control,
                 [255, 0, 0],
@@ -252,10 +313,17 @@ app.whenReady().then(async () => {
         assert.ok(result.opening.samples.at(-1).radius > 23.9);
         assert.equal(result.closing.samples[0].radius, 24);
         assert.ok(result.closing.samples.at(-1).radius < 12.1);
-        assert.ok(result.opening.samples[0].pageY > 700);
+        assert.equal(result.opening.samples[0].pageWidth, 640);
+        assert.equal(result.opening.samples[0].pageHeight, 56);
+        assert.equal(result.opening.samples[0].pageX, 200);
+        assert.equal(result.opening.samples[0].pageY, result.viewport.height - 76);
         assert.ok(result.opening.samples.at(-1).pageY < 1);
         assert.equal(result.closing.samples[0].pageY, 0);
-        assert.ok(result.closing.samples.at(-1).pageY > 700);
+        assert.ok(
+            Math.abs(result.closing.samples.at(-1).pageY - (result.viewport.height - 76)) < 1,
+        );
+        assert.ok(result.closing.samples.at(-1).pageWidth < 641);
+        assert.ok(result.closing.samples.at(-1).pageHeight < 57);
         console.log(
             'Native cover movement, scaling in both directions, interruption and fallback passed.',
         );

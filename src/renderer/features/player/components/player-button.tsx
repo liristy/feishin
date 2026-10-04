@@ -1,10 +1,11 @@
 import clsx from 'clsx';
 import { t } from 'i18next';
-import { forwardRef, ReactNode } from 'react';
+import { forwardRef, isValidElement, MouseEvent, ReactNode } from 'react';
 
 import styles from './player-button.module.css';
 
 import { ActionIcon, ActionIconProps } from '/@/shared/components/action-icon/action-icon';
+import { Icon, IconProps } from '/@/shared/components/icon/icon';
 import { Tooltip, TooltipProps } from '/@/shared/components/tooltip/tooltip';
 import { PlaybackSelectors } from '/@/shared/constants/playback-selectors';
 
@@ -17,6 +18,23 @@ interface PlayerButtonProps extends Omit<ActionIconProps, 'icon' | 'variant'> {
 
 export const PlayerButton = forwardRef<HTMLButtonElement, PlayerButtonProps>(
     ({ icon, isActive, tooltip, variant, ...rest }: PlayerButtonProps, ref) => {
+        const iconType = isValidElement<IconProps>(icon) ? icon.props.icon : undefined;
+        const direction = iconType === 'mediaPrevious' ? -1 : iconType === 'mediaNext' ? 1 : 0;
+        const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+            event.stopPropagation();
+            if (direction && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const image = event.currentTarget.querySelector('svg');
+                image?.getAnimations().forEach((animation) => animation.cancel());
+                image?.animate(
+                    [
+                        { transform: `translateX(${direction * 6}px) scale(0.75)` },
+                        { transform: 'translateX(0) scale(1)' },
+                    ],
+                    { duration: 320, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+                );
+            }
+            rest.onClick?.(event);
+        };
         if (tooltip) {
             return (
                 <Tooltip {...tooltip}>
@@ -24,13 +42,14 @@ export const PlayerButton = forwardRef<HTMLButtonElement, PlayerButtonProps>(
                         aria-pressed={isActive}
                         className={clsx({
                             [styles.active]: isActive,
+                            [styles.transportButton]: direction,
                         })}
+                        data-player-action={
+                            direction ? (direction < 0 ? 'previous' : 'next') : undefined
+                        }
                         ref={ref}
                         {...rest}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            rest.onClick?.(e);
-                        }}
+                        onClick={handleClick}
                         variant="subtle"
                     >
                         {icon}
@@ -44,13 +63,12 @@ export const PlayerButton = forwardRef<HTMLButtonElement, PlayerButtonProps>(
                 aria-pressed={isActive}
                 className={clsx(styles.playerButton, styles[variant], {
                     [styles.active]: isActive,
+                    [styles.transportButton]: direction,
                 })}
+                data-player-action={direction ? (direction < 0 ? 'previous' : 'next') : undefined}
                 ref={ref}
                 {...rest}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    rest.onClick?.(e);
-                }}
+                onClick={handleClick}
                 variant="subtle"
             >
                 {icon}
@@ -71,11 +89,8 @@ export const MainPlayButton = forwardRef<HTMLButtonElement, PlayButtonProps>(
 
         return (
             <ActionIcon
-                className={clsx(styles.main, playerStateClass)}
-                icon={isPaused ? 'mediaPlay' : 'mediaPause'}
-                iconProps={{
-                    size: 'lg',
-                }}
+                className={clsx(styles.main, styles.transportButton, playerStateClass)}
+                data-player-action="play"
                 onClick={(e) => {
                     e.stopPropagation();
                     onClick?.(e);
@@ -86,7 +101,14 @@ export const MainPlayButton = forwardRef<HTMLButtonElement, PlayButtonProps>(
                     openDelay: 0,
                 }}
                 {...props}
-            />
+            >
+                <Icon
+                    className={styles.playIcon}
+                    icon={isPaused ? 'mediaPlay' : 'mediaPause'}
+                    key={isPaused ? 'play' : 'pause'}
+                    size={28}
+                />
+            </ActionIcon>
         );
     },
 );

@@ -186,6 +186,28 @@
     width: 100%;
     padding: 0 1rem;
     padding-bottom: 1.5rem;
+
+    [data-player-action='play'] {
+        background: transparent !important;
+        border: 0;
+
+        svg {
+            width: 32px;
+            height: 32px;
+            color: var(--theme-colors-foreground);
+            fill: var(--theme-colors-foreground);
+        }
+
+        &:hover,
+        &:active {
+            background: color-mix(in srgb, var(--theme-colors-foreground) 8%, transparent) !important;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--theme-colors-foreground);
+            outline-offset: 2px;
+        }
+    }
 }
 
 .bottom-controls-bar {

@@ -207,7 +207,7 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                         </div>
                     )}
                 </AnimatePresence>
-                <motion.div className={styles.metadataStack} layout="position">
+                <div className={styles.metadataStack}>
                     {isRadioMode ? (
                         <RadioMetadataDisplay
                             onStopPropagation={stopPropagation}
@@ -334,7 +334,7 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                             )}
                         </>
                     )}
-                </motion.div>
+                </div>
             </LayoutGroup>
         </div>
     );

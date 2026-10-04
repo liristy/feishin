@@ -113,16 +113,18 @@ export const RightControls = ({ compact = false }: { compact?: boolean }) => {
                             variant="subtle"
                         />
                     </Popover.Target>
-                    <Popover.Dropdown onClick={(event) => event.stopPropagation()} p="sm">
-                        <Group gap="xs">
+                    <Popover.Dropdown
+                        className={styles.moreMenu}
+                        onClick={(event) => event.stopPropagation()}
+                        p="sm"
+                    >
+                        <Group gap="xs" wrap="nowrap">
                             {isRadioActive ? <RadioStopButton /> : <StopButton />}
                             <ShuffleAllButton disabled={isRadioActive} />
                             <DlnaCastButton />
                             <SleepTimerButton />
                             <PlayerConfig />
                             {showFavorites && <FavoriteButton />}
-                        </Group>
-                        <Group gap="sm" mt="xs">
                             {showRatings && <RatingButton />}
                             <AutoDJButton />
                         </Group>
@@ -702,7 +704,12 @@ const VolumeButton = ({ compact = false }: { compact?: boolean }) => {
                         variant="subtle"
                     />
                 </Popover.Target>
-                <Popover.Dropdown onClick={(event) => event.stopPropagation()} p="sm">
+                <Popover.Dropdown
+                    aria-label={t('player.volume')}
+                    onClick={(event) => event.stopPropagation()}
+                    p="sm"
+                    role="region"
+                >
                     <Group gap="xs" wrap="nowrap">
                         <ActionIcon
                             aria-label={t('player.muted')}
@@ -716,22 +723,11 @@ const VolumeButton = ({ compact = false }: { compact?: boolean }) => {
                             min={0}
                             onChange={handleVolumeSlider}
                             onWheel={handleVolumeWheel}
+                            thumbLabel={t('player.volume')}
                             value={sliderValue}
                             w={140}
                         />
                     </Group>
-                    <Select
-                        aria-label={t('setting.audioDevice')}
-                        data={[
-                            { label: t('setting.audioDeviceDefault'), value: '' },
-                            ...audioDevices,
-                        ]}
-                        mt="xs"
-                        onChange={(value) => handleSelectAudioDevice(value || null)}
-                        size="xs"
-                        value={currentAudioDeviceId || ''}
-                        w={180}
-                    />
                 </Popover.Dropdown>
             </Popover>
         );

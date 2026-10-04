@@ -6,3 +6,8 @@
     align-items: center;
     padding: 0;
 }
+
+.more-menu {
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+}
