@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +17,6 @@ import {
     useCollections,
     useSidebarCollapsedNavigation,
     useSidebarItems,
-    useWindowSettings,
 } from '/@/renderer/store';
 import { DropdownMenu } from '/@/shared/components/dropdown-menu/dropdown-menu';
 import { Flex } from '/@/shared/components/flex/flex';
@@ -27,13 +25,11 @@ import { Icon } from '/@/shared/components/icon/icon';
 import { ScrollArea } from '/@/shared/components/scroll-area/scroll-area';
 import { Stack } from '/@/shared/components/stack/stack';
 import { LibraryItem } from '/@/shared/types/domain-types';
-import { Platform } from '/@/shared/types/types';
 
 export const CollapsedSidebar = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const collections = useCollections();
-    const { windowBarStyle } = useWindowSettings();
     const sidebarCollapsedNavigation = useSidebarCollapsedNavigation();
     const sidebarItems = useSidebarItems();
     const { isScanning } = useScanStatus();
@@ -76,13 +72,7 @@ export const CollapsedSidebar = () => {
     }, [sidebarItems, translatedSidebarItemMap]);
 
     return (
-        <motion.div
-            className={clsx({
-                [styles.linux]: windowBarStyle === Platform.LINUX,
-                [styles.sidebarContainer]: true,
-                [styles.web]: windowBarStyle === Platform.WEB,
-            })}
-        >
+        <motion.div className={styles.sidebarContainer}>
             <ScrollArea>
                 {sidebarCollapsedNavigation && (
                     <Group gap={0} grow>

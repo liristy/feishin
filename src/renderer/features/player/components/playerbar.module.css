@@ -1,7 +1,11 @@
+@value left-controls-container as metadata, image-wrapper as artwork-wrapper, image as artwork, metadata-stack as song-info, line-item as line, secondary from './left-controls.module.css';
+@value main as play from './player-button.module.css';
+@value slider-container as progress from './playerbar-slider.module.css';
+@value buttons-container as transport from './center-controls.module.css';
+
 .container {
     width: 100%;
     height: 100%;
-    border-top: 1px solid color-mix(in srgb, var(--theme-colors-foreground) 6%, transparent);
 }
 
 .controls-grid {
@@ -51,4 +55,97 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+}
+
+.compact {
+    grid-template-columns: auto minmax(100px, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+
+    .left-grid-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        order: 2;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    .center-grid-item {
+        order: 1;
+        overflow: visible;
+    }
+
+    .right-grid-item {
+        order: 3;
+    }
+
+    .metadata {
+        height: 32px;
+        padding: 0;
+    }
+
+    .artwork-wrapper {
+        padding: 0 8px 0 0;
+    }
+
+    .artwork {
+        --theme-radius-md: 4px;
+
+        width: 32px;
+        height: 32px;
+    }
+
+    .song-info {
+        gap: 0;
+    }
+
+    .secondary {
+        display: flex;
+        align-items: center;
+    }
+
+    .line {
+        max-width: 100%;
+        font-size: 12px;
+        line-height: 14px;
+
+        a,
+        p {
+            font-size: inherit;
+            line-height: inherit;
+        }
+    }
+
+    .progress {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 12px;
+    }
+
+    .left-grid-item:has(.artwork-wrapper) .progress {
+        left: 40px;
+        width: calc(100% - 40px);
+    }
+
+    .transport {
+        gap: 0;
+    }
+
+    .play {
+        background: transparent !important;
+
+        svg {
+            color: var(--theme-colors-foreground);
+            fill: var(--theme-colors-foreground);
+        }
+    }
+}
+
+@media (width < 1000px) {
+    .compact {
+        gap: 8px;
+    }
 }

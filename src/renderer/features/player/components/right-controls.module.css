@@ -1,0 +1,8 @@
+.container {
+    padding: 0.5rem 1rem;
+}
+
+.compact {
+    align-items: center;
+    padding: 0;
+}

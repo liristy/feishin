@@ -1,0 +1,7 @@
+.dropdown {
+    color: var(--theme-colors-foreground);
+    background: var(--theme-colors-background);
+    border: 1px solid var(--theme-colors-border);
+    border-radius: var(--theme-radius-lg);
+    box-shadow: 0 12px 36px rgb(0 0 0 / 18%);
+}

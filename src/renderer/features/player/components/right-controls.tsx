@@ -2,13 +2,21 @@ import { t } from 'i18next';
 import { useCallback, useEffect, useMemo, useState, WheelEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import styles from './right-controls.module.css';
+
 import { PopoverPlayQueue } from '/@/renderer/features/now-playing/components/popover-play-queue';
+import {
+    RadioStopButton,
+    ShuffleAllButton,
+    StopButton,
+} from '/@/renderer/features/player/components/center-controls';
 import { DlnaCastButton } from '/@/renderer/features/player/components/dlna-cast-button';
 import { DlnaVolumeButton } from '/@/renderer/features/player/components/dlna/volume-button';
 import { PlayerConfig } from '/@/renderer/features/player/components/player-config';
 import { CustomPlayerbarSlider } from '/@/renderer/features/player/components/playerbar-slider';
 import { SleepTimerButton } from '/@/renderer/features/player/components/sleep-timer-button';
 import { usePlayer } from '/@/renderer/features/player/context/player-context';
+import { useIsRadioActive } from '/@/renderer/features/radio/hooks/use-radio-player';
 import { useAudioDevices } from '/@/renderer/features/settings/components/playback/audio-settings';
 import {
     ListConfigBooleanControl,
@@ -44,7 +52,6 @@ import {
 } from '/@/renderer/store';
 import { useFullScreenPlayerStoreActions } from '/@/renderer/store/full-screen-player.store';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
-import { Button } from '/@/shared/components/button/button';
 import { ContextMenu } from '/@/shared/components/context-menu/context-menu';
 import { Flex } from '/@/shared/components/flex/flex';
 import { Group } from '/@/shared/components/group/group';
@@ -85,12 +92,50 @@ const calculateVolumeDown = (volume: number, volumeWheelStep: number) => {
     return volumeToSet;
 };
 
-export const RightControls = () => {
+export const RightControls = ({ compact = false }: { compact?: boolean }) => {
+    const { t } = useTranslation();
     const showRatings = useShowRatings();
     const showFavorites = useShowFavorites();
     const playbackType = usePlaybackType();
+    const isRadioActive = useIsRadioActive();
+
+    if (compact) {
+        return (
+            <Group className={styles.compact} gap={2} h="100%" wrap="nowrap">
+                <Popover position="top-end">
+                    <Popover.Target>
+                        <ActionIcon
+                            aria-label={t('common.menu')}
+                            icon="ellipsisHorizontal"
+                            iconProps={{ size: 'md' }}
+                            onClick={(event) => event.stopPropagation()}
+                            size="sm"
+                            variant="subtle"
+                        />
+                    </Popover.Target>
+                    <Popover.Dropdown onClick={(event) => event.stopPropagation()} p="sm">
+                        <Group gap="xs">
+                            {isRadioActive ? <RadioStopButton /> : <StopButton />}
+                            <ShuffleAllButton disabled={isRadioActive} />
+                            <DlnaCastButton />
+                            <SleepTimerButton />
+                            <PlayerConfig />
+                            {showFavorites && <FavoriteButton />}
+                        </Group>
+                        <Group gap="sm" mt="xs">
+                            {showRatings && <RatingButton />}
+                            <AutoDJButton />
+                        </Group>
+                    </Popover.Dropdown>
+                </Popover>
+                <LyricsButton />
+                <QueueButton />
+                {playbackType === PlayerType.DLNA ? <DlnaVolumeButton /> : <VolumeButton compact />}
+            </Group>
+        );
+    }
     return (
-        <Flex align="flex-end" direction="column" h="100%" px="1rem" py="0.5rem">
+        <Flex align="flex-end" className={styles.container} direction="column" h="100%">
             <Group h="calc(100% / 3)">
                 {showRatings && <RatingButton />}
                 <AutoDJButton />
@@ -293,18 +338,18 @@ const AutoDJButton = () => {
     return (
         <Popover position="top-end" withArrow>
             <Popover.Target>
-                <Button
+                <ActionIcon
+                    aria-label={t('setting.autoDJ')}
                     aria-pressed={settings.enabled}
+                    icon="autoDJ"
+                    iconProps={{ color: settings.enabled ? 'primary' : undefined, size: 'lg' }}
                     onClick={(e) => {
                         e.stopPropagation();
                     }}
-                    size="compact-xs"
-                    style={{ color: settings.enabled ? 'var(--theme-colors-primary)' : undefined }}
-                    uppercase
-                    variant="transparent"
-                >
-                    {t('setting.autoDJ')}
-                </Button>
+                    size="sm"
+                    tooltip={{ label: t('setting.autoDJ'), openDelay: 0 }}
+                    variant="subtle"
+                />
             </Popover.Target>
             <Popover.Dropdown maw={480} miw={320} onClick={(e) => e.stopPropagation()} p="sm">
                 <Stack gap="sm">
@@ -348,19 +393,33 @@ const QueueButton = () => {
     const sideQueueType = useSideQueueType();
     const { bindings } = useHotkeySettings();
     const [popoverOpened, setPopoverOpened] = useState(false);
+    const { activeTab, expanded } = useFullScreenPlayerStore();
+    const { setStore } = useFullScreenPlayerStoreActions();
+    const queueOpened = expanded ? activeTab === 'queue' : isSidebarRightExpanded;
+
+    useEffect(() => {
+        if (expanded) setPopoverOpened(false);
+    }, [expanded]);
+
     const handleToggleQueue = () => {
-        if (sideQueueType === 'sideQueue') setSideBar({ rightExpanded: !isSidebarRightExpanded });
-        else setPopoverOpened((prev) => !prev);
+        if (expanded) {
+            setStore({ activeTab: activeTab === 'queue' ? '' : 'queue' });
+        } else if (sideQueueType === 'sideQueue') {
+            setSideBar({ rightExpanded: !isSidebarRightExpanded });
+        } else {
+            setPopoverOpened((prev) => !prev);
+        }
     };
     useHotkeys([
         [bindings.toggleQueue.isGlobal ? '' : bindings.toggleQueue.hotkey, handleToggleQueue],
     ]);
-    if (sideQueueType === 'sideQueue') {
+    if (expanded || sideQueueType === 'sideQueue') {
         return (
             <ActionIcon
-                aria-pressed={isSidebarRightExpanded}
-                icon={isSidebarRightExpanded ? 'panelRightClose' : 'panelRightOpen'}
-                iconProps={{ size: 'lg' }}
+                aria-label={t('player.viewQueue')}
+                aria-pressed={queueOpened}
+                icon="queue"
+                iconProps={{ color: queueOpened ? 'primary' : undefined, size: 'lg' }}
                 onClick={(e) => {
                     e.stopPropagation();
                     handleToggleQueue();
@@ -394,8 +453,9 @@ const LyricsButton = () => {
 
     return (
         <ActionIcon
+            aria-label={t('player.lyrics')}
             aria-pressed={activeTab === 'lyrics' && isFullScreenPlayerExpanded}
-            icon="microphone"
+            icon="lyrics"
             iconProps={{
                 color: activeTab === 'lyrics' && isFullScreenPlayerExpanded ? 'primary' : undefined,
                 size: 'lg',
@@ -543,7 +603,8 @@ const RatingButton = () => {
     );
 };
 
-const VolumeButton = () => {
+const VolumeButton = ({ compact = false }: { compact?: boolean }) => {
+    const { t } = useTranslation();
     const { bindings } = useHotkeySettings();
     const volume = usePlayerVolume();
     const muted = usePlayerMuted();
@@ -626,6 +687,55 @@ const VolumeButton = () => {
         [bindings.volumeUp.isGlobal ? '' : bindings.volumeUp.hotkey, handleVolumeUpThrottled],
         [bindings.volumeMute.isGlobal ? '' : bindings.volumeMute.hotkey, handleMute],
     ]);
+
+    if (compact) {
+        return (
+            <Popover position="top-end">
+                <Popover.Target>
+                    <ActionIcon
+                        aria-label={t('player.volume')}
+                        icon={muted ? 'volumeMute' : volume > 50 ? 'volumeMax' : 'volumeNormal'}
+                        iconProps={{ size: 'md' }}
+                        onClick={(event) => event.stopPropagation()}
+                        onWheel={handleVolumeWheel}
+                        size="sm"
+                        variant="subtle"
+                    />
+                </Popover.Target>
+                <Popover.Dropdown onClick={(event) => event.stopPropagation()} p="sm">
+                    <Group gap="xs" wrap="nowrap">
+                        <ActionIcon
+                            aria-label={t('player.muted')}
+                            icon={muted ? 'volumeMute' : 'volumeMax'}
+                            onClick={handleMute}
+                            size="sm"
+                            variant="subtle"
+                        />
+                        <CustomPlayerbarSlider
+                            max={100}
+                            min={0}
+                            onChange={handleVolumeSlider}
+                            onWheel={handleVolumeWheel}
+                            value={sliderValue}
+                            w={140}
+                        />
+                    </Group>
+                    <Select
+                        aria-label={t('setting.audioDevice')}
+                        data={[
+                            { label: t('setting.audioDeviceDefault'), value: '' },
+                            ...audioDevices,
+                        ]}
+                        mt="xs"
+                        onChange={(value) => handleSelectAudioDevice(value || null)}
+                        size="xs"
+                        value={currentAudioDeviceId || ''}
+                        w={180}
+                    />
+                </Popover.Dropdown>
+            </Popover>
+        );
+    }
 
     return (
         <>

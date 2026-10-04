@@ -14,37 +14,6 @@
     font-display: swap;
 }
 
-:root {
-    --mantine-font-size-xs: 14px !important;
-    --mantine-font-size-sm: 16px !important;
-    --mantine-font-size-md: 17px !important;
-}
-
-button,
-input,
-textarea,
-select,
-[role='button'],
-[role='menuitem'],
-[role='tab'],
-[role='option'] {
-    font-size: 16px !important;
-}
-
-[data-row-index] {
-    font-size: 19px !important;
-}
-
-[data-row-index] :where(div, span, p, a) {
-    font-size: inherit !important;
-    line-height: 1.35 !important;
-}
-
-[data-row-index] [class*='artist'],
-[data-row-index] [class*='artist'] * {
-    font-size: 16px !important;
-}
-
 [class*='lyric'],
 [class*='lyric'] * {
     --mantine-font-size-xs: 0.75rem !important;

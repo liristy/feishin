@@ -1,6 +1,8 @@
 import { t } from 'i18next';
 import { useRef, useState } from 'react';
 
+import styles from './popover-play-queue.module.css';
+
 import { ItemListHandle } from '/@/renderer/components/item-list/types';
 import { PlayQueue } from '/@/renderer/features/now-playing/components/play-queue';
 import { PlayQueueListControls } from '/@/renderer/features/now-playing/components/play-queue-list-controls';
@@ -32,11 +34,13 @@ export const PopoverPlayQueue = ({
 
     return (
         <Popover
-            arrowSize={24}
+            arrowSize={8}
+            classNames={{ dropdown: styles.dropdown }}
             offset={12}
             onClose={handleClose}
             opened={opened}
             position="top"
+            radius="lg"
             transitionProps={{
                 transition: 'fade',
             }}
@@ -44,9 +48,11 @@ export const PopoverPlayQueue = ({
         >
             <Popover.Target>
                 <ActionIcon
+                    aria-label={t('player.viewQueue')}
                     aria-pressed={opened}
-                    icon="arrowUpToLine"
+                    icon="queue"
                     iconProps={{
+                        color: opened ? 'primary' : undefined,
                         size: 'lg',
                     }}
                     onClick={handleToggle}
@@ -58,7 +64,17 @@ export const PopoverPlayQueue = ({
                     variant="subtle"
                 />
             </Popover.Target>
-            <Popover.Dropdown h="600px" mah="80dvh" opacity={0.95} p="xs" w="560px">
+            <Popover.Dropdown
+                aria-label={t('player.viewQueue')}
+                h="600px"
+                id="popover-play-queue"
+                mah="80dvh"
+                maw="calc(100vw - 32px)"
+                opacity={0.98}
+                p="sm"
+                role="region"
+                w="560px"
+            >
                 <Stack gap={0} h="100%" w="100%">
                     <PlayQueueListControls
                         handleSearch={setSearch}

@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import appIcon from '../../../../../assets/icons/64x64.png';
 import styles from './action-bar.module.css';
 
 import { useScanStatus } from '/@/renderer/features/shared/hooks/use-scan-status';
@@ -24,20 +23,13 @@ export const ActionBar = () => {
             <Group className={styles.brandRow} gap="xs" justify="space-between" wrap="nowrap">
                 <DropdownMenu position="bottom-start">
                     <DropdownMenu.Target>
-                        <Button
+                        <ActionIcon
                             aria-label={t('common.menu')}
-                            className={styles.brand}
-                            leftSection={
-                                isScanning ? (
-                                    <Icon animate="spin" color="primary" icon="spinner" size="xl" />
-                                ) : (
-                                    <img alt="" height={28} src={appIcon} width={28} />
-                                )
-                            }
+                            icon={isScanning ? 'spinner' : 'menu'}
+                            iconProps={{ animate: isScanning ? 'spin' : undefined, size: 'sm' }}
+                            size="xs"
                             variant="subtle"
-                        >
-                            qMusic
-                        </Button>
+                        />
                     </DropdownMenu.Target>
                     <DropdownMenu.Dropdown>
                         <AppMenu />
@@ -49,13 +41,11 @@ export const ActionBar = () => {
             </Group>
             <Button
                 classNames={{ inner: styles.searchInner, root: styles.search }}
-                leftSection={<Icon color="muted" icon="search" size="lg" />}
+                leftSection={<Icon color="primary" icon="search" size="lg" />}
                 onClick={open}
                 variant="subtle"
             >
-                <Text isMuted size="sm">
-                    {t('common.search')}
-                </Text>
+                <Text size="sm">{t('common.search')}</Text>
             </Button>
         </div>
     );

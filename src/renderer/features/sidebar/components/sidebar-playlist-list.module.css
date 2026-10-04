@@ -8,6 +8,32 @@
     position: relative;
 }
 
+.section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--theme-colors-foreground-muted);
+}
+
+.header {
+    position: relative;
+    min-width: 0;
+
+    &:hover,
+    &:focus-within {
+        .header-actions {
+            opacity: 1;
+        }
+    }
+}
+
+.header-actions {
+    position: absolute;
+    right: 0;
+    background: var(--theme-colors-background-alternate);
+    opacity: 0;
+    transition: opacity 150ms ease;
+}
+
 .row {
     position: relative;
     display: flex;
@@ -30,8 +56,20 @@
 }
 
 .row-compact {
+    gap: 8px;
     align-items: center;
-    padding: var(--theme-spacing-sm) var(--theme-spacing-md);
+    min-height: 32px;
+    padding: 4px var(--theme-spacing-sm);
+}
+
+.compact-artwork {
+    --theme-radius-md: 3px;
+
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    overflow: hidden;
+    border-radius: 3px;
 }
 
 .compact-name {

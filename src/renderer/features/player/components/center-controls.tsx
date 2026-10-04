@@ -25,7 +25,13 @@ import { Stack } from '/@/shared/components/stack/stack';
 import { Text } from '/@/shared/components/text/text';
 import { PlayerRepeat, PlayerShuffle, PlayerStatus } from '/@/shared/types/types';
 
-export const CenterControls = () => {
+export const CenterControls = ({
+    compact = false,
+    showSlider = true,
+}: {
+    compact?: boolean;
+    showSlider?: boolean;
+}) => {
     const skip = useSkipButtons();
 
     const isRadioActive = useIsRadioActive();
@@ -35,7 +41,7 @@ export const CenterControls = () => {
             <>
                 <div className={styles.controlsContainer}>
                     <div className={styles.buttonsContainer}>
-                        <RadioStopButton />
+                        {!compact && <RadioStopButton />}
                         <ShuffleButton disabled={isRadioActive} />
                         <PreviousButton disabled={isRadioActive} />
                         {skip?.enabled && <SkipBackwardButton disabled={isRadioActive} />}
@@ -43,7 +49,7 @@ export const CenterControls = () => {
                         {skip?.enabled && <SkipForwardButton disabled={isRadioActive} />}
                         <NextButton disabled={isRadioActive} />
                         <RepeatButton disabled={isRadioActive} />
-                        <ShuffleAllButton disabled={isRadioActive} />
+                        {!compact && <ShuffleAllButton disabled={isRadioActive} />}
                     </div>
                 </div>
             </>
@@ -54,7 +60,7 @@ export const CenterControls = () => {
         <>
             <div className={styles.controlsContainer}>
                 <div className={styles.buttonsContainer}>
-                    <StopButton />
+                    {!compact && <StopButton />}
                     <ShuffleButton />
                     <PreviousButton />
                     {skip?.enabled && <SkipBackwardButton />}
@@ -62,10 +68,10 @@ export const CenterControls = () => {
                     {skip?.enabled && <SkipForwardButton />}
                     <NextButton />
                     <RepeatButton />
-                    <ShuffleAllButton />
+                    {!compact && <ShuffleAllButton />}
                 </div>
             </div>
-            <PlayerbarSlider />
+            {showSlider && <PlayerbarSlider />}
         </>
     );
 };
@@ -86,7 +92,7 @@ const RadioCenterPlayButton = ({ disabled }: { disabled?: boolean }) => {
     return <MainPlayButton disabled={disabled} isPaused={!isPlayingRadio} onClick={handleClick} />;
 };
 
-const RadioStopButton = ({ disabled }: { disabled?: boolean }) => {
+export const RadioStopButton = ({ disabled }: { disabled?: boolean }) => {
     const { t } = useTranslation();
     const buttonSize = useButtonSize();
     const { stop } = useRadioControls();
@@ -105,7 +111,7 @@ const RadioStopButton = ({ disabled }: { disabled?: boolean }) => {
     );
 };
 
-const StopButton = ({ disabled }: { disabled?: boolean }) => {
+export const StopButton = ({ disabled }: { disabled?: boolean }) => {
     const { t } = useTranslation();
     const buttonSize = useButtonSize();
     const { mediaStop } = usePlayer();
@@ -312,7 +318,7 @@ const RepeatButton = ({ disabled }: { disabled?: boolean }) => {
     );
 };
 
-const ShuffleAllButton = ({ disabled }: { disabled?: boolean }) => {
+export const ShuffleAllButton = ({ disabled }: { disabled?: boolean }) => {
     const { t } = useTranslation();
     const buttonSize = useButtonSize();
 

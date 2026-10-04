@@ -290,12 +290,21 @@ export const PlaylistRowButton = memo(
             >
                 {isCompact ? (
                     <>
+                        <ItemImage
+                            blurHash={item.blurHash}
+                            containerClassName={styles.compactArtwork}
+                            id={item.imageId}
+                            itemType={LibraryItem.PLAYLIST}
+                            src={imageUrl}
+                            thumbHash={item.thumbHash}
+                            type="table"
+                        />
                         <Text
                             className={clsx(styles.compactName, {
                                 [styles.nameActive]: isActive,
                             })}
                             fw={500}
-                            size="md"
+                            size="sm"
                         >
                             {name}
                         </Text>
@@ -553,7 +562,7 @@ export const SidebarPlaylistList = () => {
     return (
         <Accordion.Item value="playlists">
             <PlaylistRootAccordionControl allPlaylists={playlistItems?.items ?? []}>
-                <Group gap="xs" justify="space-between" pr="var(--theme-spacing-md)" wrap="nowrap">
+                <Group className={styles.header} gap={4} justify="space-between" wrap="nowrap">
                     <Group gap="xs" style={{ minWidth: 0 }} wrap="nowrap">
                         {inNavigation && (
                             <ActionIcon
@@ -565,11 +574,11 @@ export const SidebarPlaylistList = () => {
                                 variant="subtle"
                             />
                         )}
-                        <Text className={styles.name} fw={500}>
+                        <Text className={clsx(styles.name, styles.sectionLabel)}>
                             {inNavigation ? navigation.currentName : t('page.sidebar.playlists')}
                         </Text>
                     </Group>
-                    <Group gap="xs" wrap="nowrap">
+                    <Group className={styles.headerActions} gap={0} wrap="nowrap">
                         <ActionIcon
                             aria-label={t('setting.sidebarPlaylistSorting')}
                             aria-pressed={sidebarPlaylistSorting}

@@ -3,6 +3,10 @@
     transition: background-color 0.2s ease-in-out;
 }
 
+.track {
+    height: var(--slider-size);
+}
+
 .label {
     max-width: 200px;
     padding: var(--theme-spacing-sm) var(--theme-spacing-md);
@@ -87,4 +91,28 @@
     width: 100%;
     min-width: 0;
     height: 100%;
+}
+
+.compact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+
+    .slider-value-wrapper {
+        display: none;
+    }
+
+    .root {
+        justify-content: center;
+        height: 12px;
+    }
+
+    .thumb {
+        width: 8px;
+        height: 8px;
+    }
+
+    .label {
+        top: auto;
+        bottom: calc(100% + 40px);
+    }
 }

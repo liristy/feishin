@@ -38,7 +38,7 @@ import { Tooltip } from '/@/shared/components/tooltip/tooltip';
 import { PlaybackSelectors } from '/@/shared/constants/playback-selectors';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
-export const LeftControls = () => {
+export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
     const { t } = useTranslation();
     const { setSideBar } = useAppStoreActions();
     const {
@@ -226,7 +226,7 @@ export const LeftControls = () => {
                                         overflow="hidden"
                                         to={AppRoute.NOW_PLAYING}
                                     >
-                                        {title || '—'}
+                                        {title || '-'}
                                         {currentSong?.trackSubtitle && (
                                             <Text component="span" isMuted size="sm">
                                                 {' ('}
@@ -235,7 +235,7 @@ export const LeftControls = () => {
                                             </Text>
                                         )}
                                     </Text>
-                                    {isSongDefined && (
+                                    {isSongDefined && !compact && (
                                         <ActionIcon
                                             icon="ellipsisVertical"
                                             onClick={(e) => {
@@ -275,40 +275,63 @@ export const LeftControls = () => {
                                     artists={artists || []}
                                     linkProps={{
                                         ...JOINED_ARTISTS_MUTED_PROPS.linkProps,
-                                        size: 'md',
+                                        size: compact ? 'xs' : 'md',
                                     }}
                                     rootTextProps={{
                                         ...JOINED_ARTISTS_MUTED_PROPS.rootTextProps,
                                         className: styles.joinedArtists,
-                                        size: 'md',
+                                        size: compact ? 'xs' : 'md',
                                     }}
                                 />
-                            </div>
-                            <div
-                                className={clsx(
-                                    styles.lineItem,
-                                    styles.secondary,
-                                    PlaybackSelectors.songAlbum,
+                                {compact && currentSong?.album && (
+                                    <Text
+                                        className={clsx(
+                                            styles.compactAlbum,
+                                            PlaybackSelectors.songAlbum,
+                                        )}
+                                        component={Link}
+                                        isLink
+                                        size="xs"
+                                        to={
+                                            currentSong.albumId
+                                                ? generatePath(AppRoute.LIBRARY_ALBUMS_DETAIL, {
+                                                      albumId: currentSong.albumId,
+                                                  })
+                                                : ''
+                                        }
+                                    >
+                                        {' · '}
+                                        {currentSong.album}
+                                    </Text>
                                 )}
-                                onClick={stopPropagation}
-                            >
-                                <Text
-                                    component={Link}
-                                    fw={500}
-                                    isLink
-                                    overflow="hidden"
-                                    size="md"
-                                    to={
-                                        currentSong?.albumId
-                                            ? generatePath(AppRoute.LIBRARY_ALBUMS_DETAIL, {
-                                                  albumId: currentSong.albumId,
-                                              })
-                                            : ''
-                                    }
-                                >
-                                    {currentSong?.album || '—'}
-                                </Text>
                             </div>
+                            {!compact && (
+                                <div
+                                    className={clsx(
+                                        styles.lineItem,
+                                        styles.secondary,
+                                        PlaybackSelectors.songAlbum,
+                                    )}
+                                    onClick={stopPropagation}
+                                >
+                                    <Text
+                                        component={Link}
+                                        fw={500}
+                                        isLink
+                                        overflow="hidden"
+                                        size="md"
+                                        to={
+                                            currentSong?.albumId
+                                                ? generatePath(AppRoute.LIBRARY_ALBUMS_DETAIL, {
+                                                      albumId: currentSong.albumId,
+                                                  })
+                                                : ''
+                                        }
+                                    >
+                                        {currentSong?.album || '-'}
+                                    </Text>
+                                </div>
+                            )}
                         </>
                     )}
                 </motion.div>

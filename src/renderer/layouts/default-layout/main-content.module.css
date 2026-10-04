@@ -51,7 +51,12 @@
     flex-direction: column;
     min-width: 0;
     min-height: 0;
+    padding-bottom: 80px;
     overflow: hidden;
+
+    &:has([data-music-home]) {
+        padding-bottom: 0;
+    }
 }
 
 .main-content-body-scroll {

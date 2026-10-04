@@ -1,5 +1,6 @@
 .scroll-area {
-    height: calc(100vh - 90px);
+    height: 100%;
+    min-height: 0;
 }
 
 .drag-container {
@@ -13,6 +14,8 @@
     -webkit-app-region: drag;
 }
 
+/* OverlayScrollbars supplies these classes outside this CSS Module. */
+/* stylelint-disable selector-pseudo-class-no-unknown */
 .scroll-area :global(.os-scrollbar) {
     z-index: 200;
 }
@@ -24,3 +27,4 @@
 .scroll-area :global(.os-scrollbar-handle) {
     z-index: 200;
 }
+/* stylelint-enable selector-pseudo-class-no-unknown */

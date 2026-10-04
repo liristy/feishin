@@ -80,6 +80,14 @@
     text-overflow: ellipsis;
 }
 
+.compact-album {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .joined-artists,
 .joined-artists > * {
     white-space: nowrap;

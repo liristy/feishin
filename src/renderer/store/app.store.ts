@@ -242,7 +242,7 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                     collapsed: false,
                     expanded: [],
                     image: false,
-                    leftWidth: '309px',
+                    leftWidth: '184px',
                     rightExpanded: false,
                     rightHeight: '320px',
                     rightWidth: '522px',
@@ -268,6 +268,10 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                     state.sidebar.rightHeight = '320px';
                 }
 
+                if (version < 6 && state.sidebar.leftWidth === '309px') {
+                    state.sidebar.leftWidth = '184px';
+                }
+
                 return state;
             },
             name: 'store_app',
@@ -276,7 +280,7 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                 const { globalExpanded: _, latestVersion: __, ...rest } = state;
                 return rest;
             },
-            version: 5,
+            version: 6,
         },
     ),
 );

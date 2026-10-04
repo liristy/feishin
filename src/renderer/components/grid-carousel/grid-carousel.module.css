@@ -1,7 +1,7 @@
 .grid-carousel {
     display: flex;
     flex-direction: column;
-    gap: var(--theme-spacing-md);
+    gap: 12px;
     width: 100%;
     margin: 0 auto;
     container-name: grid-carousel;
@@ -44,14 +44,21 @@
 .grid {
     display: grid;
     grid-template-columns: repeat(var(--cards-to-show, 2), minmax(0, 1fr));
-    gap: var(--theme-spacing-md);
+    gap: 20px;
     contain: layout paint;
     overflow: hidden;
     will-change: transform;
 }
 
 .card {
+    min-width: 0;
     min-height: 0;
+}
+
+.navigation h3 {
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.4;
 }
 
 .page-indicator {

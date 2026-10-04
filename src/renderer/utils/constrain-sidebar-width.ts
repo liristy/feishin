@@ -1,6 +1,6 @@
 export const constrainSidebarWidth = (num: number) => {
-    if (num < 260) {
-        return 260;
+    if (num < 176) {
+        return 176;
     }
 
     if (num > 400) {

@@ -16,6 +16,7 @@ export const PlayerBar = () => {
             className={clsx({
                 [styles.container]: true,
                 [styles.fullscreen]: expanded && !isMobile,
+                [styles.mobile]: isMobile,
                 [styles.openDrawer]: playerbarOpenDrawer,
             })}
             id="player-bar"

@@ -82,7 +82,7 @@ const Controls = () => {
             },
             {
                 active: activeTab === 'lyrics',
-                icon: 'microphone',
+                icon: 'lyrics',
                 label: t('page.fullscreenPlayer.lyrics'),
                 onClick: () => toggleTab('lyrics'),
             },
@@ -101,6 +101,8 @@ const Controls = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, setStore, t, webAudio]);
 
+    if (activeTab === 'lyrics') return null;
+
     return (
         <Group
             className={clsx(styles.controlsContainer, 'full-screen-player-controls-container')}
@@ -111,6 +113,7 @@ const Controls = () => {
             {headerItems.map((item) => (
                 <div key={`tab-${item.label}`}>
                     <ActionIcon
+                        aria-label={item.label}
                         aria-pressed={item.active}
                         icon={item.icon}
                         iconProps={{

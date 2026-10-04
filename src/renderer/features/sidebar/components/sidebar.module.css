@@ -4,18 +4,14 @@
     gap: var(--theme-spacing-xs);
     width: 100%;
     height: 100%;
-    max-height: calc(100vh - 90px);
+    min-height: 0;
     background: var(--theme-colors-background-alternate);
-}
-
-.container.custom-bar {
-    max-height: calc(100vh - 120px);
 }
 
 .scroll-area {
     flex: 1;
     min-height: 0;
-    padding: 0 var(--theme-spacing-sm) var(--theme-spacing-md);
+    padding: 0 10px 100px;
 }
 
 @keyframes fade-in {
@@ -66,9 +62,10 @@
 
 .accordion-control {
     height: auto;
-    min-height: 2.5rem;
-    margin-top: var(--theme-spacing-sm);
-    border-radius: var(--theme-radius-md);
+    min-height: 2rem;
+    padding: 0 var(--theme-spacing-sm);
+    margin-top: var(--theme-spacing-md);
+    border-radius: 6px;
 
     &:hover {
         background: var(--theme-colors-background);
@@ -78,7 +75,11 @@
 .section-label {
     font-size: var(--theme-font-size-xs);
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0;
+}
+
+.accordion-label {
+    padding: 6px 0;
 }
 
 .primary-navigation {

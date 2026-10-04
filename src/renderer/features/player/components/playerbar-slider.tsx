@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import formatDuration from 'format-duration';
 import { lazy, Suspense } from 'react';
 
@@ -23,7 +24,7 @@ const PlayerbarWaveform = lazy(() =>
     })),
 );
 
-export const PlayerbarSlider = () => {
+export const PlayerbarSlider = ({ compact = false }: { compact?: boolean }) => {
     const currentSong = usePlayerSong();
     const playerbarSlider = usePlayerbarSlider();
 
@@ -36,11 +37,11 @@ export const PlayerbarSlider = () => {
     const showTimeRemaining = useAppStore((state) => state.showTimeRemaining);
     const { setShowTimeRemaining } = useAppStoreActions();
 
-    const isWaveform = playerbarSlider?.type === PlayerbarSliderType.WAVEFORM;
+    const isWaveform = !compact && playerbarSlider?.type === PlayerbarSliderType.WAVEFORM;
 
     return (
         <>
-            <div className={styles.sliderContainer}>
+            <div className={clsx(styles.sliderContainer, { [styles.compact]: compact })}>
                 <div className={styles.sliderValueWrapper}>
                     <ScrobbleStatus />
                 </div>
@@ -50,7 +51,7 @@ export const PlayerbarSlider = () => {
                             <PlayerbarWaveform />
                         </Suspense>
                     ) : (
-                        <PlayerbarSeekSlider max={songDuration} min={0} />
+                        <PlayerbarSeekSlider compact={compact} max={songDuration} min={0} />
                     )}
                 </div>
                 <div className={styles.sliderValueWrapper}>
@@ -72,7 +73,7 @@ export const PlayerbarSlider = () => {
     );
 };
 
-export const CustomPlayerbarSlider = ({ ...props }: SliderProps) => {
+export const CustomPlayerbarSlider = ({ size = 6, ...props }: SliderProps) => {
     return (
         <Slider
             classNames={{
@@ -80,9 +81,10 @@ export const CustomPlayerbarSlider = ({ ...props }: SliderProps) => {
                 label: styles.label,
                 root: styles.root,
                 thumb: styles.thumb,
+                track: styles.track,
             }}
             {...props}
-            size={6}
+            size={size}
         />
     );
 };

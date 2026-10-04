@@ -63,7 +63,7 @@ export const MobileFullscreenPlayerBottomControls = memo(
                     />
                     <ActionIcon
                         className={styles.bottomControlIcon}
-                        icon="metadata"
+                        icon="lyrics"
                         iconProps={{
                             fill: isLyricsActive ? 'primary' : undefined,
                             size: 'xl',

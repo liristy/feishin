@@ -1,6 +1,8 @@
 import { Suspense, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import styles from './home-route.module.css';
+
 import { useGridCarouselContainerQuery } from '/@/renderer/components/grid-carousel/grid-carousel-v2';
 import { NativeScrollArea } from '/@/renderer/components/native-scroll-area/native-scroll-area';
 import { AlbumInfiniteCarousel } from '/@/renderer/features/albums/components/album-infinite-carousel';
@@ -101,13 +103,12 @@ const HomeRoute = () => {
             >
                 <LibraryContainer>
                     <Stack
-                        gap="2xl"
+                        className={styles.content}
+                        data-music-home
                         mb="5rem"
-                        pt="xl"
-                        px={{ base: 'md', sm: 'xl' }}
                         ref={containerQuery.ref}
                     >
-                        <TextTitle fw={700} fz="xl" order={1}>
+                        <TextTitle className={styles.title} order={1}>
                             {t('page.home.title')}
                         </TextTitle>
                         {homeFeature && <WeeklyListeningCharts />}

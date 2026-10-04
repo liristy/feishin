@@ -99,6 +99,7 @@ export const MobileFullscreenPlayerAlbumArt = () => {
 
     const currentImageUrl = useItemImageUrl({
         id: currentSong?.imageId || undefined,
+        imageUrl: currentSong?.imageId ? undefined : currentSong?.imageUrl,
         itemType: LibraryItem.SONG,
         serverId: currentSong?._serverId,
         size: mainImageDimensions.idealSize,
@@ -107,6 +108,7 @@ export const MobileFullscreenPlayerAlbumArt = () => {
 
     const nextImageUrl = useItemImageUrl({
         id: nextSong?.imageId || undefined,
+        imageUrl: nextSong?.imageId ? undefined : nextSong?.imageUrl,
         itemType: LibraryItem.SONG,
         serverId: nextSong?._serverId,
         size: mainImageDimensions.idealSize,
@@ -117,6 +119,7 @@ export const MobileFullscreenPlayerAlbumArt = () => {
         id: currentRadioStationArt?.imageId || undefined,
         itemType: LibraryItem.RADIO_STATION,
         serverId: currentRadioStationArt?.serverId,
+        size: mainImageDimensions.idealSize,
         type: 'fullScreenPlayer',
     });
 
@@ -128,9 +131,16 @@ export const MobileFullscreenPlayerAlbumArt = () => {
 
     const updateImageSize = useCallback(() => {
         if (mainImageRef.current) {
+            const { offsetHeight, offsetWidth } = mainImageRef.current;
             const idealSize =
-                albumArtRes ||
-                Math.ceil((mainImageRef.current as HTMLDivElement).offsetHeight / 100) * 100;
+                albumArtRes === 0
+                    ? 0
+                    : Math.max(
+                          albumArtRes,
+                          Math.ceil(
+                              (Math.max(offsetHeight, offsetWidth) * window.devicePixelRatio) / 100,
+                          ) * 100,
+                      );
 
             setMainImageDimensions({ idealSize });
         }
@@ -138,6 +148,13 @@ export const MobileFullscreenPlayerAlbumArt = () => {
 
     useLayoutEffect(() => {
         updateImageSize();
+        const observer = new ResizeObserver(updateImageSize);
+        if (mainImageRef.current) observer.observe(mainImageRef.current);
+        window.addEventListener('resize', updateImageSize);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', updateImageSize);
+        };
     }, [updateImageSize]);
 
     // Track previous song to detect changes

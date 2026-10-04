@@ -5,7 +5,9 @@ import styles from './playerbar.module.css';
 
 import { CenterControls } from '/@/renderer/features/player/components/center-controls';
 import { LeftControls } from '/@/renderer/features/player/components/left-controls';
+import { PlayerbarSlider } from '/@/renderer/features/player/components/playerbar-slider';
 import { RightControls } from '/@/renderer/features/player/components/right-controls';
+import { useIsRadioActive } from '/@/renderer/features/radio/hooks/use-radio-player';
 import { useIsMobile } from '/@/renderer/hooks/use-is-mobile';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 
@@ -23,6 +25,7 @@ export const Playerbar = () => {
     const { expanded: isFullScreenPlayerExpanded } = useFullScreenPlayerStore();
     const setFullScreenPlayerStore = useSetFullScreenPlayerStore();
     const isMobile = useIsMobile();
+    const isRadioActive = useIsRadioActive();
 
     const handleToggleFullScreenPlayer = (e?: KeyboardEvent | MouseEvent<HTMLDivElement>) => {
         e?.stopPropagation();
@@ -42,23 +45,31 @@ export const Playerbar = () => {
             className={clsx(styles.container, PlaybackSelectors.mediaPlayer)}
             onClick={playerbarOpenDrawer ? handleToggleFullScreenPlayer : undefined}
         >
-            <div className={styles.controlsGrid}>
+            <div
+                className={clsx(styles.controlsGrid, {
+                    [styles.compact]: !isFullScreenPlayerExpanded,
+                })}
+            >
                 <div
                     className={clsx(styles.leftGridItem, {
                         [styles.hidden]: isFullScreenPlayerExpanded,
                     })}
                 >
-                    <LeftControls />
+                    <LeftControls compact={!isFullScreenPlayerExpanded} />
+                    {!isFullScreenPlayerExpanded && !isRadioActive && <PlayerbarSlider compact />}
                 </div>
                 <div className={styles.centerGridItem} data-player-controls>
-                    <CenterControls />
+                    <CenterControls
+                        compact={!isFullScreenPlayerExpanded}
+                        showSlider={isFullScreenPlayerExpanded}
+                    />
                 </div>
                 <div
                     className={clsx(styles.rightGridItem, {
                         [styles.revealOnHover]: isFullScreenPlayerExpanded,
                     })}
                 >
-                    <RightControls />
+                    <RightControls compact={!isFullScreenPlayerExpanded} />
                 </div>
             </div>
         </div>

@@ -35,7 +35,6 @@ import {
     useSidebarImageEnabled,
     useSidebarItems,
     useSidebarPlaylistList,
-    useWindowSettings,
 } from '/@/renderer/store/settings.store';
 import { Accordion } from '/@/shared/components/accordion/accordion';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
@@ -48,7 +47,6 @@ import { Text } from '/@/shared/components/text/text';
 import { Tooltip } from '/@/shared/components/tooltip/tooltip';
 import { useImageHashUrl } from '/@/shared/hooks/use-image-hash-url';
 import { ExplicitStatus, LibraryItem } from '/@/shared/types/domain-types';
-import { Platform } from '/@/shared/types/types';
 
 const SidebarPlaylistSection = () => {
     const isAddDragActive = useSidebarPlaylistAddDragMonitor();
@@ -89,7 +87,6 @@ export const Sidebar = () => {
     );
 
     const sidebarItems = useSidebarItems();
-    const { windowBarStyle } = useWindowSettings();
     const sidebarImageEnabled = useSidebarImageEnabled();
     const sidebarImageShown = useAppStore((state) => state.sidebar.image);
     const showImage = sidebarImageEnabled && sidebarImageShown;
@@ -113,31 +110,24 @@ export const Sidebar = () => {
     const libraryItemsWithRoute = useMemo(
         () =>
             sidebarItemsWithRoute.filter(
-                (item) => item.id !== 'Collections' && item.id !== 'Home' && item.route,
+                (item) =>
+                    !['Collections', 'Home', 'Radio', 'Search'].includes(item.id) && item.route,
             ),
         [sidebarItemsWithRoute],
     );
 
-    const isCustomWindowBar =
-        windowBarStyle === Platform.WINDOWS || windowBarStyle === Platform.MACOS;
-
     return (
-        <div
-            className={clsx(styles.container, {
-                [styles.customBar]: isCustomWindowBar,
-            })}
-            id="left-sidebar"
-        >
+        <div className={styles.container} id="left-sidebar">
             <Group grow id="global-search-container" style={{ flexShrink: 0 }}>
                 <ActionBar />
             </Group>
             <ScrollArea allowDragScroll className={styles.scrollArea}>
                 <div className={styles.primaryNavigation}>
                     {sidebarItemsWithRoute
-                        .filter((item) => item.id === 'Home')
+                        .filter((item) => ['Home', 'Radio', 'Search'].includes(item.id))
                         .map((item) => (
                             <SidebarItem key={item.id} to={item.route}>
-                                <Group gap="md">
+                                <Group gap="sm">
                                     <SidebarIcon route={item.route} />
                                     {item.label}
                                 </Group>
@@ -149,6 +139,7 @@ export const Sidebar = () => {
                         content: styles.accordionContent,
                         control: styles.accordionControl,
                         item: styles.accordionItem,
+                        label: styles.accordionLabel,
                         root: styles.accordionRoot,
                     }}
                     defaultValue={['library', 'collections', 'playlists']}
@@ -164,7 +155,7 @@ export const Sidebar = () => {
                             {libraryItemsWithRoute.map((item) => {
                                 return (
                                     <SidebarItem key={`sidebar-${item.route}`} to={item.route}>
-                                        <Group gap="md">
+                                        <Group gap="sm">
                                             <SidebarIcon route={item.route} />
                                             {item.label}
                                         </Group>

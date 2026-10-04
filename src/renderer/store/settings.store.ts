@@ -1315,7 +1315,7 @@ const initialState: SettingsState = {
         type: FontType.BUILT_IN,
     },
     general: {
-        accent: 'rgb(240, 170, 22)',
+        accent: 'rgb(250, 45, 72)',
         albumBackground: false,
         albumBackgroundBlur: 3,
         albumGroupImageSize: 0,
@@ -1404,17 +1404,17 @@ const initialState: SettingsState = {
         sidebarPlaylistFolderView: 'tree',
         sidebarPlaylistList: true,
         sidebarPlaylistListFilterRegex: '',
-        sidebarPlaylistMode: 'expanded',
+        sidebarPlaylistMode: 'compact',
         sidebarPlaylistSorting: false,
         sideQueueLayout: 'horizontal',
-        sideQueueType: 'sideQueue',
+        sideQueueType: 'sideDrawerQueue',
         skipButtons: {
             enabled: false,
             skipBackwardSeconds: 5,
             skipForwardSeconds: 10,
         },
         spotify: true,
-        theme: AppTheme.GRUVBOX_DARK,
+        theme: AppTheme.DEFAULT_LIGHT,
         themeDark: AppTheme.DEFAULT_DARK,
         themeLight: AppTheme.DEFAULT_LIGHT,
         useThemeAccentColor: false,
@@ -3048,10 +3048,32 @@ export const useSettingsStore = createWithEqualityFn<SettingsSlice>()(
                     }
                 }
 
+                if (version < 38) {
+                    if (state.general.accent === 'rgb(240, 170, 22)') {
+                        state.general.accent = initialState.general.accent;
+                    }
+                    if (state.general.theme === AppTheme.GRUVBOX_DARK) {
+                        state.general.theme = initialState.general.theme;
+                    }
+                    if (state.general.sidebarPlaylistMode === 'expanded') {
+                        state.general.sidebarPlaylistMode = 'compact';
+                    }
+                }
+
+                if (version < 39) {
+                    state.general.sidebarItems = state.general.sidebarItems?.filter(
+                        (item) => item.id !== 'New',
+                    );
+                }
+
+                if (version < 40) {
+                    state.general.sideQueueType = 'sideDrawerQueue';
+                }
+
                 return persistedState;
             },
             name: 'store_settings',
-            version: 37,
+            version: 40,
         },
     ),
 );

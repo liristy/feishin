@@ -308,6 +308,7 @@
         "radioStationWithCount_other": "{{count}} 个广播电台"
     },
     "player": {
+        "volume": "音量",
         "repeat_all": "循环全部",
         "stop": "停止",
         "repeat": "循环",

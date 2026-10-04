@@ -16,6 +16,7 @@ import {
     useFullScreenPlayerStore,
     useFullScreenPlayerStoreActions,
     useGeneralSettings,
+    useImageRes,
     useNativeAspectRatio,
     usePlayerData,
     usePlayerSong,
@@ -99,7 +100,10 @@ export const FullScreenPlayerImage = () => {
     const { t } = useTranslation();
     const mainImageRef = useRef<HTMLButtonElement | null>(null);
     const { setStore } = useFullScreenPlayerStoreActions();
-    const [imageContainerWidth, setImageContainerWidth] = useState<null | number>(null);
+    const [imageDimensions, setImageDimensions] = useState({
+        resolution: 0,
+        width: null as null | number,
+    });
 
     const isRadioActive = useIsRadioActive();
     const { currentStationArt: currentRadioStationArt } = useRadioPlayer();
@@ -107,13 +111,16 @@ export const FullScreenPlayerImage = () => {
     const currentSong = usePlayerSong();
     const { nextSong } = usePlayerData();
     const { blurExplicitImages, playerItems } = useGeneralSettings();
-    const { coverArtSize, titleDisplayType, titleLineCount } = useFullScreenPlayerStore();
+    const { coverArtSize } = useFullScreenPlayerStore();
+    const { fullScreenPlayer: albumArtRes } = useImageRes();
+    const imageSize = albumArtRes === 0 ? 0 : Math.max(albumArtRes, imageDimensions.resolution);
 
     const currentImageUrl = useItemImageUrl({
         id: currentSong?.imageId || undefined,
         imageUrl: currentSong?.imageId ? undefined : currentSong?.imageUrl,
         itemType: LibraryItem.SONG,
         serverId: currentSong?._serverId,
+        size: imageSize,
         type: 'fullScreenPlayer',
     });
 
@@ -122,6 +129,7 @@ export const FullScreenPlayerImage = () => {
         imageUrl: nextSong?.imageId ? undefined : nextSong?.imageUrl,
         itemType: LibraryItem.SONG,
         serverId: nextSong?._serverId,
+        size: imageSize,
         type: 'fullScreenPlayer',
     });
 
@@ -129,6 +137,7 @@ export const FullScreenPlayerImage = () => {
         id: currentRadioStationArt?.imageId || undefined,
         itemType: LibraryItem.RADIO_STATION,
         serverId: currentRadioStationArt?.serverId,
+        size: imageSize,
         type: 'fullScreenPlayer',
     });
 
@@ -197,27 +206,25 @@ export const FullScreenPlayerImage = () => {
     useLayoutEffect(() => {
         const updateImageContainerWidth = () => {
             if (mainImageRef.current) {
-                const width = mainImageRef.current.offsetWidth;
-                setImageContainerWidth(width);
+                const { offsetHeight: height, offsetWidth: width } = mainImageRef.current;
+                setImageDimensions({
+                    resolution:
+                        Math.ceil((Math.max(width, height) * window.devicePixelRatio) / 100) * 100,
+                    width,
+                });
             }
         };
 
         updateImageContainerWidth();
+        const observer = new ResizeObserver(updateImageContainerWidth);
+        if (mainImageRef.current) observer.observe(mainImageRef.current);
         window.addEventListener('resize', updateImageContainerWidth);
 
-        return () => window.removeEventListener('resize', updateImageContainerWidth);
-    }, []);
-
-    useLayoutEffect(() => {
-        const updateImageContainerWidth = () => {
-            if (mainImageRef.current) {
-                const width = mainImageRef.current.offsetWidth;
-                setImageContainerWidth(width);
-            }
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', updateImageContainerWidth);
         };
-
-        updateImageContainerWidth();
-    }, [titleDisplayType, titleLineCount, coverArtSize]);
+    }, []);
 
     // Keep ref in sync
     useEffect(() => {
@@ -338,7 +345,7 @@ export const FullScreenPlayerImage = () => {
                     )}
                 </AnimatePresence>
             </button>
-            <SharedFullscreenPlayerMetadata imageContainerWidth={imageContainerWidth} />
+            <SharedFullscreenPlayerMetadata imageContainerWidth={imageDimensions.width} />
         </Flex>
     );
 };

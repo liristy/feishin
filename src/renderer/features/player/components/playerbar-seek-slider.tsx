@@ -7,13 +7,14 @@ import { usePlayer } from '/@/renderer/features/player/context/player-context';
 import { usePlayerTimestamp } from '/@/renderer/store';
 
 interface PlayerbarSeekSliderProps {
+    compact?: boolean;
     max: number;
     min: number;
 }
 
 const SEEK_RESOLVE_MS = 1000;
 
-export const PlayerbarSeekSlider = ({ max, min }: PlayerbarSeekSliderProps) => {
+export const PlayerbarSeekSlider = ({ compact = false, max, min }: PlayerbarSeekSliderProps) => {
     const [isSeeking, setIsSeeking] = useState(false);
     const [seekValue, setSeekValue] = useState(0);
     const currentTime = usePlayerTimestamp();
@@ -43,7 +44,11 @@ export const PlayerbarSeekSlider = ({ max, min }: PlayerbarSeekSliderProps) => {
 
     return (
         <CustomPlayerbarSlider
-            label={(value) => formatDuration(value * 1000)}
+            label={(value) =>
+                compact
+                    ? `${formatDuration(value * 1000)} / ${formatDuration(max * 1000)}`
+                    : formatDuration(value * 1000)
+            }
             max={max}
             min={min}
             onChange={(e) => {
@@ -65,7 +70,7 @@ export const PlayerbarSeekSlider = ({ max, min }: PlayerbarSeekSliderProps) => {
             onClick={(e) => {
                 e?.stopPropagation();
             }}
-            size={6}
+            size={compact ? 3 : 6}
             value={isSeeking ? seekValue : currentTime}
             w="100%"
         />

@@ -57,8 +57,8 @@ const WeeklyChart = ({
                 </Button>
             ) : query.data?.length ? (
                 <ol className={styles.list}>
-                    {query.data.slice(0, 5).map(({ entity, plays, rank }, index) => (
-                        <li data-featured={index === 0 || undefined} key={JSON.stringify(entity)}>
+                    {query.data.slice(0, 5).map(({ entity, plays, rank }) => (
+                        <li key={JSON.stringify(entity)}>
                             <button
                                 className={styles.row}
                                 onClick={() => onOpen(kind, entity)}
@@ -67,12 +67,7 @@ const WeeklyChart = ({
                             >
                                 <span className={styles.rank}>{String(rank).padStart(2, '0')}</span>
                                 <span className={styles.artwork}>
-                                    <EntityArtwork
-                                        entity={entity}
-                                        large={index === 0}
-                                        size={index === 0 ? 72 : 28}
-                                        url={url}
-                                    />
+                                    <EntityArtwork entity={entity} size={40} url={url} />
                                 </span>
                                 <span className={styles.label}>
                                     <span className={styles.name}>{entity.name}</span>
@@ -86,9 +81,7 @@ const WeeklyChart = ({
                                     aria-label={t('listeningHistory.entries', { count: plays })}
                                     className={styles.plays}
                                 >
-                                    {index === 0
-                                        ? t('listeningHistory.entries', { count: plays })
-                                        : plays.toLocaleString(i18n.language)}
+                                    {plays.toLocaleString(i18n.language)}
                                 </span>
                             </button>
                         </li>

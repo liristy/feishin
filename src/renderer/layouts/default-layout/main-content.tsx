@@ -22,7 +22,7 @@ import {
 import { constrainRightSidebarWidth, constrainSidebarWidth } from '/@/renderer/utils';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 
-const MINIMUM_SIDEBAR_WIDTH = 260;
+const MINIMUM_SIDEBAR_WIDTH = 176;
 
 export const MainContent = ({ shell }: { shell?: boolean }) => {
     const { collapsed, leftWidth, rightExpanded, rightHeight, rightWidth } = useAppStore(

@@ -4,22 +4,30 @@
     display: grid;
     grid-template-areas:
         'window-bar'
-        'main-content'
-        'player';
-    grid-template-rows: 0 calc(100vh - var(--player-bar-height)) var(--player-bar-height);
-    grid-template-rows: 0 calc(100dvh - var(--player-bar-height)) var(--player-bar-height);
+        'main-content';
+    grid-template-rows: 0 minmax(0, 1fr);
     grid-template-columns: 1fr;
     gap: 0;
-    height: 100%;
+    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
+    background: var(--theme-colors-background);
 }
 
-.windows {
-    grid-template-rows: 30px calc(100vh - 30px - var(--player-bar-height)) var(--player-bar-height);
-    grid-template-rows: 30px calc(100dvh - 30px - var(--player-bar-height)) var(--player-bar-height);
-}
-
+.windows,
 .macos {
-    grid-template-rows: 30px calc(100vh - 30px - var(--player-bar-height)) var(--player-bar-height);
+    grid-template-rows: 30px minmax(0, 1fr);
+}
+
+.fullscreen {
+    grid-template-areas:
+        'window-bar'
+        'main-content'
+        'player';
+    grid-template-rows: 0 calc(100dvh - var(--player-bar-height)) var(--player-bar-height);
+}
+
+.fullscreen.windows,
+.fullscreen.macos {
     grid-template-rows: 30px calc(100dvh - 30px - var(--player-bar-height)) var(--player-bar-height);
 }

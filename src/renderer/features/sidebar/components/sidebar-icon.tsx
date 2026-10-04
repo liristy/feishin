@@ -7,8 +7,6 @@ import {
     RiFlag2Line,
     RiFolder3Fill,
     RiFolder3Line,
-    RiHeartFill,
-    RiHeartLine,
     RiHistoryFill,
     RiHistoryLine,
     RiHome6Fill,
@@ -17,8 +15,6 @@ import {
     RiMusic2Line,
     RiPlayFill,
     RiPlayLine,
-    RiPlayListFill,
-    RiPlayListLine,
     RiRadioFill,
     RiRadioLine,
     RiSearchFill,
@@ -33,6 +29,7 @@ import { generatePath, useLocation } from 'react-router';
 import styles from './sidebar-icon.module.css';
 
 import { AppRoute } from '/@/renderer/router/routes';
+import { Icon } from '/@/shared/components/icon/icon';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
 interface SidebarIconProps {
@@ -77,8 +74,7 @@ export const SidebarIcon = ({ active, route, size }: SidebarIconProps) => {
                 if (isActive) return <RiPlayFill size={size} />;
                 return <RiPlayLine size={size} />;
             case AppRoute.PLAYLISTS:
-                if (isActive) return <RiPlayListFill size={size} />;
-                return <RiPlayListLine size={size} />;
+                return <Icon icon="playlist" size={size} />;
             case AppRoute.RADIO:
                 if (isActive) return <RiRadioFill size={size} />;
                 return <RiRadioLine size={size} />;
@@ -90,8 +86,9 @@ export const SidebarIcon = ({ active, route, size }: SidebarIconProps) => {
                 return <RiSearchLine size={size} />;
             default:
                 if (route.startsWith(AppRoute.FAVORITES)) {
-                    if (isActive) return <RiHeartFill size={size} />;
-                    return <RiHeartLine size={size} />;
+                    return (
+                        <Icon fill={isActive ? 'primary' : undefined} icon="favorite" size={size} />
+                    );
                 }
                 return <RiHome6Line size={size} />;
         }

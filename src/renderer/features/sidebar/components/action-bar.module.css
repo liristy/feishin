@@ -1,9 +1,9 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--theme-spacing-sm);
+    gap: 8px;
     width: 100%;
-    padding: var(--theme-spacing-md) var(--theme-spacing-sm);
+    padding: 14px 10px 4px;
     -webkit-app-region: drag;
 
     button {
@@ -15,20 +15,18 @@
     width: 100%;
 }
 
-.brand {
-    padding: 0 var(--theme-spacing-sm);
-    font-size: var(--theme-font-size-lg);
-    font-weight: 750;
-    color: var(--theme-colors-foreground);
-}
-
 .search {
     width: 100%;
-    height: 38px;
-    padding: 0 var(--theme-spacing-md);
-    background: color-mix(in srgb, var(--theme-colors-surface) 65%, transparent);
-    border: 1px solid color-mix(in srgb, var(--theme-colors-foreground) 4%, transparent);
-    border-radius: var(--theme-radius-md);
+    height: 32px;
+    padding: 0 var(--theme-spacing-sm);
+    color: var(--theme-colors-foreground);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+
+    &:hover {
+        background: color-mix(in srgb, var(--theme-colors-foreground) 5%, transparent);
+    }
 }
 
 .search-inner {

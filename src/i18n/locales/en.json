@@ -863,6 +863,7 @@
         }
     },
     "player": {
+        "volume": "Volume",
         "addLast": "Last",
         "addNext": "Next",
         "addLastShuffled": "Last (shuffled)",

@@ -1,14 +1,10 @@
 import { motion } from 'motion/react';
-import {
-    RiHome5Line,
-    RiListOrdered2,
-    RiMusic2Line,
-    RiPlayListLine,
-    RiRadioLine,
-} from 'react-icons/ri';
+import { RiHome5Line, RiMusic2Line, RiRadioLine } from 'react-icons/ri';
 import { NavLink } from 'react-router';
 
 import styles from './tab-bar.module.css';
+
+import { Icon } from '/@/shared/components/icon/icon';
 
 interface Tab {
     icon: React.ReactNode;
@@ -19,9 +15,9 @@ interface Tab {
 const TABS: Tab[] = [
     { icon: <RiHome5Line size={22} />, label: 'Home', to: '/' },
     { icon: <RiMusic2Line size={22} />, label: 'Library', to: '/library' },
-    { icon: <RiPlayListLine size={22} />, label: 'Playlists', to: '/playlists' },
+    { icon: <Icon icon="playlist" size={22} />, label: 'Playlists', to: '/playlists' },
     { icon: <RiRadioLine size={22} />, label: 'Radio', to: '/radio' },
-    { icon: <RiListOrdered2 size={22} />, label: 'Queue', to: '/queue' },
+    { icon: <Icon icon="queue" size={22} />, label: 'Queue', to: '/queue' },
 ];
 
 export const TabBar = () => {
