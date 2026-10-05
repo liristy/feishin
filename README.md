@@ -1,17 +1,43 @@
 <img src="assets/icons/icon.png" alt="qMusic for Windows 图标" align="right" width="72" height="72" />
 
-# qMusic for Windows · 2.0 Beta
+# qMusic for Windows
 
-qMusic for Windows 是面向自托管音乐服务的 Windows 音乐播放器，支持 Navidrome、Jellyfin 和兼容 Subsonic / OpenSubsonic API 的服务器。本分支在 Feishin 的基础上，重点扩展**离线使用、下载管理和桌面播放体验**。
+连接自己的音乐库，以 Apple Music 风格的界面浏览、收藏和播放音乐。
+
+qMusic 基于 Feishin，支持 **Navidrome、Jellyfin 和 Subsonic / OpenSubsonic**，提供悬浮播放条、全屏歌词、聆听统计、下载管理与离线播放。
 
 [![License](https://img.shields.io/github/license/liristy/feishin?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/liristy/feishin?include_prereleases&style=flat-square&label=release)](https://github.com/liristy/feishin/releases)
 
-[下载安装](https://github.com/liristy/feishin/releases) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md) · [上游项目](https://github.com/jeffvli/feishin)
+[下载 beta5](https://github.com/liristy/feishin/releases/tag/v2.0.0-beta.5) · [更新内容](docs/releases/2.0.0-beta.5.md) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md)
 
-> qMusic for Windows 是基于 Feishin 独立维护的分支，软件内名称为 qMusic。`2.0.0-beta.4` 是本分支的版本号，不代表上游 Feishin 的官方版本。Beta 为预发布版本，安装文件及已知问题以本仓库 Release 说明为准。
+> 当前版本：**2.0.0-beta.5**。本次仅发布 Windows x64 与 ARM64 安装包。qMusic 是独立维护的 Feishin 分支，Beta 为预发布版本。
 
-## 2.0 新增功能
+![主页](media/screenshots/home.png)
+
+## 新版界面
+
+- **主页**：保留常听、随机推荐、最近添加和最近播放等内容，以紧凑的本周排行榜查看聆听趋势。
+- **侧栏**：统一图标和导航，聆听统计位于主页下方；向上滚动时显示搜索，播放列表可独立滚动。
+- **悬浮播放条**：歌曲信息、播放控制、进度条与音量集中呈现，播放队列和更多操作通过浮层打开。
+- **全屏播放器**：从播放条展开，显示高清封面、流动背景与同步歌词，关闭时回到播放条。
+- **歌词**：突出当前歌词行，支持手动浏览、偏移调节和多语言显示。可用歌词与语言取决于音乐服务器。
+
+### 全屏播放器
+
+![全屏播放器](media/screenshots/player.png)
+
+### 媒体库
+
+![媒体库](media/screenshots/library.png)
+
+### 专辑详情
+
+![专辑详情](media/screenshots/album.png)
+
+## 下载与离线播放
+
+![下载管理](media/screenshots/downloads.png)
 
 ### 下载管理
 
@@ -34,57 +60,18 @@ qMusic for Windows 是面向自托管音乐服务的 Windows 音乐播放器，�
 - 对本地已有记录支持分页、排序、搜索和常用筛选，无需手动切换离线模式。
 - 已缓存的封面可用于音乐库、侧栏及全屏播放器；缺少所需分辨率时，可复用同一封面的已有尺寸。
 
-## 与原版 Feishin 的区别
-
-以下比较以上游提交 [`02bfa68d`](https://github.com/jeffvli/feishin/commit/02bfa68d88dc95f5f1f9e4d11a7433bf63e5fef6) 为基线，对应本分支引入定制改动前的代码。上游后续版本可能有所变化。
-
-| 项目 | 上游基线 | 本分支 2.0 Beta |
-| --- | --- | --- |
-| 下载方式 | 将服务器下载地址交给桌面下载器或浏览器处理 | 增加应用内任务管理、本地歌曲索引及批量操作 |
-| 离线使用 | 启动与服务器切换包含连接验证流程 | 使用保存的登录信息进入应用，并读取已缓存的音乐库内容 |
-| 音频保存 | 未提供本分支的边听边存与本地索引联动 | 播放时可自动保存音频，MPV 和内置播放器优先使用本地文件 |
-| 全屏播放器 | 上游全屏播放器布局与背景效果 | 调整封面、队列和控制栏布局，增加基于封面配色的流动背景 |
-| 歌词交互 | 上游歌词显示与跟随行为 | 手动浏览时暂缓自动跟随，离开后恢复；突出当前歌词行 |
-| Windows 播放体验 | 用户自行配置 MPV；使用上游媒体控制实现 | Windows x64 包含固定版本 MPV，并改进系统媒体面板、任务栏按钮与播放状态同步 |
-| 界面与发布渠道 | 上游图标、默认主题和更新来源 | 调整图标、默认主题、侧栏与列表布局；更新与发布说明指向本仓库 |
-
-上表包含本分支在 1.x 阶段已引入、并由 2.0 延续的改动。MPV / 内置双播放引擎、服务器曲库浏览、播放列表、歌词、Navidrome 智能播放列表等能力来自上游，仍是本项目的基础功能；具体可用功能取决于服务器实现。
-
-## 界面预览
-
-以下图片由当前版本的真实界面生成，使用独立演示配置。歌曲及封面用于展示；不含个人账号、服务器地址、播放历史或收藏记录，页面中的本地文件信息为演示数据。
-
-### 全屏播放器
-
-以戴佩妮《你要的爱》为例，展示封面配色背景与歌词。
-
-![全屏播放器：戴佩妮《你要的爱》与歌词](media/screenshots/player.png)
-
-### 音乐库
-
-![音乐库：专辑封面网格与统一导航](media/screenshots/library.png)
-
-### 下载管理
-
-![下载管理：已下载歌曲、专辑及本地文件管理入口](media/screenshots/downloads.png)
-
-### 专辑详情
-
-![专辑详情：戴佩妮《怎样》的歌曲列表](media/screenshots/album.png)
-
 ## 安装与使用
 
 ### 桌面端
 
-从[本仓库 Releases](https://github.com/liristy/feishin/releases)选择对应操作系统及处理器架构的文件。Beta 版本会标注为预发布版本；请勿将上游安装包、Flathub 分发包或上游托管网页视为本分支的发行版本。
+从[本仓库 Releases](https://github.com/liristy/feishin/releases)下载安装程序或 ZIP 压缩包，按设备选择 x64 或 ARM64。自动接收预发布更新时，在高级设置中将更新通道设为 **Beta**。
 
-| 平台 | 构建格式 | MPV 配置 |
+| 架构 | 安装包 | 播放引擎 |
 | --- | --- | --- |
-| Windows | 安装程序、ZIP 压缩包 | x64 构建包含 MPV；其他架构需自行准备兼容的 MPV，或选择内置播放器 |
-| macOS | DMG、ZIP 压缩包 | 使用 MPV 时需自行安装并设置可执行文件路径 |
-| Linux | AppImage、DEB、tar.xz | 使用 MPV 时需自行安装并设置可执行文件路径 |
+| Windows x64 | EXE、ZIP | 内置 MPV，也可使用内置播放器 |
+| Windows ARM64 | EXE、ZIP | 使用内置播放器，或自行配置兼容的 MPV |
 
-各次发布提供的架构和文件以 Release 附件为准。macOS 的系统权限提示及 Linux 的桌面集成行为取决于系统配置。
+各次发布提供的文件以 Release 附件为准。macOS 和 Linux 可从源码构建，beta5 不提供这两个平台的安装包。
 
 1. 安装或解压应用，在服务器管理中添加 Navidrome、Jellyfin 或 Subsonic / OpenSubsonic 服务器。
 2. 输入完整服务器地址及账号信息。本项目是音乐客户端，需要已有音乐服务器，不提供音乐内容服务。

@@ -28,6 +28,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Prepare release draft
+              id: release
               shell: bash
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,10 +36,15 @@ jobs:
                   VERSION=$(node -p "require('./package.json').version")
                   NOTES="docs/releases/${VERSION}.md"
                   test -f "$NOTES"
+                  COMMAND=publish:win
+                  if [[ "$VERSION" == *-beta.* ]]; then COMMAND=publish:win:beta; fi
+                  echo "command=$COMMAND" >> "$GITHUB_OUTPUT"
                   if gh release view "v${VERSION}" --json targetCommitish,isDraft > release-state.json; then
                       node -e "const r=require('./release-state.json'); if (!r.isDraft || r.targetCommitish !== process.env.GITHUB_SHA) throw new Error('Release already published or targets a different commit')"
                   else
-                      gh release create "v${VERSION}" --target "$GITHUB_SHA" --draft --title "qMusic ${VERSION}" --notes-file "$NOTES"
+                      FLAGS=()
+                      if [[ "$VERSION" == *-* ]]; then FLAGS+=(--prerelease); fi
+                      gh release create "v${VERSION}" --target "$GITHUB_SHA" --draft "${FLAGS[@]}" --title "qMusic ${VERSION}" --notes-file "$NOTES"
                   fi
 
             - name: Build and Publish releases
@@ -50,7 +56,7 @@ jobs:
                   max_attempts: 3
                   retry_on: error
                   command: |
-                      pnpm run publish:win
+                      pnpm run ${{ steps.release.outputs.command }}
                   on_retry_command: pnpm cache delete
 
             - name: Publish completed release
@@ -59,4 +65,8 @@ jobs:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   VERSION=$(node -p "require('./package.json').version")
-                  gh release edit "v${VERSION}" --draft=false --latest --title "qMusic ${VERSION}" --notes-file "docs/releases/${VERSION}.md"
+                  if [[ "$VERSION" == *-* ]]; then
+                      gh release edit "v${VERSION}" --draft=false --prerelease --latest=false --title "qMusic ${VERSION}" --notes-file "docs/releases/${VERSION}.md"
+                  else
+                      gh release edit "v${VERSION}" --draft=false --prerelease=false --latest --title "qMusic ${VERSION}" --notes-file "docs/releases/${VERSION}.md"
+                  fi
