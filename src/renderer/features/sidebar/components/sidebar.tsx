@@ -117,7 +117,9 @@ export const Sidebar = () => {
         () =>
             sidebarItemsWithRoute.filter(
                 (item) =>
-                    !['Collections', 'Home', 'Radio', 'Search'].includes(item.id) && item.route,
+                    !['Collections', 'Home', 'Listening History', 'Radio', 'Search'].includes(
+                        item.id,
+                    ) && item.route,
             ),
         [sidebarItemsWithRoute],
     );
@@ -158,7 +160,9 @@ export const Sidebar = () => {
             <ScrollArea allowDragScroll className={styles.scrollArea}>
                 <div className={styles.primaryNavigation}>
                     {sidebarItemsWithRoute
-                        .filter((item) => ['Home', 'Radio', 'Search'].includes(item.id))
+                        .filter((item) =>
+                            ['Home', 'Listening History', 'Radio', 'Search'].includes(item.id),
+                        )
                         .map((item) => (
                             <SidebarItem key={item.id} to={item.route}>
                                 <Group gap="sm">

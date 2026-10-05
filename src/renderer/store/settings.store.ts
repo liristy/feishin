@@ -3266,8 +3266,8 @@ export const useSidebarPlaylistListFilterRegex = () =>
 
 export const useSidebarItems = () => {
     const items = useSettingsStore((state) => state.general.sidebarItems, shallow);
-    return useMemo(
-        () =>
+    return useMemo(() => {
+        const navigationItems =
             isElectron() && !items.some((item) => item.id === 'Offline')
                 ? [
                       ...items,
@@ -3282,9 +3282,17 @@ export const useSidebarItems = () => {
                       item.id === 'Offline'
                           ? { ...item, label: 'Downloads', route: AppRoute.DOWNLOADS }
                           : item,
-                  ),
-        [items],
-    );
+                  );
+        const historyIndex = navigationItems.findIndex(
+            (item) => item.id === SidebarItem.LISTENING_HISTORY,
+        );
+        if (historyIndex >= 0) {
+            const [history] = navigationItems.splice(historyIndex, 1);
+            const homeIndex = navigationItems.findIndex((item) => item.id === 'Home');
+            navigationItems.splice(homeIndex + 1, 0, history);
+        }
+        return navigationItems;
+    }, [items]);
 };
 
 export const usePlayerItems = () => useSettingsStore((state) => state.general.playerItems, shallow);

@@ -129,6 +129,19 @@ const fixtureServer = http.createServer((request, response) => {
         },
         artists: { index: [] },
         genres: { genre: [] },
+        lyricsList: {
+            structuredLyrics: [
+                {
+                    lang: 'en',
+                    line: [
+                        { start: 0, value: 'The night is quiet' },
+                        { start: 5000, value: 'The city lights are shining' },
+                        { start: 10000, value: 'A little closer to the morning' },
+                    ],
+                    synced: true,
+                },
+            ],
+        },
         musicFolders: { musicFolder: [] },
         playlists: {
             playlist: Array.from({ length: 40 }, (_, index) => ({
@@ -194,7 +207,7 @@ app.once('browser-window-created', (_event, win) => {
             await serverReady;
             const server = {
                 credential: 'fixture',
-                features: {},
+                features: { lyricsMultipleStructured: [1] },
                 id: 'test',
                 name: 'Music Library',
                 type: 'subsonic',
@@ -270,11 +283,18 @@ app.once('browser-window-created', (_event, win) => {
                                     route: '/playlists',
                                 },
                                 { disabled: false, id: 'Radio', label: 'Radio', route: '/radio' },
+                                {
+                                    disabled: false,
+                                    id: 'Listening History',
+                                    label: 'Listening statistics',
+                                    route: '/listening-history',
+                                },
                             ],
                             sidebarPlaylistMode: 'expanded',
                             sideQueueType: 'sideQueue',
                             theme: 'gruvboxDark',
                         },
+                        lyrics: { fetch: false, preferLocalLyrics: true },
                         playback: { type: 'web' },
                     },
                     version: 37,
@@ -843,6 +863,30 @@ app.once('browser-window-created', (_event, win) => {
                 delete window.playerOpeningTransition;
             })()`);
             await delay(600);
+            const windowControls = '[data-fullscreen-player] button[aria-label="Minimize"]';
+            assert.equal(
+                await evaluate(
+                    `document.querySelectorAll('button[aria-label="Minimize"]:not([data-player-cover])').length`,
+                ),
+                1,
+                'Fullscreen uses one set of window controls without the always visible titlebar',
+            );
+            win.webContents.sendInputEvent({ type: 'mouseMove', x: 500, y: 400 });
+            await waitFor(
+                `getComputedStyle(document.querySelector('${windowControls}').closest('[class*="full-screen-player-module-window-controls"]')).opacity==='0'`,
+            );
+            const windowControlPoint = await evaluate(`(() => {
+                const r=document.querySelector('${windowControls}').getBoundingClientRect();
+                return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};
+            })()`);
+            win.webContents.sendInputEvent({ type: 'mouseMove', ...windowControlPoint });
+            await waitFor(
+                `getComputedStyle(document.querySelector('${windowControls}').closest('[class*="full-screen-player-module-window-controls"]')).opacity==='1'`,
+            );
+            win.webContents.sendInputEvent({ type: 'mouseMove', x: 500, y: 400 });
+            await waitFor(
+                `getComputedStyle(document.querySelector('${windowControls}').closest('[class*="full-screen-player-module-window-controls"]')).opacity==='0'`,
+            );
             assert.equal(
                 await evaluate(
                     `getComputedStyle(document.querySelector('#player-bar')).borderRadius`,
@@ -929,6 +973,30 @@ app.once('browser-window-created', (_event, win) => {
                 `document.querySelectorAll('.full-screen-player-controls-container').length===1`,
             );
             const sharpCover = `(() => {const image=document.querySelector('img.full-screen-player-image');if(!image?.complete)return false;const r=image.getBoundingClientRect();return image.naturalWidth>=Math.max(r.width,r.height)*devicePixelRatio;})()`;
+            await waitFor(
+                `document.querySelector('.synchronized-lyrics')?.textContent.includes('The night is quiet')`,
+            );
+            const lyricActions = await evaluate(`(() => {
+                const input=document.querySelector('[aria-label="Lyric offset"]');
+                const controls=input.closest('[class*="lyrics-actions-module-root"]');
+                return {text:controls.textContent,buttonHeight:controls.querySelector('[aria-label="Decrease lyric offset"]').getBoundingClientRect().height,inputWidth:input.getBoundingClientRect().width};
+            })()`);
+            assert.ok(
+                !/Export|Search/i.test(lyricActions.text),
+                'Lyrics no longer expose export or search actions',
+            );
+            assert.ok(
+                lyricActions.buttonHeight <= 24 && lyricActions.inputWidth <= 60,
+                'Lyric offset controls stay compact',
+            );
+            await evaluate(
+                `document.querySelector('[aria-label="Increase lyric offset"]').click()`,
+            );
+            await waitFor(`document.querySelector('[aria-label="Lyric offset"]').value==='50'`);
+            await evaluate(
+                `document.querySelector('[aria-label="Decrease lyric offset"]').click()`,
+            );
+            await waitFor(`document.querySelector('[aria-label="Lyric offset"]').value==='0'`);
             await waitFor(sharpCover);
             win.setSize(1280, 850);
             await delay(500);

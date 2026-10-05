@@ -22,7 +22,6 @@ import {
     getOverlayLayerKey,
     lyricsHasWordCues,
 } from '/@/renderer/features/lyrics/api/lyrics-utils';
-import { openLyricsExportModal } from '/@/renderer/features/lyrics/components/lyrics-export-form';
 import {
     useFuriganaLyrics,
     useRomajiLyrics,
@@ -50,7 +49,6 @@ import { Group } from '/@/shared/components/group/group';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 import { Text } from '/@/shared/components/text/text';
 import { useLocalStorage } from '/@/shared/hooks/use-local-storage';
-import { LyricsOverride } from '/@/shared/types/domain-types';
 
 type LyricsProps = {
     fadeOutNoLyricsMessage?: boolean;
@@ -314,17 +312,6 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
         useServerPronunciation,
     ]);
 
-    const handleOnSearchOverride = useCallback(
-        (params: LyricsOverride) => {
-            if (!lyricsKey) return;
-            queryClient.setQueryData<LyricsQueryResult>(lyricsKey, (prev) =>
-                prev ? { ...prev, overrideSelection: params } : prev,
-            );
-            queryClient.invalidateQueries({ queryKey: lyricsKey });
-        },
-        [lyricsKey],
-    );
-
     const handleUpdateOffset = useCallback(
         (offsetMs: number) => {
             if (!currentSong || !lyricsKey) return;
@@ -496,12 +483,6 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
         return undefined;
     }, [isLoadingLyrics, hasNoLyrics, fadeOutNoLyricsMessage]);
 
-    const handleExportLyrics = useCallback(() => {
-        if (lyrics && !isLyricsDisabled) {
-            openLyricsExportModal({ lyrics, offsetMs: currentOffsetMs, synced });
-        }
-    }, [currentOffsetMs, isLyricsDisabled, lyrics, synced]);
-
     const handleOpenSettings = () => {
         openLyricsSettingsModal(settingsKey);
     };
@@ -575,9 +556,7 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
                         index={indexToUse}
                         languages={languages}
                         offsetMs={displayOffsetMs}
-                        onExportLyrics={handleExportLyrics}
                         onRemoveLyric={handleOnRemoveLyric}
-                        onSearchOverride={handleOnSearchOverride}
                         onToggleOverlayLayer={handleToggleOverlayLayer}
                         onTranslateLyric={
                             translationApiProvider && translationApiKey

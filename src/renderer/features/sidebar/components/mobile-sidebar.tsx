@@ -79,6 +79,18 @@ export const MobileSidebar = () => {
                 <ActionBar />
             </Group>
             <ScrollArea allowDragScroll className={styles.scrollArea}>
+                <div className={styles.primaryNavigation}>
+                    {sidebarItemsWithRoute
+                        .filter((item) => ['Home', 'Listening History'].includes(item.id))
+                        .map((item) => (
+                            <SidebarItem key={item.id} to={item.route}>
+                                <Group gap="sm">
+                                    <SidebarIcon route={item.route} />
+                                    {item.label}
+                                </Group>
+                            </SidebarItem>
+                        ))}
+                </div>
                 <Accordion
                     classNames={{
                         content: styles.accordionContent,
@@ -96,16 +108,18 @@ export const MobileSidebar = () => {
                             </Text>
                         </Accordion.Control>
                         <Accordion.Panel>
-                            {sidebarItemsWithRoute.map((item) => {
-                                return (
-                                    <SidebarItem key={`sidebar-${item.route}`} to={item.route}>
-                                        <Group gap="sm">
-                                            <SidebarIcon route={item.route} />
-                                            {item.label}
-                                        </Group>
-                                    </SidebarItem>
-                                );
-                            })}
+                            {sidebarItemsWithRoute
+                                .filter((item) => !['Home', 'Listening History'].includes(item.id))
+                                .map((item) => {
+                                    return (
+                                        <SidebarItem key={`sidebar-${item.route}`} to={item.route}>
+                                            <Group gap="sm">
+                                                <SidebarIcon route={item.route} />
+                                                {item.label}
+                                            </Group>
+                                        </SidebarItem>
+                                    );
+                                })}
                         </Accordion.Panel>
                     </Accordion.Item>
                     {sidebarPlaylistList && <MobileSidebarPlaylistSection />}

@@ -18,6 +18,10 @@
     height: auto;
 }
 
+.primary-navigation {
+    padding-bottom: var(--theme-spacing-sm);
+}
+
 .accordion-item {
     border-bottom: none;
 }

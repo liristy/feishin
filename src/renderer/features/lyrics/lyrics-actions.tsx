@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 import styles from './lyrics-actions.module.css';
 
-import { openLyricSearchModal } from '/@/renderer/features/lyrics/components/lyrics-search-form';
 import { useLyricsSettings, usePlayerSong } from '/@/renderer/store';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
 import { Button } from '/@/shared/components/button/button';
@@ -17,7 +16,7 @@ import { Stack } from '/@/shared/components/stack/stack';
 import { Switch } from '/@/shared/components/switch/switch';
 import { Text } from '/@/shared/components/text/text';
 import { Tooltip } from '/@/shared/components/tooltip/tooltip';
-import { LyricsKind, LyricsOverride } from '/@/shared/types/domain-types';
+import { LyricsKind } from '/@/shared/types/domain-types';
 
 export type OverlayLayerToggle = {
     key: string;
@@ -30,9 +29,7 @@ interface LyricsActionsProps {
     index: number;
     languages: { label: string; value: string }[];
     offsetMs: number;
-    onExportLyrics: () => void;
     onRemoveLyric: () => void;
-    onSearchOverride: (params: LyricsOverride) => void;
     onToggleOverlayLayer?: (key: string) => void;
     onTranslateLyric?: () => void;
     onUpdateOffset: (offsetMs: number) => void;
@@ -71,9 +68,7 @@ export const LyricsActions = ({
     index,
     languages,
     offsetMs,
-    onExportLyrics,
     onRemoveLyric,
-    onSearchOverride,
     onToggleOverlayLayer,
     onTranslateLyric,
     onUpdateOffset,
@@ -127,10 +122,7 @@ export const LyricsActions = ({
         : t('page.fullscreenPlayer.lyricLanguage');
 
     const showTopRow =
-        hasLyrics ||
-        hasMultipleLanguages ||
-        quickOverlayLayers.length > 0 ||
-        extraOverlayLayers.length > 0;
+        hasMultipleLanguages || quickOverlayLayers.length > 0 || extraOverlayLayers.length > 0;
 
     const languageMenu = hasMultipleLanguages ? (
         <DropdownMenu position="top">
@@ -233,43 +225,19 @@ export const LyricsActions = ({
         <div className={styles.root}>
             {showTopRow ? (
                 <Group className={styles.topRow} gap="xs" justify="center">
-                    {hasLyrics ? (
-                        <Button
-                            onClick={onExportLyrics}
-                            size="compact-sm"
-                            uppercase
-                            variant="subtle"
-                        >
-                            {t('form.lyricsExport.export')}
-                        </Button>
-                    ) : null}
                     {languageMenu}
                     {overlayToggleIcons}
                     {extraLayersPopover}
                 </Group>
             ) : null}
             <Group className={styles.controlsRow} gap="xs" justify="center">
-                {isDesktop && sources.length ? (
-                    <Button
-                        disabled={isActionsDisabled}
-                        onClick={() =>
-                            openLyricSearchModal({
-                                artist: currentSong?.artistName,
-                                name: currentSong?.name,
-                                onSearchOverride,
-                            })
-                        }
-                        uppercase
-                        variant="subtle"
-                    >
-                        {t('common.search')}
-                    </Button>
-                ) : null}
                 <ActionIcon
                     aria-label="Decrease lyric offset"
                     disabled={isActionsDisabled}
                     icon="minus"
+                    iconProps={{ size: 14 }}
                     onClick={() => handleLyricOffset(offsetMs - 50)}
+                    size={24}
                     tooltip={{
                         label: t('common.slower'),
                         openDelay: 0,
@@ -281,16 +249,19 @@ export const LyricsActions = ({
                         aria-label="Lyric offset"
                         disabled={isActionsDisabled}
                         onChange={handleLyricOffset}
+                        size="xs"
                         styles={{ input: { textAlign: 'center' } }}
                         value={offsetMs || 0}
-                        width={70}
+                        width={60}
                     />
                 </Tooltip>
                 <ActionIcon
                     aria-label="Increase lyric offset"
                     disabled={isActionsDisabled}
                     icon="plus"
+                    iconProps={{ size: 14 }}
                     onClick={() => handleLyricOffset(offsetMs + 50)}
+                    size={24}
                     tooltip={{
                         label: t('common.faster'),
                         openDelay: 0,
