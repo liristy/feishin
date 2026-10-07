@@ -10,6 +10,7 @@ const ts = require('typescript');
 
 let song = { _uniqueId: 'one', imageUrl: 'https://example.test/red.jpg' };
 let hashUrl = null;
+let backgroundInitial;
 const settings = {
     dynamicBackground: true,
     dynamicImageBlur: 6,
@@ -64,15 +65,17 @@ const mocks = {
     'motion/react': {
         AnimatePresence: ({ children }) => children,
         motion: {
-            div: ({ children, className, custom, style }) =>
-                React.createElement(
+            div: ({ children, className, custom, initial, style }) => {
+                if (className === 'background-image') backgroundInitial = initial;
+                return React.createElement(
                     'div',
                     {
                         className,
                         style: custom ? { backgroundColor: custom.background } : style,
                     },
                     children,
-                ),
+                );
+            },
         },
     },
     'react-router': { useLocation: () => ({}) },
@@ -99,6 +102,7 @@ vm.runInNewContext(
 const render = () =>
     renderToStaticMarkup(React.createElement(moduleUnderTest.exports.FullScreenPlayer));
 assert.match(render(), /background-flow/);
+assert.equal(backgroundInitial, false, 'Opening does not add a second background fade-in');
 assert.match(render(), /window-controls/);
 assert.match(render(), /red\.jpg/);
 song = { _uniqueId: 'one' };

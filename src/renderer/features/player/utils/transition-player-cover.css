@@ -84,10 +84,12 @@
 @keyframes player-cover-radius {
     from {
         border-radius: var(--player-cover-radius-from);
+        filter: var(--player-cover-shadow-from);
     }
 
     to {
         border-radius: var(--player-cover-radius-to);
+        filter: var(--player-cover-shadow-to);
     }
 }
 
@@ -201,7 +203,7 @@
     }
 }
 
-/* Opening uses the decoded large image, never an enlarged compact-cover raster. */
+/* Keep the current fullscreen artwork visible throughout expansion. */
 :root[data-player-transition]:has([data-player-cover='expanded']) {
     &::view-transition-old(player-cover) {
         opacity: 0;

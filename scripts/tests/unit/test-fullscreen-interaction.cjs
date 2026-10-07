@@ -103,7 +103,10 @@ function load(relative) {
         {
             cancelAnimationFrame: noop,
             clearTimeout: (id) => timers.delete(id),
-            document: { getElementById: () => container },
+            document: {
+                getElementById: () => container,
+                querySelector: () => compactArtwork,
+            },
             exports,
             MutationObserver: class {
                 disconnect = noop;
@@ -139,6 +142,7 @@ function load(relative) {
     return exports;
 }
 let container;
+let compactArtwork;
 function flushTimers() {
     const callbacks = [...timers.values()];
     timers.clear();
@@ -233,6 +237,78 @@ assert.equal(
     'Ordinary queue keeps its configured columns',
 );
 assert.equal(normal.props.size, 'large');
+const { MainPlayButton, PlayerButton } = load(
+    'src/renderer/features/player/components/player-button.tsx',
+);
+for (const render of [
+    (onClick) => MainPlayButton({ onClick }),
+    (onClick) => PlayerButton({ icon: 'shuffle', onClick, variant: 'tertiary' }),
+    (onClick) =>
+        PlayerButton({
+            icon: 'shuffle',
+            onClick,
+            tooltip: { label: 'Shuffle' },
+            variant: 'tertiary',
+        }).props.children,
+]) {
+    for (const detail of [0, 1, 2]) {
+        const calls = [];
+        const button = render(() => calls.push('playback'));
+        button.props.onClick({
+            currentTarget: { blur: () => calls.push('blur') },
+            detail,
+            stopPropagation: () => calls.push('stop'),
+        });
+        assert.deepEqual(
+            calls,
+            detail > 0 ? ['stop', 'blur', 'playback'] : ['stop', 'playback'],
+            'Pointer clicks release focus before playback; keyboard clicks keep focus',
+        );
+    }
+}
+let fullSizeArtwork;
+let openingArtwork;
+const originalUseState = fakeReact.useState;
+fakeReact.useState = (value) =>
+    typeof value === 'function'
+        ? [openingArtwork ?? (openingArtwork = value()), noop]
+        : originalUseState(value);
+compactArtwork = { complete: true, currentSrc: 'blob:visible-cover', naturalWidth: 160 };
+mocks['/@/renderer/components/item-image/item-image'] = {
+    useItemImageUrl: () => fullSizeArtwork,
+};
+mocks['/@/renderer/features/radio/hooks/use-radio-player'] = {
+    useIsRadioActive: () => false,
+    useRadioPlayer: () => ({}),
+};
+mocks['/@/shared/hooks/use-set-state'] = { useSetState: (value) => [value, noop] };
+mocks['react-i18next'] = { useTranslation: () => ({ t: (key) => key }) };
+Object.assign(mocks['/@/renderer/store'], {
+    PlayerItem: {},
+    useFullScreenPlayerStore: () => ({ coverArtSize: 70 }),
+    useFullScreenPlayerStoreActions: () => ({ setStore: noop }),
+    useGeneralSettings: () => ({ playerItems: [] }),
+    useImageRes: () => ({ fullScreenPlayer: 600 }),
+    usePlayerData: () => ({}),
+});
+const { FullScreenPlayerImage } = load(
+    'src/renderer/features/player/components/full-screen-player-image.tsx',
+);
+const visibleCover = () =>
+    FullScreenPlayerImage().props.children[0].props.children.props.children[0];
+assert.equal(visibleCover().props.src, 'blob:visible-cover', 'Opening reuses the loaded artwork');
+fullSizeArtwork = 'blob:large-cover';
+assert.equal(
+    visibleCover().props.src,
+    'blob:large-cover',
+    'Available large artwork takes priority',
+);
+fullSizeArtwork = undefined;
+queue[0] = { _uniqueId: 'different-song' };
+assert.equal(visibleCover().props.src, '', 'Changing songs cannot reuse the previous cover');
+openingArtwork = undefined;
+compactArtwork = { complete: false, currentSrc: 'blob:loading-cover', naturalWidth: 0 };
+assert.equal(visibleCover().props.src, '', 'Incomplete artwork is not used as the opening preview');
 console.log(
-    'Lyrics manual browsing, progress resync, lyric seeking and compact instant queue passed.',
+    'Lyrics browsing, lyric seeking, instant queue, player button focus and opening artwork passed.',
 );

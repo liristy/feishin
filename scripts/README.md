@@ -25,12 +25,13 @@ node scripts/tests/unit/test-offline.cjs
 
 `tests/electron/` 使用 Electron 运行，相关测试使用独立临时配置。需要图形环境；部分测试会显示测试窗口。
 
-以下三个检查直接加载被测代码：
+以下检查直接加载被测代码：
 
 ```sh
 pnpm exec electron scripts/tests/electron/test-cover-flow-canvas.cjs
 pnpm exec electron scripts/tests/electron/test-text-scrolling.cjs
 pnpm exec electron scripts/tests/electron/test-offline-electron.cjs
+pnpm exec electron scripts/tests/electron/test-player-button-transition.cjs
 ```
 
 完整界面检查需要先构建桌面应用：

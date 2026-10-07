@@ -72,6 +72,8 @@ app.whenReady().then(async () => {
                 pixel(rect.x + rect.width - 3, rect.y + rect.height - 3),
             ],
             home: pixel(10, 10),
+            shadowEdge: pixel(rect.x + rect.width + 5, rect.y + rect.height / 2),
+            shadowOutside: pixel(rect.x + rect.width + 60, rect.y + rect.height / 2),
             markerRatio: measureMarker
                 ? (marker.right - marker.left + 1) / (marker.bottom - marker.top + 1)
                 : null,
@@ -98,7 +100,16 @@ app.whenReady().then(async () => {
             const transition = exports.transitionPlayerCover;
             const start = document.startViewTransition.bind(document);
             let current;
-            document.startViewTransition = (update) => current = start(update);
+            let transitionStarted;
+            let updateDelay;
+            document.startViewTransition = (update) => {
+                transitionStarted = performance.now();
+                return current = start(() => {
+                    const result = update();
+                    updateDelay = performance.now() - transitionStarted;
+                    return result;
+                });
+            };
             document.documentElement.style.setProperty('--theme-radius-md', '12px');
             const bar = document.querySelector('#player-bar');
             const open = () => {
@@ -111,6 +122,9 @@ app.whenReady().then(async () => {
             };
             const inspect = async (measureMarker = false) => {
                 await current.ready;
+                const readyDelay = performance.now() - transitionStarted;
+                const background = document.querySelector('[data-player-background]');
+                const backgroundReady = !background || !!background.querySelector('[data-player-background-ready]');
                 const barBackground = getComputedStyle(bar).backgroundColor;
                 const preserveAspect = document.documentElement.hasAttribute('data-player-cover-preserve-aspect');
                 const animation = document.getAnimations().find(a => a.effect.pseudoElement === '::view-transition-group(player-cover)');
@@ -142,11 +156,11 @@ app.whenReady().then(async () => {
                         measureMarker,
                         viewport: {width:innerWidth,height:innerHeight},
                     });
-                    samples.push({...pixels, time, width:parseFloat(group.width), radius:parseFloat(pair.borderTopLeftRadius), pageX:pageTransform.e,pageY:pageTransform.f,pageWidth:parseFloat(page.width),pageHeight:parseFloat(page.height), oldPageOpacity:parseFloat(oldPage.opacity),newPageOpacity:parseFloat(newPage.opacity),oldOpacity:parseFloat(oldCover.opacity), newOpacity:parseFloat(newCover.opacity),controlTransform:controlGroup.transform});
+                    samples.push({...pixels, time, shadow:pair.filter, width:parseFloat(group.width), radius:parseFloat(pair.borderTopLeftRadius), pageX:pageTransform.e,pageY:pageTransform.f,pageWidth:parseFloat(page.width),pageHeight:parseFloat(page.height), oldPageOpacity:parseFloat(oldPage.opacity),newPageOpacity:parseFloat(newPage.opacity),oldOpacity:parseFloat(oldCover.opacity), newOpacity:parseFloat(newCover.opacity),controlTransform:controlGroup.transform});
                 }
                 animations.forEach(item => item.finish());
                 await current.finished;
-                return { frames: frames.map(f => ({width:f.width,transform:f.transform})), samples, duration, barBackground, preserveAspect, cleanedUp:!document.documentElement.hasAttribute('data-player-cover-preserve-aspect') && !document.documentElement.hasAttribute('data-player-transition') };
+                return { frames: frames.map(f => ({width:f.width,transform:f.transform})), samples, duration, readyDelay, updateDelay, backgroundReady, barBackground, preserveAspect, cleanedUp:!document.documentElement.hasAttribute('data-player-cover-preserve-aspect') && !document.documentElement.hasAttribute('data-player-transition') };
             };
             await new Promise(requestAnimationFrame);
             transition(open);
@@ -178,14 +192,33 @@ app.whenReady().then(async () => {
                 transition(close);
                 rectangular.push({width, height, nativeBox, expanding, collapsing:await inspect(true)});
             }
+            const preview = new Image();
+            preview.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="100%" height="100%" fill="lime"/></svg>');
+            preview.style.cssText = 'width:100%;height:100%;border-radius:24px';
+            await preview.decode();
+            compact.replaceChildren(preview.cloneNode(true));
             transition(() => {
                 open();
+                document.querySelector('[data-player-cover="expanded"]').append(preview);
+            });
+            const smallArtwork = await inspect();
+            transition(close);
+            await inspect();
+            transition(() => {
+                open();
+                const background = document.createElement('div');
+                background.dataset.playerBackground = 'true';
+                document.querySelector('section').append(background);
+                const cover = document.querySelector('[data-player-cover="expanded"]');
+                const cached = preview.cloneNode(true);
+                cached.style.filter = 'drop-shadow(rgba(0,0,0,0.35) 0px 5px 15px)';
+                cover.append(cached);
                 setTimeout(() => {
-                    const cover=document.querySelector('[data-player-cover="expanded"]');
+                    if (!cover.isConnected) return;
                     const image=new Image();
                     image.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1600"><rect width="100%" height="100%" fill="lime"/></svg>');
-                    image.style.cssText='width:100%;height:100%;border-radius:24px';
-                    cover.append(image);
+                    image.style.cssText='width:100%;height:100%;border-radius:24px;filter:drop-shadow(rgba(0,0,0,0.35) 0px 5px 15px)';
+                    cover.replaceChildren(image);
                 }, 70);
             });
             const loadingCover = await inspect(true);
@@ -203,7 +236,7 @@ app.whenReady().then(async () => {
             close();
             document.startViewTransition = undefined;
             transition(open);
-            return {opening,closing,rectangular,loadingCover,openingImageWidth,interruptedClosed,reducedMotionImmediate,viewport:{width:innerWidth,height:innerHeight},unsupportedImmediate:!!document.querySelector('section')};
+            return {opening,closing,rectangular,smallArtwork,loadingCover,openingImageWidth,interruptedClosed,reducedMotionImmediate,viewport:{width:innerWidth,height:innerHeight},unsupportedImmediate:!!document.querySelector('section')};
         })().catch(error => { throw new Error(error.stack || String(error)); })`);
         assert.equal(result.opening.frames[0].width, '60px');
         fs.mkdirSync('.scratch/apple-music', { recursive: true });
@@ -218,7 +251,30 @@ app.whenReady().then(async () => {
         assert.equal(result.closing.duration, 300);
         assert.equal(result.opening.preserveAspect, false);
         assert.ok(result.loadingCover.cleanedUp);
-        assert.equal(result.openingImageWidth, 1600, 'Opening waits for the large cover to decode');
+        assert.ok(
+            result.smallArtwork.readyDelay < 300,
+            'Artwork smaller than its display size must not delay opening',
+        );
+        assert.equal(result.loadingCover.backgroundReady, false);
+        assert.ok(
+            result.loadingCover.readyDelay < 500,
+            'A background awaiting its animation frame must not delay opening',
+        );
+        assert.match(result.loadingCover.samples[0].shadow, /rgba\(0, 0, 0, 0\)/);
+        assert.doesNotMatch(
+            result.loadingCover.samples[2].shadow,
+            /rgba\(0, 0, 0, 0\)/,
+            'The cover shadow appears during expansion',
+        );
+        assert.match(result.loadingCover.samples.at(-1).shadow, /0\.35/);
+        const shadowSample = result.loadingCover.samples[2];
+        assert.ok(
+            shadowSample.shadowEdge.some(
+                (channel, index) => channel < shadowSample.shadowOutside[index],
+            ),
+            'The expanding shadow is visible outside the clipped cover snapshot',
+        );
+        assert.equal(result.openingImageWidth, 1600, 'Large artwork replaces the preview after opening starts');
         for (const sample of result.loadingCover.samples) {
             assert.deepEqual(
                 sample.center,

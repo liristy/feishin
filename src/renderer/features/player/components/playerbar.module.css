@@ -137,6 +137,7 @@
 
     .play {
         background: transparent !important;
+        border: 0;
 
         svg {
             color: var(--theme-colors-foreground);

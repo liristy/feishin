@@ -62,6 +62,12 @@ const BackgroundImage = memo(
             sourceUrl,
         );
         const backgroundUrl = dynamicIsImage ? sourceUrl : flowUrl;
+        // Opening already has a shared transition; only later backgrounds fade in.
+        const hasBackground = useRef(false);
+
+        useLayoutEffect(() => {
+            if (backgroundUrl) hasBackground.current = true;
+        }, [backgroundUrl]);
 
         if (!dynamicBackground) return null;
 
@@ -72,7 +78,7 @@ const BackgroundImage = memo(
                         animate={{ opacity: 1 }}
                         className={styles.backgroundImage}
                         exit={{ opacity: 0 }}
-                        initial={{ opacity: 0 }}
+                        initial={hasBackground.current ? { opacity: 0 } : false}
                         key={currentSong?._uniqueId || currentSong?.id || 'none'}
                         style={{ '--image-blur': `${dynamicImageBlur ?? 0}rem` } as CSSProperties}
                         transition={{ duration: 1.5, ease: 'easeInOut' }}

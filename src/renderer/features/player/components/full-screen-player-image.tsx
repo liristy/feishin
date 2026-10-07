@@ -109,6 +109,21 @@ export const FullScreenPlayerImage = () => {
     const { currentStationArt: currentRadioStationArt } = useRadioPlayer();
 
     const currentSong = usePlayerSong();
+    const [openingArtwork] = useState(() => {
+        const image = document.querySelector<HTMLImageElement>('[data-player-cover="compact"] img');
+        return {
+            songId: currentSong?._uniqueId || currentSong?.id,
+            src:
+                image?.complete && image.naturalWidth > 0
+                    ? image.currentSrc || image.src
+                    : undefined,
+        };
+    });
+    // Reuse the visible artwork immediately while the larger image loads.
+    const openingImageUrl =
+        openingArtwork.songId === (currentSong?._uniqueId || currentSong?.id)
+            ? openingArtwork.src
+            : undefined;
     const { nextSong } = usePlayerData();
     const { blurExplicitImages, playerItems } = useGeneralSettings();
     const { coverArtSize } = useFullScreenPlayerStore();
@@ -146,7 +161,7 @@ export const FullScreenPlayerImage = () => {
         bottomImage: nextImageUrl,
         current: 0,
         topExplicit: currentSong?.explicitStatus === ExplicitStatus.EXPLICIT,
-        topImage: currentImageUrl,
+        topImage: currentImageUrl || openingImageUrl,
     });
 
     const isItemEnabled = (item: PlayerItem) =>
@@ -247,12 +262,12 @@ export const FullScreenPlayerImage = () => {
             bottomExplicit:
                 (isTop ? nextSong?.explicitStatus : currentSong?.explicitStatus) ===
                 ExplicitStatus.EXPLICIT,
-            bottomImage: isTop ? nextImageUrl : currentImageUrl,
+            bottomImage: isTop ? nextImageUrl : currentImageUrl || openingImageUrl,
             current,
             topExplicit:
                 (isTop ? currentSong?.explicitStatus : nextSong?.explicitStatus) ===
                 ExplicitStatus.EXPLICIT,
-            topImage: isTop ? currentImageUrl : nextImageUrl,
+            topImage: isTop ? currentImageUrl || openingImageUrl : nextImageUrl,
         });
 
         previousSongRef.current = currentSong?._uniqueId;
@@ -260,6 +275,7 @@ export const FullScreenPlayerImage = () => {
         isRadioActive,
         currentSong?._uniqueId,
         currentImageUrl,
+        openingImageUrl,
         nextSong?._uniqueId,
         nextImageUrl,
         setImageState,
