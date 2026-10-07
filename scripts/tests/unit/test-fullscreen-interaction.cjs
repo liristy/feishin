@@ -261,8 +261,8 @@ for (const render of [
         });
         assert.deepEqual(
             calls,
-            detail > 0 ? ['stop', 'blur', 'playback'] : ['stop', 'playback'],
-            'Pointer clicks release focus before playback; keyboard clicks keep focus',
+            ['stop', 'playback'],
+            'Player buttons forward clicks; the app manages pointer focus',
         );
     }
 }
@@ -310,5 +310,5 @@ openingArtwork = undefined;
 compactArtwork = { complete: false, currentSrc: 'blob:loading-cover', naturalWidth: 0 };
 assert.equal(visibleCover().props.src, '', 'Incomplete artwork is not used as the opening preview');
 console.log(
-    'Lyrics browsing, lyric seeking, instant queue, player button focus and opening artwork passed.',
+    'Lyrics browsing, lyric seeking, instant queue, player button clicks and opening artwork passed.',
 );

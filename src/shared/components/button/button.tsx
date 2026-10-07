@@ -62,6 +62,7 @@ export const _Button = forwardRef<HTMLButtonElement, ButtonProps>(
                     <MantineButton
                         autoContrast
                         classNames={memoizedClassNames}
+                        data-button-control=""
                         loading={loading}
                         ref={ref}
                         size={size}
@@ -78,6 +79,7 @@ export const _Button = forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <MantineButton
                 classNames={memoizedClassNames}
+                data-button-control=""
                 loading={loading}
                 ref={ref}
                 size={size}

@@ -21,6 +21,7 @@ import { AppRouter } from '/@/renderer/router/app-router';
 import { useHotkeySettings, useLanguage, usePlayerHydrated } from '/@/renderer/store';
 import { initCustomThemes } from '/@/renderer/store/custom-themes.store';
 import { useAppTheme } from '/@/renderer/themes/use-app-theme';
+import { useButtonFocus } from '/@/shared/hooks/use-button-focus';
 import { WebAudio } from '/@/shared/types/types';
 import '/@/shared/styles/global.css';
 import { PlayerProvider } from '/@/renderer/features/player/context/player-context';
@@ -36,6 +37,7 @@ const UpdateAvailableDialog = lazy(() =>
 const ipc = isElectron() ? window.api.ipc : null;
 
 export const App = () => {
+    useButtonFocus();
     const playerHydrated = usePlayerHydrated();
     // Custom themes must be loaded (and registered into the shared theme
     // registry) before the first render of ThemedApp, otherwise a user whose

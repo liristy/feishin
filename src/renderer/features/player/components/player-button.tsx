@@ -22,7 +22,6 @@ export const PlayerButton = forwardRef<HTMLButtonElement, PlayerButtonProps>(
         const direction = iconType === 'mediaPrevious' ? -1 : iconType === 'mediaNext' ? 1 : 0;
         const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
             event.stopPropagation();
-            if (event.detail > 0) event.currentTarget.blur();
             if (direction && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 const image = event.currentTarget.querySelector('svg');
                 image?.getAnimations().forEach((animation) => animation.cancel());
@@ -94,7 +93,6 @@ export const MainPlayButton = forwardRef<HTMLButtonElement, PlayButtonProps>(
                 data-player-action="play"
                 onClick={(e) => {
                     e.stopPropagation();
-                    if (e.detail > 0) e.currentTarget.blur();
                     onClick?.(e);
                 }}
                 ref={ref}

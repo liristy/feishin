@@ -11,9 +11,11 @@ import { HashRouter } from 'react-router';
 import { Shell } from '/@/remote/components/shell';
 import { useAccentColor, useIsDark, useReconnect } from '/@/remote/store';
 import { useAppTheme } from '/@/renderer/themes/use-app-theme';
+import { useButtonFocus } from '/@/shared/hooks/use-button-focus';
 import { AppTheme } from '/@/shared/themes/app-theme-types';
 
 export const App = () => {
+    useButtonFocus();
     const isDark = useIsDark();
     const reconnect = useReconnect();
     const accentColor = useAccentColor();

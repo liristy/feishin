@@ -69,7 +69,7 @@ const _ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
         if (tooltip && icon) {
             return (
                 <Tooltip withinPortal {...tooltip}>
-                    <MantineActionIcon ref={ref} {...actionIconProps}>
+                    <MantineActionIcon data-button-control="" ref={ref} {...actionIconProps}>
                         <Icon icon={icon} size={actionIconProps.size} {...iconProps} />
                     </MantineActionIcon>
                 </Tooltip>
@@ -78,7 +78,7 @@ const _ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
 
         if (icon) {
             return (
-                <MantineActionIcon ref={ref} {...actionIconProps}>
+                <MantineActionIcon data-button-control="" ref={ref} {...actionIconProps}>
                     <Icon icon={icon} size={actionIconProps.size} {...iconProps} />
                 </MantineActionIcon>
             );
@@ -87,7 +87,7 @@ const _ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
         if (tooltip) {
             return (
                 <Tooltip withinPortal {...tooltip}>
-                    <MantineActionIcon ref={ref} {...actionIconProps}>
+                    <MantineActionIcon data-button-control="" ref={ref} {...actionIconProps}>
                         {children}
                     </MantineActionIcon>
                 </Tooltip>
@@ -95,7 +95,7 @@ const _ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
         }
 
         return (
-            <MantineActionIcon ref={ref} {...actionIconProps}>
+            <MantineActionIcon data-button-control="" ref={ref} {...actionIconProps}>
                 {children}
             </MantineActionIcon>
         );
