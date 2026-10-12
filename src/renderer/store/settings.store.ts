@@ -741,6 +741,9 @@ const WindowSettingsSchema = z.object({
     preventSuspendOnPlayback: z.boolean(),
     releaseChannel: z.enum(['alpha', 'beta', 'latest']),
     startMinimized: z.boolean(),
+    // Keep the original keys so enabled taskbar players upgrade to the floating player.
+    taskbarPlayer: z.boolean().default(false),
+    taskbarPlayerHideWhenIdle: z.boolean().default(true),
     tray: z.boolean(),
     windowBarStyle: z.nativeEnum(Platform),
     windowBarTrackinfo: z.boolean(),
@@ -2308,6 +2311,8 @@ const initialState: SettingsState = {
         preventSuspendOnPlayback: false,
         releaseChannel: 'latest',
         startMinimized: false,
+        taskbarPlayer: false,
+        taskbarPlayerHideWhenIdle: true,
         tray: true,
         windowBarStyle: Platform.WEB,
         windowBarTrackinfo: true,

@@ -29,6 +29,36 @@ export const WindowSettings = memo(() => {
     const windowOptions: SettingOption[] = [
         {
             control: (
+                <Switch
+                    aria-label={t('setting.floatingPlayer')}
+                    checked={settings.taskbarPlayer}
+                    onChange={(event) =>
+                        setSettings({ window: { taskbarPlayer: event.currentTarget.checked } })
+                    }
+                />
+            ),
+            description: t('setting.floatingPlayer_description'),
+            isHidden: !isElectron(),
+            title: t('setting.floatingPlayer'),
+        },
+        {
+            control: (
+                <Switch
+                    aria-label={t('setting.floatingPlayerHideWhenIdle')}
+                    checked={settings.taskbarPlayerHideWhenIdle}
+                    onChange={(event) =>
+                        setSettings({
+                            window: { taskbarPlayerHideWhenIdle: event.currentTarget.checked },
+                        })
+                    }
+                />
+            ),
+            description: t('setting.floatingPlayerHideWhenIdle_description'),
+            isHidden: !isElectron() || !settings.taskbarPlayer,
+            title: t('setting.floatingPlayerHideWhenIdle'),
+        },
+        {
+            control: (
                 <Select
                     data={WINDOW_BAR_OPTIONS}
                     disabled={!isElectron()}

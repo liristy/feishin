@@ -39,6 +39,12 @@ const createConfig = (isDevelopment: boolean): UserConfig => ({
     },
     preload: {
         build: {
+            rollupOptions: {
+                input: {
+                    'floating-player-window': resolve('src/preload/floating-player-window.ts'),
+                    index: resolve('src/preload/index.ts'),
+                },
+            },
             sourcemap: true,
         },
         resolve: {
@@ -54,6 +60,12 @@ const createConfig = (isDevelopment: boolean): UserConfig => ({
             minify: 'esbuild',
             modulePreload: {
                 polyfill: false,
+            },
+            rollupOptions: {
+                input: {
+                    'floating-player': resolve('src/renderer/floating-player.html'),
+                    index: resolve('src/renderer/index.html'),
+                },
             },
             sourcemap: true,
             target: electronRendererTarget,

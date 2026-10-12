@@ -1,17 +1,23 @@
 import { useEffect, useRef } from 'react';
 
-import { getPlayerWaveformEnergy } from '/@/renderer/features/player/utils/player-waveform';
-import { subscribePlayerStatus, usePlayerStoreBase } from '/@/renderer/store/player.store';
-import { useTimestampStoreBase } from '/@/renderer/store/timestamp.store';
-import { PlayerStatus } from '/@/shared/types/types';
-
 interface CoverFlowCanvasProps {
     className: string;
+    getEnergy?: () => number;
+    playing: boolean;
     source: string;
 }
 
-export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => {
+export const CoverFlowCanvas = ({
+    className,
+    getEnergy,
+    playing,
+    source,
+}: CoverFlowCanvasProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const playback = useRef({ getEnergy, playing });
+    const restartRef = useRef<(() => void) | null>(null);
+    playback.current = { getEnergy, playing };
+    useEffect(() => restartRef.current?.(), [playing]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -39,8 +45,7 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
         let painted = false;
         let colors: number[][] = [];
         let gradients: CanvasGradient[] = [];
-        const isPlaying = () =>
-            usePlayerStoreBase.getState().player.status === PlayerStatus.PLAYING;
+        const isPlaying = () => playback.current.playing;
 
         const paint = (now: number) => {
             if (cancelled || document.hidden) return;
@@ -50,10 +55,7 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
             const delta = Number.isFinite(lastPaint) ? Math.min(0.1, (now - lastPaint) / 1000) : 0;
             lastPaint = now;
             if (isPlaying() && !motion.matches) {
-                const target = getPlayerWaveformEnergy(
-                    usePlayerStoreBase.getState().getCurrentSong()?._uniqueId,
-                    useTimestampStoreBase.getState().timestamp,
-                );
+                const target = playback.current.getEnergy?.() || 0;
                 energy += (target - energy) * (1 - Math.exp(-delta * 5));
                 time += delta * 0.24 * (1 + energy * 0.3);
             }
@@ -144,11 +146,11 @@ export const CoverFlowCanvas = ({ className, source }: CoverFlowCanvasProps) => 
         artwork.src = source;
         document.addEventListener('visibilitychange', restart);
         motion.addEventListener('change', restart);
-        const unsubscribeStatus = subscribePlayerStatus(restart);
+        restartRef.current = restart;
 
         return () => {
             cancelled = true;
-            unsubscribeStatus();
+            restartRef.current = null;
             cancelAnimationFrame(frame);
             artwork.onload = null;
             document.removeEventListener('visibilitychange', restart);

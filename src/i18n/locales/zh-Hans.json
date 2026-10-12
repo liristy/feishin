@@ -1,4 +1,14 @@
 {
+    "floatingPlayer": {
+        "loading": "正在加载歌词…",
+        "enable": "开启悬浮播放器",
+        "disable": "关闭悬浮播放器",
+        "drag": "拖动背景或歌曲信息移动悬浮窗，滚轮调节音量，右键查看更多控制。",
+        "empty": "暂无播放内容",
+        "open": "打开 qMusic",
+        "pause": "暂停",
+        "reset": "重置位置"
+    },
     "listeningHistory": {
         "trackNotFound": "当前资料库中未找到匹配的歌曲。",
         "playError": "无法从资料库加载这首歌曲，请重试。",
@@ -364,6 +374,10 @@
         "scrobbleForceSubmit": "强制记录播放记录"
     },
     "setting": {
+        "floatingPlayer": "悬浮播放器",
+        "floatingPlayer_description": "可自由拖动的桌面播放器，与应用内悬浮条采用相同的胶囊样式。最小化 qMusic 后仍可控制播放，并记住上次位置。",
+        "floatingPlayerHideWhenIdle": "无播放内容时隐藏悬浮播放器",
+        "floatingPlayerHideWhenIdle_description": "未选择歌曲或电台时自动隐藏，暂停播放时保持显示。",
         "crossfadeStyle_description": "选择用于音频播放器的淡入淡出风格",
         "hotkey_favoriteCurrentSong": "收藏$t(common.currentSong)",
         "audioExclusiveMode_description": "启用独占输出模式。在此模式下，系统通常被锁定为只有 MPV 能够输出音频",

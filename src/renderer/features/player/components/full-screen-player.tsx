@@ -14,6 +14,7 @@ import {
 } from '/@/renderer/features/player/components/full-screen-player-queue';
 import { SharedFullscreenPlayerSettings } from '/@/renderer/features/player/components/shared-full-screen-player-settings';
 import { useCoverFlowImage } from '/@/renderer/features/player/hooks/use-cover-flow-image';
+import { getPlayerWaveformEnergy } from '/@/renderer/features/player/utils/player-waveform';
 import {
     useIsRadioActive,
     useRadioPlayer,
@@ -25,10 +26,20 @@ import {
     useFullScreenPlayerStoreActions,
     useImagePlaceholderPriority,
     usePlayerSong,
+    usePlayerStatus,
 } from '/@/renderer/store';
+import { usePlayerStoreBase } from '/@/renderer/store/player.store';
+import { useTimestampStoreBase } from '/@/renderer/store/timestamp.store';
 import { Group } from '/@/shared/components/group/group';
 import { useImageHashUrl } from '/@/shared/hooks/use-image-hash-url';
 import { ExplicitStatus, LibraryItem } from '/@/shared/types/domain-types';
+import { PlayerStatus } from '/@/shared/types/types';
+
+const getFlowEnergy = () =>
+    getPlayerWaveformEnergy(
+        usePlayerStoreBase.getState().getCurrentSong()?._uniqueId,
+        useTimestampStoreBase.getState().timestamp,
+    );
 
 const mainBackground = 'var(--theme-colors-background)';
 
@@ -41,6 +52,7 @@ interface BackgroundImageProps {
 const BackgroundImage = memo(
     ({ dynamicBackground, dynamicImageBlur, dynamicIsImage }: BackgroundImageProps) => {
         const currentSong = usePlayerSong();
+        const status = usePlayerStatus();
         const imageUrl = useItemImageUrl({
             id: currentSong?.imageId || undefined,
             imageUrl: currentSong?.imageUrl,
@@ -91,6 +103,8 @@ const BackgroundImage = memo(
                         ) : (
                             <CoverFlowCanvas
                                 className={styles.backgroundFlow}
+                                getEnergy={getFlowEnergy}
+                                playing={status === PlayerStatus.PLAYING}
                                 source={backgroundUrl}
                             />
                         )}

@@ -1,4 +1,14 @@
 {
+    "floatingPlayer": {
+        "loading": "Loading lyrics…",
+        "enable": "Enable floating player",
+        "disable": "Close floating player",
+        "drag": "Drag the background or song information to move the player. Scroll to adjust volume. Right-click for more controls.",
+        "empty": "Nothing playing",
+        "open": "Open qMusic",
+        "pause": "Pause",
+        "reset": "Reset position"
+    },
     "listeningHistory": {
         "trackNotFound": "No matching song was found in the current library.",
         "playError": "Could not load this song from the library. Please try again.",
@@ -948,6 +958,10 @@
         }
     },
     "setting": {
+        "floatingPlayer": "Floating player",
+        "floatingPlayer_description": "A movable desktop player with the same capsule style as the in-app player bar. Remains available when qMusic is minimized.",
+        "floatingPlayerHideWhenIdle": "Hide floating player when empty",
+        "floatingPlayerHideWhenIdle_description": "Hide when no song or radio station is selected. Paused playback remains visible.",
         "autoDJ": "Auto DJ",
         "autoDJ_itemCount": "Item count",
         "autoDJ_itemCount_description": "The number of items attempted to be added to the queue",

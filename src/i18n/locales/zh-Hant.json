@@ -1,4 +1,14 @@
 {
+    "floatingPlayer": {
+        "loading": "正在載入歌詞…",
+        "enable": "開啟懸浮播放器",
+        "disable": "關閉懸浮播放器",
+        "drag": "拖曳背景或歌曲資訊移動懸浮視窗，滾輪調整音量，右鍵查看更多控制。",
+        "empty": "暫無播放內容",
+        "open": "開啟 qMusic",
+        "pause": "暫停",
+        "reset": "重設位置"
+    },
     "listeningHistory": {
         "trackNotFound": "目前資料庫中未找到符合的歌曲。",
         "playError": "無法從資料庫載入這首歌曲，請重試。",
@@ -555,6 +565,10 @@
         "previousAlbum": "Alt + 點擊：上一張專輯"
     },
     "setting": {
+        "floatingPlayer": "懸浮播放器",
+        "floatingPlayer_description": "可自由拖曳的桌面播放器，與應用內懸浮列採用相同的膠囊樣式。最小化 qMusic 後仍可控制播放，並記住上次位置。",
+        "floatingPlayerHideWhenIdle": "無播放內容時隱藏懸浮播放器",
+        "floatingPlayerHideWhenIdle_description": "未選擇歌曲或電台時自動隱藏，暫停播放時保持顯示。",
         "audioPlayer_description": "選擇用於播放的音訊播放器",
         "themeLight": "主題（淺色）",
         "themeLight_description": "應用程式將使用淺色主題",

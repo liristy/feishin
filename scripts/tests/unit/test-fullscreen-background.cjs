@@ -42,6 +42,7 @@ const mocks = {
     '/@/renderer/features/player/hooks/use-cover-flow-image': {
         useCoverFlowImage: (source) => source,
     },
+    '/@/renderer/features/player/utils/player-waveform': {},
     '/@/renderer/features/radio/hooks/use-radio-player': {
         useIsRadioActive: () => false,
         useRadioPlayer: () => ({}),
@@ -55,13 +56,17 @@ const mocks = {
         useFullScreenPlayerStoreActions: () => ({ setStore: empty }),
         useImagePlaceholderPriority: () => 'thumbHash',
         usePlayerSong: () => song,
+        usePlayerStatus: () => 'paused',
     },
+    '/@/renderer/store/player.store': {},
+    '/@/renderer/store/timestamp.store': {},
     '/@/shared/components/group/group': { Group: empty },
     '/@/shared/hooks/use-image-hash-url': { useImageHashUrl: () => hashUrl },
     '/@/shared/types/domain-types': {
         ExplicitStatus: { EXPLICIT: 'explicit' },
         LibraryItem: { SONG: 'song' },
     },
+    '/@/shared/types/types': { PlayerStatus: { PLAYING: 'playing' } },
     'motion/react': {
         AnimatePresence: ({ children }) => children,
         motion: {

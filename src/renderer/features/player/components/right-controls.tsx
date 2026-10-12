@@ -1,4 +1,5 @@
 import { t } from 'i18next';
+import isElectron from 'is-electron';
 import { useCallback, useEffect, useMemo, useState, WheelEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -42,6 +43,7 @@ import {
     usePlayerSong,
     usePlayerVolume,
     useSetFullScreenPlayerStore,
+    useSettingsStore,
     useSettingsStoreActions,
     useShowFavorites,
     useShowRatings,
@@ -130,6 +132,7 @@ export const RightControls = ({ compact = false }: { compact?: boolean }) => {
                         </Group>
                     </Popover.Dropdown>
                 </Popover>
+                <FloatingPlayerButton />
                 <LyricsButton />
                 <QueueButton />
                 {playbackType === PlayerType.DLNA ? <DlnaVolumeButton /> : <VolumeButton compact />}
@@ -138,21 +141,41 @@ export const RightControls = ({ compact = false }: { compact?: boolean }) => {
     }
     return (
         <Flex align="flex-end" className={styles.container} direction="column" h="100%">
-            <Group h="calc(100% / 3)">
-                {showRatings && <RatingButton />}
-                <AutoDJButton />
-            </Group>
+            <Group h="calc(100% / 3)">{showRatings && <RatingButton />}</Group>
             <Group align="center" gap="xs" wrap="nowrap">
                 <DlnaCastButton />
                 <SleepTimerButton />
                 <PlayerConfig />
                 <LyricsButton />
                 {showFavorites && <FavoriteButton />}
+                <AutoDJButton />
+                <FloatingPlayerButton />
                 <QueueButton />
                 {playbackType === PlayerType.DLNA ? <DlnaVolumeButton /> : <VolumeButton />}
             </Group>
             <Group h="calc(100% / 3)" />
         </Flex>
+    );
+};
+
+const FloatingPlayerButton = () => {
+    const { t } = useTranslation();
+    const enabled = useSettingsStore((state) => state.window.taskbarPlayer);
+    const { setSettings } = useSettingsStoreActions();
+    if (!isElectron()) return null;
+    const label = t(enabled ? 'floatingPlayer.disable' : 'floatingPlayer.enable');
+    return (
+        <ActionIcon
+            aria-label={label}
+            aria-pressed={enabled}
+            icon="appWindow"
+            iconProps={{ color: enabled ? 'primary' : undefined, size: 'lg' }}
+            onClick={() => setSettings({ window: { taskbarPlayer: !enabled } })}
+            size="sm"
+            stopsPropagation
+            tooltip={{ label, openDelay: 0 }}
+            variant="subtle"
+        />
     );
 };
 

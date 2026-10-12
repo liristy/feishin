@@ -38,9 +38,8 @@ app.whenReady()
             textureContext.fillStyle = color;
             textureContext.fillRect(i % 2 * 32 - 4, Math.floor(i / 2) * 32 - 4, 40, 40);
         });
-        let effect;
+        let effects = []; let refs = [];
         let playing = true;
-        let statusListener;
         let waveformReads = 0;
         let jobs = new Map();
         let id = 0;
@@ -72,29 +71,15 @@ app.whenReady()
         let hidden = false;
         Object.defineProperty(document, 'hidden', { get: () => hidden });
         const exports = {};
-        const mocks = {
-            '/@/renderer/store/player.store': {
-                subscribePlayerStatus: fn => { statusListener = fn; return () => { statusListener = null; }; },
-                usePlayerStoreBase: { getState: () => ({ player: { status: playing ? 'playing' : 'paused' }, getCurrentSong: () => ({ _uniqueId: 'song' }) }) },
-            },
-            '/@/renderer/store/timestamp.store': { useTimestampStoreBase: { getState: () => ({ timestamp: 12 }) } },
-            '/@/shared/types/types': { PlayerStatus: { PLAYING: 'playing' } },
-            '/@/renderer/features/player/utils/player-waveform': {
-                getPlayerWaveformEnergy: (song, timestamp) => {
-                    if(song !== 'song' || timestamp !== 12) throw new Error('Waveform must follow the playing song and position');
-                    waveformReads++; return 0;
-                },
-            },
-        };
-        const require = name => mocks[name] || (name === 'react' ? {
-            useEffect: fn => { effect = fn; },
-            useRef: () => ({ current: canvas }),
+        const require = name => (name === 'react' ? {
+            useEffect: fn => { effects.push(fn); },
+            useRef: value => { const ref = { current: refs.length === 0 ? canvas : value }; refs.push(ref); return ref; },
         } : { jsx: (_, props) => props });
         new Function('exports', 'require', 'requestAnimationFrame', 'cancelAnimationFrame', ${JSON.stringify(code)})(
             exports, require, fn => { jobs.set(++id, fn); return id; }, key => jobs.delete(key)
         );
-        const props = exports.CoverFlowCanvas({className: 'flow', source: texture.toDataURL()});
-        const cleanup = effect();
+        const props = exports.CoverFlowCanvas({className: 'flow', source: texture.toDataURL(), playing, getEnergy: () => { waveformReads++; return 0; }});
+        effects[0](); const cleanup = effects[1]();
         context = canvas.getContext('2d');
         for(let retry = 0; retry < 100 && jobs.size === 0; retry++) await new Promise(r => setTimeout(r, 10));
         if(!jobs.size) throw new Error('Texture did not load');
@@ -140,11 +125,11 @@ app.whenReady()
         const secondPng = lastSnapshot.png;
         const pausedImage = canvas.toDataURL();
         playing = false;
-        statusListener();
+        refs[1].current.playing = playing; effects[0]();
         tick(60000);
         const pauseStopped = jobs.size === 0 && canvas.toDataURL() === pausedImage && painted === frames;
         playing = true;
-        statusListener();
+        refs[1].current.playing = playing; effects[0]();
         tick(61000);
         const resumeWithoutJump = canvas.toDataURL() === pausedImage && jobs.size > 0;
         hidden = true;
@@ -159,7 +144,7 @@ app.whenReady()
         tick(61300);
         const reducedStopped = jobs.size === 0;
         cleanup();
-        return { difference: difference / (320 * 180 * 3), grain, colorType, bufferBytes: canvas.width * canvas.height * (colorType === 'float16' ? 8 : 4), fullscreenPng, edgeJump, frames, renderTimeMs, animationGradientBuilds, hiddenStopped, resumed, reducedStopped, pauseStopped, resumeWithoutJump, waveformReads, unsubscribed: statusListener === null, jobs: jobs.size, width: props.width, height: props.height, firstPng, secondPng };
+        return { difference: difference / (320 * 180 * 3), grain, colorType, bufferBytes: canvas.width * canvas.height * (colorType === 'float16' ? 8 : 4), fullscreenPng, edgeJump, frames, renderTimeMs, animationGradientBuilds, hiddenStopped, resumed, reducedStopped, pauseStopped, resumeWithoutJump, waveformReads, unsubscribed: refs[2].current === null, jobs: jobs.size, width: props.width, height: props.height, firstPng, secondPng };
     })()`);
         assert.equal(result.width, 320);
         assert.equal(result.height, 180);

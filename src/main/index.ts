@@ -29,13 +29,14 @@ import path, { join } from 'path';
 import semver from 'semver';
 
 import packageJson from '../../package.json';
+import { initializeFloatingPlayer } from './features/core/floating-player';
 import { disableMediaKeys, enableMediaKeys } from './features/core/player/media-keys';
 import { shutdownServer } from './features/core/remote';
 import { store } from './features/core/settings';
 import { canHandleVisualizerDisplayMedia } from './features/core/visualizer';
 import log, { autoUpdaterLogInterface } from './logger';
-import MenuBuilder, { MenuPlaybackState } from './menu';
 import './features';
+import MenuBuilder, { MenuPlaybackState } from './menu';
 import { hotkeyToElectronAccelerator } from './utils';
 
 import { disableAutoUpdates, isLinux, isMacOS, isWindows } from '/@/main/env';
@@ -693,6 +694,8 @@ async function createWindow(first = true): Promise<void> {
     electronLocalShortcut.register(mainWindow, 'Ctrl+Shift+I', () => {
         mainWindow?.webContents.openDevTools();
     });
+
+    initializeFloatingPlayer(mainWindow, showMainWindow);
 
     ipcMain.on('window-dev-tools', () => {
         mainWindow?.webContents.openDevTools();
