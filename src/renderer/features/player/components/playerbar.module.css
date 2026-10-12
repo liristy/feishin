@@ -112,6 +112,7 @@
         line-height: 15px;
 
         a,
+        div,
         p,
         span {
             font-size: inherit;

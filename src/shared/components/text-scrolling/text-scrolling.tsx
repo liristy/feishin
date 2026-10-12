@@ -132,7 +132,7 @@ export const BaseTextScrolling = ({ children, gap, pause, speed, ...rest }: Text
                 </Text>
 
                 {isOverflowing && (
-                    <Text aria-hidden {...rest}>
+                    <Text {...rest} aria-hidden inert>
                         {children}
                     </Text>
                 )}

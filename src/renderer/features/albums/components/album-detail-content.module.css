@@ -8,20 +8,23 @@
     display: flex;
     flex-direction: column;
     gap: var(--theme-spacing-lg);
-    padding: 1rem 2rem 5rem;
+    padding: 1rem 1rem 5rem;
 }
 
 .content-layout {
     display: grid;
-    grid-template-areas:
-        'metadata'
-        'songs';
-    grid-template-rows: auto auto;
-    grid-template-columns: 1fr;
+    grid-template-areas: 'songs';
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--theme-spacing-lg);
     align-items: start;
     width: 100%;
     min-width: 0;
+
+    &:has(> .metadata-column:not(:empty)) {
+        grid-template-areas:
+            'metadata'
+            'songs';
+    }
 }
 
 .metadata-column {
@@ -31,7 +34,13 @@
     grid-area: metadata;
     gap: var(--theme-spacing-xl);
     align-items: center;
+    min-width: 0;
     text-align: center;
+    overflow-wrap: anywhere;
+
+    &:empty {
+        display: none;
+    }
 }
 
 .songs-column {
@@ -75,6 +84,11 @@
 }
 
 @container (min-width: $mantine-breakpoint-sm) {
+    .detail-container {
+        padding-right: 2rem;
+        padding-left: 2rem;
+    }
+
     .metadata-column {
         flex-direction: row;
         justify-content: flex-start;
@@ -99,7 +113,7 @@
 }
 
 @container (min-width: $mantine-breakpoint-lg) {
-    .content-layout {
+    .content-layout:has(> .metadata-column:not(:empty)) {
         grid-template-areas: 'songs metadata';
         grid-template-rows: 1fr;
         grid-template-columns: minmax(0, 1fr) 300px;

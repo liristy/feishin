@@ -33,6 +33,7 @@ import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
 import { Center } from '/@/shared/components/center/center';
 import { Group } from '/@/shared/components/group/group';
 import { Icon } from '/@/shared/components/icon/icon';
+import { TextScrolling } from '/@/shared/components/text-scrolling/text-scrolling';
 import { Text } from '/@/shared/components/text/text';
 import { Tooltip } from '/@/shared/components/tooltip/tooltip';
 import { PlaybackSelectors } from '/@/shared/constants/playback-selectors';
@@ -216,14 +217,21 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                     ) : (
                         <>
                             <div className={styles.lineItem} onClick={stopPropagation}>
-                                <Group align="center" gap="xs" wrap="nowrap">
-                                    <Text
+                                <Group
+                                    align="center"
+                                    className={styles.titleGroup}
+                                    gap="xs"
+                                    wrap="nowrap"
+                                >
+                                    <TextScrolling
                                         className={PlaybackSelectors.songTitle}
                                         component={Link}
                                         fw={500}
+                                        gap={80}
                                         isLink
                                         onContextMenu={handleToggleContextMenu}
-                                        overflow="hidden"
+                                        pause={3}
+                                        speed={30}
                                         to={AppRoute.NOW_PLAYING}
                                     >
                                         {title || '-'}
@@ -234,7 +242,7 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                                                 {')'}
                                             </Text>
                                         )}
-                                    </Text>
+                                    </TextScrolling>
                                     {isSongDefined && !compact && (
                                         <ActionIcon
                                             icon="ellipsisVertical"
@@ -263,46 +271,58 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                                 </Group>
                             </div>
                             <div
-                                className={clsx(
-                                    styles.lineItem,
-                                    styles.secondary,
-                                    PlaybackSelectors.songArtist,
-                                )}
+                                className={clsx(styles.lineItem, styles.secondary)}
                                 onClick={stopPropagation}
                             >
-                                <JoinedArtists
-                                    artistName={currentSong?.artistName || ''}
-                                    artists={artists || []}
-                                    linkProps={{
-                                        ...JOINED_ARTISTS_MUTED_PROPS.linkProps,
-                                        size: compact ? 'xs' : 'md',
-                                    }}
-                                    rootTextProps={{
-                                        ...JOINED_ARTISTS_MUTED_PROPS.rootTextProps,
-                                        className: styles.joinedArtists,
-                                        size: compact ? 'xs' : 'md',
-                                    }}
-                                />
+                                <div
+                                    className={clsx(
+                                        styles.artistMetadata,
+                                        PlaybackSelectors.songArtist,
+                                    )}
+                                >
+                                    <TextScrolling gap={80} pause={3} speed={30}>
+                                        <JoinedArtists
+                                            artistName={currentSong?.artistName || ''}
+                                            artists={artists || []}
+                                            linkProps={{
+                                                ...JOINED_ARTISTS_MUTED_PROPS.linkProps,
+                                                size: compact ? 'xs' : 'md',
+                                            }}
+                                            rootTextProps={{
+                                                ...JOINED_ARTISTS_MUTED_PROPS.rootTextProps,
+                                                className: styles.joinedArtists,
+                                                size: compact ? 'xs' : 'md',
+                                            }}
+                                        />
+                                    </TextScrolling>
+                                </div>
                                 {compact && currentSong?.album && (
-                                    <Text
-                                        className={clsx(
-                                            styles.compactAlbum,
-                                            PlaybackSelectors.songAlbum,
-                                        )}
-                                        component={Link}
-                                        isLink
-                                        size="xs"
-                                        to={
-                                            currentSong.albumId
-                                                ? generatePath(AppRoute.LIBRARY_ALBUMS_DETAIL, {
-                                                      albumId: currentSong.albumId,
-                                                  })
-                                                : ''
-                                        }
-                                    >
-                                        {' · '}
-                                        {currentSong.album}
-                                    </Text>
+                                    <>
+                                        <Text component="span">·</Text>
+                                        <div className={styles.compactAlbum}>
+                                            <TextScrolling
+                                                className={PlaybackSelectors.songAlbum}
+                                                component={Link}
+                                                gap={80}
+                                                isLink
+                                                pause={3}
+                                                size="xs"
+                                                speed={30}
+                                                to={
+                                                    currentSong.albumId
+                                                        ? generatePath(
+                                                              AppRoute.LIBRARY_ALBUMS_DETAIL,
+                                                              {
+                                                                  albumId: currentSong.albumId,
+                                                              },
+                                                          )
+                                                        : ''
+                                                }
+                                            >
+                                                {currentSong.album}
+                                            </TextScrolling>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                             {!compact && (
@@ -314,12 +334,14 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                                     )}
                                     onClick={stopPropagation}
                                 >
-                                    <Text
+                                    <TextScrolling
                                         component={Link}
                                         fw={500}
+                                        gap={80}
                                         isLink
-                                        overflow="hidden"
+                                        pause={3}
                                         size="md"
+                                        speed={30}
                                         to={
                                             currentSong?.albumId
                                                 ? generatePath(AppRoute.LIBRARY_ALBUMS_DETAIL, {
@@ -329,7 +351,7 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                                         }
                                     >
                                         {currentSong?.album || '-'}
-                                    </Text>
+                                    </TextScrolling>
                                 </div>
                             )}
                         </>

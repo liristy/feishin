@@ -26,7 +26,7 @@ app.whenReady()
                         }));
                         build.onLoad({ filter: /.*/, namespace: 'fixture' }, (args) => ({
                             contents: args.path.endsWith('/text')
-                                ? `import {forwardRef} from 'react'; export const Text=forwardRef(({children},ref)=><div ref={ref}>{children}</div>);`
+                                ? `import {forwardRef} from 'react'; export const Text=forwardRef(({component:Component='div',children,...props},ref)=><Component {...props} ref={ref}>{children}</Component>);`
                                 : 'export const createPolymorphicComponent=component=>component;',
                             loader: 'jsx',
                             resolveDir: process.cwd(),
@@ -43,7 +43,7 @@ app.whenReady()
                 import {createRoot} from 'react-dom/client';
                 import {BaseTextScrolling} from './src/shared/components/text-scrolling/text-scrolling';
                 createRoot(document.querySelector('#host')).render(React.createElement(BaseTextScrolling,
-                    {gap:100,pause:0.01,speed:500}, 'The title needs to remain visible'));`,
+                    {component:'a',href:'#album',gap:100,pause:0.01,speed:500}, 'The title needs to remain visible'));`,
                 resolveDir: process.cwd(),
             },
             write: false,
@@ -70,9 +70,21 @@ app.whenReady()
             Object.assign(host.style,${JSON.stringify(style)});
             await new Promise(resolve=>setTimeout(resolve,150));
             const track=host.firstElementChild.firstElementChild;
-            return {copies:track.children.length,animations:track.getAnimations().length};
+            return {copies:track.children.length,animations:track.getAnimations().length,
+                href:track.firstElementChild.getAttribute('href'),
+                inert:track.children[1]?.inert,
+                gap:track.children[1]&&getComputedStyle(track.children[1]).marginLeft};
         })()`);
             assert.equal(result.copies, expected, label);
+            assert.equal(result.href, '#album', 'Scrolling text retains its link');
+            if (expected === 2) {
+                assert.equal(
+                    result.inert,
+                    true,
+                    'Duplicate links stay outside keyboard navigation',
+                );
+                assert.equal(result.gap, '100px', 'Linked text retains the scrolling gap');
+            }
             if (expected === 1) assert.equal(result.animations, 0, label + ': no stale animation');
         };
         await check({}, 2, 'Narrow container scrolls a long title');

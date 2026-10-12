@@ -403,7 +403,7 @@ export const LibraryHeaderMenu = ({
 
     return (
         <div className={styles.libraryHeaderMenu}>
-            <Group wrap="nowrap">
+            <Group>
                 {onPlay && <PlayTextButton {...handlePlayNow.handlers} {...handlePlayNow.props} />}
                 {onPlay && (
                     <PlayNextTextButton {...handlePlayNext.handlers} {...handlePlayNext.props} />

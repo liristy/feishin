@@ -176,6 +176,7 @@
     align-items: center;
     justify-content: center;
     width: 100%;
+    min-width: 0;
     height: 100%;
     text-align: center;
 
@@ -199,11 +200,13 @@
     line-height: 1.2;
     word-break: keep-all;
     text-wrap: pretty;
+    overflow-wrap: anywhere;
 }
 
 .library-header-menu {
     display: flex;
     flex-direction: column;
+    flex-wrap: wrap;
     gap: var(--theme-spacing-sm);
     align-items: center;
     justify-content: center;
@@ -214,11 +217,17 @@
         min-width: 0;
     }
 
+    > :first-child {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
     > :nth-child(2) {
         flex-shrink: 0;
     }
 
     button {
+        flex-shrink: 0;
         min-width: 0;
         overflow: hidden;
         white-space: nowrap;
@@ -232,5 +241,9 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+
+        > :first-child {
+            justify-content: flex-start;
+        }
     }
 }

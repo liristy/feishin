@@ -4,16 +4,37 @@
     align-items: center;
     justify-content: center;
     padding: var(--theme-spacing-md) var(--theme-spacing-md) var(--theme-spacing-md) 0;
-
 }
 
 .metadata-stack {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: var(--theme-spacing-xs);
     justify-content: center;
-    width: 100%;
+    min-width: 0;
     overflow: hidden;
+}
+
+.title-group > :first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.secondary {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.artist-metadata {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 40%;
+
+    &:only-child {
+        max-width: 100%;
+    }
 }
 
 @keyframes fadein {
@@ -81,10 +102,9 @@
 }
 
 .compact-album {
-    flex-shrink: 1;
+    flex: 1;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
