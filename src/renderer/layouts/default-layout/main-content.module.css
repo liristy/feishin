@@ -52,16 +52,25 @@
     flex-direction: column;
     min-width: 0;
     min-height: 0;
-    padding-bottom: 80px;
     overflow: hidden;
-
-    &:has([data-music-home]) {
-        padding-bottom: 0;
-    }
 }
 
 .main-content-body-scroll {
+    --player-scroll-clearance: 80px;
+
     flex: 1;
     min-height: 0;
     overflow: auto;
+}
+
+/* Keep the viewport behind the player; only the end of its content needs clearance. */
+.main-content-body-scroll [data-overlayscrollbars-viewport]::after {
+    display: block;
+    height: var(--player-scroll-clearance);
+    content: '';
+}
+
+/* Nested lists already scroll with the outer viewport's clearance. */
+.main-content-body-scroll [data-overlayscrollbars-viewport] > * {
+    --player-scroll-clearance: 0px;
 }

@@ -163,6 +163,13 @@
     overflow-y: auto; /* Maintain vertical scrolling */
 }
 
+/* The left pane scrolls without OverlayScrollbars, but must match the other panes. */
+.item-table-pinned-columns-container > [role='grid']::after {
+    display: block;
+    height: var(--player-scroll-clearance, 0);
+    content: '';
+}
+
 .item-table-pinned-right-columns-container {
     flex: 1 1 auto;
     min-width: 0;
@@ -179,6 +186,7 @@
     height: 100%;
 }
 
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .item-table-container :global(.os-scrollbar) {
     z-index: 2;
 }
