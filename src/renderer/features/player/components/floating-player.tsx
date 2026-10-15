@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from 'motion/react';
 import { CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -231,8 +232,8 @@ function FloatingPlayer() {
                         )}
                     </button>
                     <div className={styles.metadata}>
-                        <div className={styles.title}>{state.title || labels.empty}</div>
-                        <div className={styles.artist}>{state.artist || 'qMusic'}</div>
+                        <OverflowText className={styles.title} text={state.title || labels.empty} />
+                        <OverflowText className={styles.artist} text={state.artist || 'qMusic'} />
                     </div>
                     <button
                         aria-label={labels.lyrics}
@@ -323,6 +324,62 @@ function LyricLine({ duration, text }: { duration: number; text: string }) {
         >
             <span ref={textRef}>{text || '\u00a0'}</span>
         </motion.p>
+    );
+}
+
+function OverflowText({ className, text }: { className: string; text: string }) {
+    const lineRef = useRef<HTMLDivElement | null>(null);
+    const textRef = useRef<HTMLSpanElement | null>(null);
+    useLayoutEffect(() => {
+        const line = lineRef.current;
+        const span = textRef.current;
+        if (!line || !span) return;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        let cancelled = false;
+        let scroll: Animation | undefined;
+        const measure = () => {
+            if (cancelled) return;
+            scroll?.cancel();
+            line.scrollLeft = 0;
+            line.dataset.overflow = 'false';
+            const width = line.clientWidth;
+            if (!width || span.scrollWidth <= width + 1) return;
+            line.dataset.overflow = 'true';
+            if (reducedMotion.matches) return;
+            const overflow = span.scrollWidth - width;
+            const duration = (overflow / 28) * 1000 + 3200;
+            const pause = 1600 / duration;
+            scroll = span.animate(
+                [
+                    { offset: 0, transform: 'translateX(0)' },
+                    { offset: pause, transform: 'translateX(0)' },
+                    { offset: 1 - pause, transform: `translateX(-${overflow}px)` },
+                    { offset: 1, transform: `translateX(-${overflow}px)` },
+                ],
+                { direction: 'alternate', duration, easing: 'linear', iterations: Infinity },
+            );
+        };
+        const observer = new ResizeObserver(measure);
+        observer.observe(line);
+        reducedMotion.addEventListener('change', measure);
+        void document.fonts.ready.then(measure);
+        measure();
+        return () => {
+            cancelled = true;
+            observer.disconnect();
+            reducedMotion.removeEventListener('change', measure);
+            scroll?.cancel();
+        };
+    }, [text]);
+    return (
+        <div
+            aria-label={text}
+            className={clsx(styles.metadataLine, className)}
+            ref={lineRef}
+            tabIndex={0}
+        >
+            <span ref={textRef}>{text}</span>
+        </div>
     );
 }
 

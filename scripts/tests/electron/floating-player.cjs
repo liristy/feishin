@@ -150,6 +150,120 @@ app.whenReady()
                 state.title,
             );
         });
+        await check(
+            'long titles and artists scroll fully without disturbing controls',
+            async () => {
+                const longState = {
+                    ...state,
+                    artist: '张碧晨 • 杨宗纬 • 群星 • A Very Long Artist Name',
+                    title: '下一秒 (Diamond) - 电视剧微微一笑很倾城原声带特别版本',
+                };
+                update(longState);
+                await wait(150);
+                const layout = await floating.webContents.executeJavaScript(`(async () => {
+                await document.fonts.ready;
+                await new Promise(requestAnimationFrame);
+                await new Promise(requestAnimationFrame);
+                const rows = ['title', 'artist'].map(name => document.querySelector('[class*="module-' + name + '"]'));
+                window.metadataAnimations = rows.map(row => row.querySelector('span').getAnimations()[0]);
+                const samples = [];
+                for (const [index, animation] of window.metadataAnimations.entries()) {
+                    if (!animation) throw new Error('Overflowing metadata must scroll');
+                    animation.pause();
+                    const span = rows[index].querySelector('span');
+                    const duration = animation.effect.getComputedTiming().duration;
+                    const positions = [];
+                    for (const time of [800, duration / 2, duration - 800, duration * 1.5]) {
+                        animation.currentTime = time;
+                        await new Promise(requestAnimationFrame);
+                        positions.push(new DOMMatrixReadOnly(getComputedStyle(span).transform).m41);
+                    }
+                    samples.push({ positions, overflow: span.scrollWidth - rows[index].clientWidth,
+                        fade: getComputedStyle(rows[index]).maskImage,
+                        label: rows[index].getAttribute('aria-label') });
+                }
+                return { samples, width: innerWidth,
+                    outside: Array.from(document.querySelectorAll('[class*="module-player"] button')).some(button => {
+                        const rect = button.getBoundingClientRect(); return rect.left < 0 || rect.right > innerWidth;
+                    }) };
+            })()`);
+                assert.equal(layout.width, 420);
+                assert.equal(layout.outside, false);
+                for (const [index, sample] of layout.samples.entries()) {
+                    assert.equal(sample.label, index === 0 ? longState.title : longState.artist);
+                    assert.match(sample.fade, /linear-gradient/);
+                    assert.ok(Math.abs(sample.positions[0]) < 1, 'Pause at the beginning');
+                    assert.ok(
+                        Math.abs(sample.positions[1] + sample.overflow / 2) < 1,
+                        JSON.stringify(sample),
+                    );
+                    assert.ok(
+                        Math.abs(sample.positions[2] + sample.overflow) < 1,
+                        'Reveal the final character',
+                    );
+                    assert.ok(
+                        Math.abs(sample.positions[3] - sample.positions[1]) < 1,
+                        'Return smoothly',
+                    );
+                }
+                fs.writeFileSync(
+                    path.join(root, '.scratch/floating-player-long-metadata.png'),
+                    (
+                        await floating.webContents.capturePage({
+                            height: 104,
+                            width: 420,
+                            x: 0,
+                            y: 288,
+                        })
+                    ).toPNG(),
+                );
+                update({ ...longState, volume: 55 });
+                await wait(100);
+                assert.equal(
+                    await floating.webContents
+                        .executeJavaScript(`['title', 'artist'].every((name, index) =>
+                document.querySelector('[class*="module-' + name + '"] span').getAnimations()[0] === window.metadataAnimations[index])`),
+                    true,
+                    'Playback updates must not restart scrolling',
+                );
+                update(state);
+                await wait(100);
+                assert.equal(
+                    await floating.webContents
+                        .executeJavaScript(`['title', 'artist'].every(name => {
+                const row = document.querySelector('[class*="module-' + name + '"]');
+                return row.dataset.overflow === 'false' && row.querySelector('span').getAnimations().length === 0 &&
+                    getComputedStyle(row).maskImage === 'none';
+            })`),
+                    true,
+                    'Short metadata must stop scrolling and restore plain edges',
+                );
+                floating.webContents.debugger.attach('1.3');
+                try {
+                    await floating.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+                        features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+                    });
+                    update(longState);
+                    await wait(150);
+                    assert.equal(
+                        await floating.webContents
+                            .executeJavaScript(`['title', 'artist'].every(name => {
+                    const row = document.querySelector('[class*="module-' + name + '"]');
+                    row.scrollLeft = 40;
+                    return row.querySelector('span').getAnimations().length === 0 && row.scrollLeft > 0;
+                })`),
+                        true,
+                        'Reduced motion must allow manual scrolling without animation',
+                    );
+                } finally {
+                    await floating.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+                        features: [],
+                    });
+                    floating.webContents.debugger.detach();
+                    update(state);
+                }
+            },
+        );
         await check('floating player shares the fullscreen palette and cover flow', async () => {
             state.artwork = await floating.webContents.executeJavaScript(`(() => {
                 const cover = document.createElement('canvas'); cover.width = cover.height = 64;
@@ -286,6 +400,120 @@ app.whenReady()
             const raises = floating.raises;
             await wait(1700);
             assert.equal(floating.raises, raises);
+        });
+        await check(
+            'main-window frame loading never hides or destroys the floating player',
+            async () => {
+                const before = floating.getBounds();
+                const count = windows.length;
+                let loads = 0;
+                const loading = () => loads++;
+                main.webContents.on('did-start-loading', loading);
+                try {
+                    await main.webContents.executeJavaScript(`new Promise(resolve => {
+                    const frame = document.createElement('iframe');
+                    frame.onload = () => resolve(true);
+                    frame.src = 'data:text/html,<p>Main-window child frame</p>';
+                    document.body.append(frame);
+                    setTimeout(() => resolve(false), 2000);
+                })`);
+                    assert.ok(loads > 0, 'The child frame must trigger real loading events');
+                    assert.equal(floating.isDestroyed(), false);
+                    assert.equal(floating.isVisible(), true);
+                    assert.equal(windows.length, count);
+                    assert.deepEqual(floating.getBounds(), before);
+                } finally {
+                    main.webContents.removeListener('did-start-loading', loading);
+                    await main.webContents.executeJavaScript(
+                        `document.querySelectorAll('iframe').forEach(frame => frame.remove())`,
+                    );
+                }
+            },
+        );
+        await check('rebuilt queues and renderer reloads preserve the floating panel', async () => {
+            const sender = { sender: floating.webContents };
+            ipcMain.emit('floating-player-command', sender, 'lyrics');
+            await wait(300);
+            const previous = floating;
+            const bounds = floating.getBounds();
+            await main.webContents.executeJavaScript(
+                `location.hash = '/playlists/rebuilt-sequence'`,
+            );
+            await wait(100);
+            const destroyed = previous.isDestroyed();
+            update({ ...state, currentSongId: 'rebuilt-song', title: '重建后的歌曲' });
+            if (destroyed) {
+                floating = windows.at(-1);
+                await ready(floating);
+            }
+            assert.equal(
+                destroyed,
+                false,
+                'In-page navigation must not recreate the floating window',
+            );
+            assert.deepEqual(floating.getBounds(), bounds);
+            assert.equal(
+                await floating.webContents.executeJavaScript(
+                    `document.querySelector('button[aria-label="Lyrics"]').getAttribute('aria-pressed')`,
+                ),
+                'true',
+            );
+            for (const panel of ['lyrics', 'queue']) {
+                if (panel === 'queue')
+                    ipcMain.emit(
+                        'floating-player-command',
+                        { sender: floating.webContents },
+                        panel,
+                    );
+                await wait(300);
+                const before = floating.getBounds();
+                const count = windows.length;
+                const loaded = new Promise((resolve) =>
+                    main.webContents.once('did-finish-load', resolve),
+                );
+                main.webContents.reload();
+                await loaded;
+                assert.equal(
+                    floating.isDestroyed(),
+                    false,
+                    'Reloading must keep the existing surface',
+                );
+                assert.equal(
+                    floating.isVisible(),
+                    true,
+                    'The surface must remain visible before media reconnects',
+                );
+                assert.equal(windows.length, count);
+                ipcMain.emit('floating-player-panel-ready', owner);
+                // The simulated main renderer has no preload; inspect the state restored to the window.
+                update({
+                    ...state,
+                    currentSongId: 'rebuilt-song',
+                    lyrics: ['重建后的歌词'],
+                    panel: null,
+                    queue: [{ artist: '重建后的歌手', id: 'rebuilt-song', title: '重建后的歌曲' }],
+                });
+                floating = windows.at(-1);
+                await ready(floating);
+                await wait(300);
+                assert.deepEqual(floating.getBounds(), before);
+                const label = panel === 'lyrics' ? 'Lyrics' : 'Play queue';
+                assert.equal(
+                    await floating.webContents.executeJavaScript(
+                        `document.querySelector('button[aria-label="${label}"]').getAttribute('aria-pressed')`,
+                    ),
+                    'true',
+                );
+                assert.equal(
+                    await floating.webContents.executeJavaScript(
+                        `document.querySelector('section').textContent.includes(${JSON.stringify(panel === 'lyrics' ? '重建后的歌词' : '重建后的歌曲')})`,
+                    ),
+                    true,
+                );
+            }
+            ipcMain.emit('floating-player-command', { sender: floating.webContents }, 'queue');
+            await wait(300);
+            update(state);
         });
         await check('100 on/off cycles leave exactly one window', async () => {
             for (let i = 0; i < 100; i++) {
@@ -610,7 +838,6 @@ app.whenReady()
             assert.equal(windows.length, count);
         });
         fs.writeFileSync(report, JSON.stringify(results, null, 2));
-        main.destroy();
         app.exit(results.every((result) => result.passed) ? 0 : 1);
     })
     .catch((error) => {

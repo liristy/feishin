@@ -163,13 +163,30 @@
     min-width: 0;
 }
 
-.title,
-.artist {
-    overflow: hidden;
-    text-overflow: ellipsis;
+.metadata-line {
+    overflow: auto hidden;
     font-size: 13px;
     line-height: 16px;
     white-space: nowrap;
+    scrollbar-width: none;
+
+    span {
+        display: block;
+        width: max-content;
+    }
+
+    &[data-overflow='true'] {
+        mask-image: linear-gradient(90deg, black, black calc(100% - 6px), transparent);
+
+        span {
+            padding-right: 6px;
+        }
+    }
+
+    &:focus-visible {
+        outline: 1px solid var(--theme-colors-foreground-muted);
+        outline-offset: -1px;
+    }
 }
 
 .panel {

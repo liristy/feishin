@@ -220,6 +220,5 @@ function FloatingPlayerBridge() {
         t,
     ]);
 
-    useEffect(() => () => floatingPlayer!.configure(false, true), []);
     return null;
 }

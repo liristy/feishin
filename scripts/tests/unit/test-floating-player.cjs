@@ -206,6 +206,11 @@ test('floating player isolates IPC, controls playback and preserves its desktop 
     command('lyrics');
     assert.equal(window.height, 168);
     assert.equal(window.position.y, barY - 64);
+    const panelMessages = sent.length;
+    ipcMain.emit('floating-player-panel-ready', client);
+    assert.equal(sent.length, panelMessages, 'Only the main renderer can request panel state');
+    ipcMain.emit('floating-player-panel-ready', owner);
+    assert.deepEqual(sent.at(-1), ['floating-player-panel', 'lyrics']);
     command('queue');
     command('lyrics');
     assert.equal(window.height, 392, 'Switching to lyrics keeps room for the animation');
@@ -256,12 +261,23 @@ test('floating player isolates IPC, controls playback and preserves its desktop 
     assert.equal(sent.length, 4);
     full = true;
     main.emit('enter-full-screen');
-    assert.equal(window.visible, false);
+    update(track);
+    assert.equal(window.visible, true, 'Main-window fullscreen must not hide the floating player');
     full = false;
     main.emit('leave-full-screen');
     assert.equal(window.visible, true);
     main.emit('minimize');
     assert.equal(window.visible, true);
+    for (const details of [
+        { isMainFrame: false, isSameDocument: false },
+        { isMainFrame: true, isSameDocument: true },
+        { isMainFrame: true, isSameDocument: false },
+    ]) {
+        main.webContents.emit('did-start-navigation', details);
+        assert.equal(window.destroyed, false, 'Navigation must not destroy the floating window');
+        assert.equal(window.visible, true);
+        update(track);
+    }
     update({ ...track, hasMedia: false });
     assert.equal(window.visible, false);
     configure({ enabled: true, hideWhenIdle: false });

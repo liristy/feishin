@@ -25,6 +25,12 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
     let panelInset = 0;
     const fixedViewport = process.platform === 'win32';
     let panelResizeTimer: ReturnType<typeof setTimeout> | undefined;
+    const selectedPanelHeight = () =>
+        panel === 'lyrics'
+            ? FLOATING_PLAYER_LYRICS_HEIGHT
+            : panel === 'queue'
+              ? FLOATING_PLAYER_PANEL_HEIGHT
+              : 0;
     const panelHeight = () => (fixedViewport ? FLOATING_PLAYER_PANEL_HEIGHT : panelInset);
     const resizePanel = (height: number) => {
         if (!floatingWindow) return;
@@ -83,16 +89,16 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
                 : area.y + area.height - HEIGHT - panelHeight() - 8,
         });
     };
-    const closeWindow = () => {
+    const closeWindow = (resetPanel = true) => {
         clearTimeout(moveTimer);
         clearTimeout(panelResizeTimer);
         const previous = floatingWindow;
         floatingWindow = null;
         dragOrigin = null;
         ready = false;
-        panel = null;
+        if (resetPanel) panel = null;
         panelInset = 0;
-        if (!mainWindow.isDestroyed()) mainWindow.webContents.send('floating-player-panel', null);
+        if (!mainWindow.isDestroyed()) mainWindow.webContents.send('floating-player-panel', panel);
         previous?.destroy();
     };
     const disable = () => {
@@ -103,7 +109,7 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
     const publish = () => {
         if (!floatingWindow || !ready || !state) return;
         floatingWindow.webContents.send('floating-player-state', { ...state, panel });
-        if (enabled && !mainWindow.isFullScreen() && (!hideWhenIdle || state.hasMedia)) {
+        if (enabled && (!hideWhenIdle || state.hasMedia)) {
             if (!floatingWindow.isVisible()) {
                 floatingWindow.showInactive();
                 floatingWindow.setAlwaysOnTop(true, 'pop-up-menu');
@@ -137,8 +143,9 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
             width: WIDTH,
         });
         floatingWindow = window;
+        if (!fixedViewport) panelInset = selectedPanelHeight();
         placeWindow();
-        if (fixedViewport) resizePanel(0);
+        if (fixedViewport) resizePanel(selectedPanelHeight());
         window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
         window.webContents.on('will-navigate', (event) => event.preventDefault());
         window.webContents.on('did-finish-load', () => {
@@ -194,12 +201,7 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
             clearTimeout(panelResizeTimer);
             panel = panel === value ? null : value;
             dragOrigin = null;
-            const height =
-                panel === 'lyrics'
-                    ? FLOATING_PLAYER_LYRICS_HEIGHT
-                    : panel === 'queue'
-                      ? FLOATING_PLAYER_PANEL_HEIGHT
-                      : 0;
+            const height = selectedPanelHeight();
             if (height >= panelInset) resizePanel(height);
             else {
                 // Keep room for the renderer's animation before shrinking the native window.
@@ -259,8 +261,19 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
         publish();
     };
     const clearState = () => {
+        savePosition();
         state = null;
-        closeWindow();
+        closeWindow(false);
+    };
+    const rendererNavigating = (
+        details: Electron.Event<Electron.WebContentsDidStartNavigationEventParams>,
+    ) => {
+        // Keep the independent surface visible while the main renderer reconnects.
+        if (details.isMainFrame && !details.isSameDocument) state = null;
+    };
+    const panelReady = (event: Electron.IpcMainEvent) => {
+        if (event.sender === mainWindow.webContents)
+            mainWindow.webContents.send('floating-player-panel', panel);
     };
     const beforeQuit = () => {
         quitting = true;
@@ -311,10 +324,9 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
     ipcMain.on('floating-player-update', update);
     ipcMain.on('floating-player-command', command);
     ipcMain.on('floating-player-ready', rendererReady);
+    ipcMain.on('floating-player-panel-ready', panelReady);
     ipcMain.on('floating-player-drag', drag);
-    mainWindow.on('enter-full-screen', publish);
-    mainWindow.on('leave-full-screen', publish);
-    mainWindow.webContents.on('did-start-loading', clearState);
+    mainWindow.webContents.on('did-start-navigation', rendererNavigating);
     mainWindow.webContents.on('render-process-gone', clearState);
     screen.on('display-removed', displayChanged);
     screen.on('display-metrics-changed', displayChanged);
@@ -325,6 +337,7 @@ export function initializeFloatingPlayer(mainWindow: BrowserWindow, showMainWind
         ipcMain.removeListener('floating-player-update', update);
         ipcMain.removeListener('floating-player-command', command);
         ipcMain.removeListener('floating-player-ready', rendererReady);
+        ipcMain.removeListener('floating-player-panel-ready', panelReady);
         ipcMain.removeListener('floating-player-drag', drag);
         screen.removeListener('display-removed', displayChanged);
         screen.removeListener('display-metrics-changed', displayChanged);

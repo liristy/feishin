@@ -14,6 +14,7 @@ export const floatingPlayer = {
         const listener = (_event: Electron.IpcRendererEvent, panel: FloatingPlayerPanel) =>
             callback(panel);
         ipcRenderer.on('floating-player-panel', listener);
+        ipcRenderer.send('floating-player-panel-ready');
         return () => ipcRenderer.removeListener('floating-player-panel', listener);
     },
     onPlayQueueItem: (callback: (id: string) => void) => {
