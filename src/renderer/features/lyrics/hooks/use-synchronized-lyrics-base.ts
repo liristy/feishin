@@ -131,11 +131,13 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
             clearTimeout(scrollTimeoutRef.current);
         }
         userScrollingRef.current = false;
+        containerRef.current?.removeAttribute('data-user-scrolling');
         resumeLyricsAutoscroll(scrollAnimStateRef.current);
     }, []);
 
     const pauseManualScrollFollow = useCallback(() => {
         userScrollingRef.current = true;
+        containerRef.current?.setAttribute('data-user-scrolling', 'true');
         handleLyricsUserScroll(scrollAnimStateRef.current, MANUAL_SCROLL_PAUSE_MS);
 
         if (scrollTimeoutRef.current) {

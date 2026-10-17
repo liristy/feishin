@@ -152,6 +152,7 @@ for (const name of ['synchronized-lyrics', 'synchronized-karaoke-lyrics']) {
     effects = [];
     timers = new Map();
     const handlers = {};
+    const attributes = new Map();
     let hovered = true;
     container = {
         addEventListener: (event, fn) => {
@@ -159,8 +160,10 @@ for (const name of ['synchronized-lyrics', 'synchronized-karaoke-lyrics']) {
         },
         classList: { add: noop, remove: noop },
         matches: () => hovered,
+        removeAttribute: (name) => attributes.delete(name),
         removeEventListener: noop,
         scrollTop: 400,
+        setAttribute: (name, value) => attributes.set(name, value),
     };
     const exports = load(`src/renderer/features/lyrics/${name}.tsx`);
     const Component = exports.SynchronizedLyrics || exports.SynchronizedKaraokeLyrics;
@@ -170,6 +173,7 @@ for (const name of ['synchronized-lyrics', 'synchronized-karaoke-lyrics']) {
     progressListener({ timestamp: 10 });
     assert.equal(lastTick.follow, true);
     handlers.wheel({ deltaX: 0, deltaY: 120 });
+    assert.equal(attributes.get('data-user-scrolling'), 'true', `${name}: browsing removes blur`);
     progressListener({ timestamp: 20 });
     assert.equal(
         lastTick.follow,
@@ -179,13 +183,16 @@ for (const name of ['synchronized-lyrics', 'synchronized-karaoke-lyrics']) {
     flushTimers();
     progressListener({ timestamp: 30 });
     assert.equal(lastTick.follow, false, `${name}: keep browsing while mouse remains over lyrics`);
+    assert.equal(attributes.get('data-user-scrolling'), 'true', 'Keep lyrics clear while browsing');
     hovered = false;
     tree.props.onMouseLeave();
     assert.equal(lastTimerDelay, 1000, `${name}: resume one second after the mouse leaves`);
     flushTimers();
     progressListener({ timestamp: 40 });
     assert.equal(lastTick.follow, true, `${name}: resume after leaving and waiting`);
+    assert.equal(attributes.has('data-user-scrolling'), false, 'Restore blur when follow resumes');
     handlers.pointerdown();
+    assert.equal(attributes.get('data-user-scrolling'), 'true', 'Scrollbar dragging removes blur');
     progressListener({ timestamp: 50 });
     assert.equal(lastTick.follow, false, 'Scrollbar dragging pauses follow');
     tree.props.onClick({
@@ -195,9 +202,11 @@ for (const name of ['synchronized-lyrics', 'synchronized-karaoke-lyrics']) {
         },
     });
     assert.equal(seekTime, 42);
+    assert.equal(attributes.has('data-user-scrolling'), false, 'Seeking resumes normal display');
     progressListener({ timestamp: 42 });
     assert.equal(lastTick.follow, true, 'Clicking a lyric seeks and resumes follow');
     handlers.keydown({ key: 'PageUp' });
+    assert.equal(attributes.get('data-user-scrolling'), 'true', 'Keyboard browsing removes blur');
     progressListener({ timestamp: 60 });
     assert.equal(lastTick.follow, false, 'Keyboard browsing pauses follow');
     cleanups.forEach((fn) => typeof fn === 'function' && fn());

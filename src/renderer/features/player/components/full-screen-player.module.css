@@ -77,8 +77,10 @@
         font-weight: 700 !important;
     }
 
-    :global(.lyric-line.synchronized:not(.lyrics-line-active, :hover, :focus-within)),
-    :global(.karaoke-line.synchronized:not(.lyrics-line-active, :hover, :focus-within)) {
+    :global(.synchronized-lyrics:not([data-user-scrolling]))
+        :global(.lyric-line.synchronized:not(.lyrics-line-active, :hover, :focus-within)),
+    :global(.synchronized-karaoke-lyrics:not([data-user-scrolling]))
+        :global(.karaoke-line.synchronized:not(.lyrics-line-active, :hover, :focus-within)) {
         filter: blur(1.5px);
     }
 
