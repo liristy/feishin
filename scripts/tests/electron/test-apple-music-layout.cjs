@@ -692,6 +692,18 @@ app.once('browser-window-created', (_event, win) => {
                 `document.querySelector('.media-player button[aria-label="View queue"]').click()`,
             );
             await waitFor(`!document.querySelector('#popover-play-queue')`);
+            const titleClick = await evaluate(`(() => {
+                const title=document.querySelector('.media-player .song-title');
+                const route=location.hash;
+                title.click();
+                return {link:!!title.closest('a'),before:route,after:location.hash};
+            })()`);
+            assert.equal(titleClick.link, false, 'The floating player title is plain text');
+            assert.equal(
+                titleClick.after,
+                titleClick.before,
+                'Clicking the title preserves the page',
+            );
             for (const width of [1280, 900, 800]) {
                 win.setSize(width, 850);
                 await delay(350);
@@ -913,6 +925,22 @@ app.once('browser-window-created', (_event, win) => {
             assert.equal(progressColors.bar, 'rgb(255, 255, 255)');
             assert.equal(progressColors.elapsed, 'rgba(255, 255, 255, 0.9)');
             assert.equal(progressColors.duration, progressColors.elapsed);
+            const colorScheme = await evaluate(
+                `document.documentElement.dataset.mantineColorScheme`,
+            );
+            for (const scheme of ['light', 'dark']) {
+                await evaluate(`document.documentElement.dataset.mantineColorScheme='${scheme}'`);
+                assert.equal(
+                    await evaluate(
+                        `getComputedStyle(document.querySelector('.media-player .mantine-Slider-thumb')).backgroundColor`,
+                    ),
+                    'rgb(255, 255, 255)',
+                    `The fullscreen seek thumb stays white in ${scheme} mode`,
+                );
+            }
+            await evaluate(
+                `document.documentElement.dataset.mantineColorScheme=${JSON.stringify(colorScheme)}`,
+            );
             assert.equal(
                 await evaluate(
                     `document.querySelectorAll('.full-screen-player-controls-container').length`,

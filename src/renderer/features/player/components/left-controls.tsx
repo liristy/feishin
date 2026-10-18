@@ -225,14 +225,11 @@ export const LeftControls = ({ compact = false }: { compact?: boolean }) => {
                                 >
                                     <TextScrolling
                                         className={PlaybackSelectors.songTitle}
-                                        component={Link}
                                         fw={500}
                                         gap={80}
-                                        isLink
                                         onContextMenu={handleToggleContextMenu}
                                         pause={3}
                                         speed={30}
-                                        to={AppRoute.NOW_PLAYING}
                                     >
                                         {title || '-'}
                                         {currentSong?.trackSubtitle && (
