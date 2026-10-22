@@ -14,11 +14,11 @@ import { createFloatingPlayerArtwork } from '/@/renderer/features/player/utils/f
 import { useRadioPlayer } from '/@/renderer/features/radio/hooks/use-radio-player';
 import {
     useFullScreenPlayerStore,
+    usePlayerProgress,
     usePlayerQueue,
     usePlayerSong,
     usePlayerStatus,
     usePlayerStore,
-    usePlayerTimestamp,
     usePlayerVolume,
     useSettingsStore,
 } from '/@/renderer/store';
@@ -40,7 +40,7 @@ function FloatingPlayerBridge() {
     const hideWhenIdle = useSettingsStore((settings) => settings.window.taskbarPlayerHideWhenIdle);
     const song = usePlayerSong();
     const queue = usePlayerQueue();
-    const timestamp = usePlayerTimestamp();
+    const timestamp = usePlayerProgress();
     const { mediaPlay } = usePlayer();
     const [panel, setPanel] = useState<FloatingPlayerPanel>(null);
     const status = usePlayerStatus();
@@ -69,7 +69,7 @@ function FloatingPlayerBridge() {
         lyricLines[0]?.startMs >= 0
             ? getCurrentLyricIndex(
                   lyricLines,
-                  timestamp * 1000 - (lyricsData?.selectedOffsetMs || 0),
+                  timestamp * 1000 + (lyricsData?.selectedOffsetMs || 0),
               )
             : -1;
     const lyricDurationMs =

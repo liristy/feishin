@@ -317,6 +317,93 @@ test('floating player isolates IPC, controls playback and preserves its desktop 
     assert.equal(screen.listenerCount('display-removed'), 0);
 });
 
+test('floating lyrics follow live progress and apply the same offset direction as the main player', () => {
+    const effects = [];
+    const updates = [];
+    const noop = () => {};
+    let timestamp = 0.95;
+    const lyricsData = {
+        selected: {
+            lyrics: [
+                { startMs: 0, text: 'first' },
+                { startMs: 1000, text: 'second' },
+                { startMs: 1500, text: 'third' },
+            ],
+        },
+        selectedOffsetMs: 0,
+    };
+    const { FloatingPlayerHook } = load(
+        'src/renderer/features/player/hooks/use-floating-player.tsx',
+        {
+            '/@/renderer/components/item-image/item-image': { useItemImageRequest: () => null },
+            '/@/renderer/features/lyrics/api/lyrics-api': {
+                lyricsQueries: { songLyrics: noop },
+            },
+            '/@/renderer/features/lyrics/api/lyrics-utils': load(
+                'src/renderer/features/lyrics/api/lyrics-utils.ts',
+            ),
+            '/@/renderer/features/player/context/player-context': {
+                usePlayer: () => ({ mediaPlay: noop }),
+            },
+            '/@/renderer/features/player/utils/floating-player-artwork': {},
+            '/@/renderer/features/radio/hooks/use-radio-player': { useRadioPlayer: () => ({}) },
+            '/@/renderer/store': {
+                useFullScreenPlayerStore: () => ({}),
+                usePlayerProgress: () => timestamp,
+                usePlayerQueue: () => [],
+                usePlayerSong: () => ({ _uniqueId: 'song', id: 'song' }),
+                usePlayerStatus: () => 'PLAYING',
+                usePlayerTimestamp: () => 0.5,
+                usePlayerVolume: () => 30,
+                useSettingsStore: (select) => select({ window: { taskbarPlayer: true } }),
+            },
+            '/@/renderer/utils/logger': {},
+            '/@/shared/components/image/use-native-image': { useNativeImage: () => ({}) },
+            '/@/shared/types/domain-types': { LibraryItem: {} },
+            '/@/shared/types/types': { PlayerStatus: { PLAYING: 'PLAYING' } },
+            '@tanstack/react-query': { useQuery: () => ({ data: lyricsData }) },
+            'is-electron': { default: () => true },
+            react: {
+                useEffect: (effect) => effects.push(effect),
+                useMemo: (factory) => factory(),
+                useState: (initial) => [initial === null ? 'lyrics' : initial, noop],
+            },
+            'react-i18next': { useTranslation: () => ({ t: (key) => key }) },
+            'react/jsx-runtime': { jsx: (type) => ({ type }) },
+        },
+        {
+            window: {
+                api: {
+                    floatingPlayer: {
+                        configure: noop,
+                        onDisable: noop,
+                        onPanel: noop,
+                        onPlayQueueItem: noop,
+                        update: (state) => updates.push(state),
+                    },
+                },
+            },
+        },
+    );
+    const render = () => {
+        FloatingPlayerHook().type();
+        effects.splice(0).forEach((effect) => effect());
+        return updates.at(-1);
+    };
+    assert.equal(render().currentLyric, 0);
+    timestamp = 1.05;
+    assert.equal(render().currentLyric, 1, 'switch immediately when live progress crosses a cue');
+    assert.equal(updates.at(-1).lyricDurationMs, 500);
+    timestamp = 1.25;
+    lyricsData.selectedOffsetMs = 300;
+    assert.equal(render().currentLyric, 2, 'positive offsets advance lyrics');
+    lyricsData.selectedOffsetMs = -300;
+    assert.equal(render().currentLyric, 0, 'negative offsets delay lyrics');
+    timestamp = 0.1;
+    lyricsData.selectedOffsetMs = 0;
+    assert.equal(render().currentLyric, 0, 'seeking back updates the line immediately');
+});
+
 test('floating player drags its background, preserves buttons and ignores horizontal scrolling', () => {
     let rendered;
     const commands = [];
