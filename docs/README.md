@@ -24,5 +24,6 @@
 ## 发布记录
 
 当前版本以[本仓库 Releases](https://github.com/liristy/feishin/releases)为准。
-[2.0.0-beta.5 发布说明](releases/2.0.0-beta.5.md)记录新版界面与 Windows 更新内容。
+[2.0.0 正式版发布说明](releases/2.0.0.md)记录当前界面、桌面悬浮播放器与同步修复。
+[2.0.0-beta.5 发布说明](releases/2.0.0-beta.5.md)保留预发布版本的更新内容。
 [CHANGELOG](../CHANGELOG.md) 和 [1.16.0 发布说明](releases/1.16.0.md)保留历史记录。

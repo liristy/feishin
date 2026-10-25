@@ -7,11 +7,11 @@
 qMusic 基于 Feishin，支持 **Navidrome、Jellyfin 和 Subsonic / OpenSubsonic**，提供悬浮播放条、全屏歌词、聆听统计、下载管理与离线播放。
 
 [![License](https://img.shields.io/github/license/liristy/feishin?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/liristy/feishin?include_prereleases&style=flat-square&label=release)](https://github.com/liristy/feishin/releases)
+[![Release](https://img.shields.io/github/v/release/liristy/feishin?style=flat-square&label=release)](https://github.com/liristy/feishin/releases/latest)
 
-[下载 beta5](https://github.com/liristy/feishin/releases/tag/v2.0.0-beta.5) · [更新内容](docs/releases/2.0.0-beta.5.md) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md)
+[下载 2.0 正式版](https://github.com/liristy/feishin/releases/tag/v2.0.0) · [更新内容](docs/releases/2.0.0.md) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md)
 
-> 当前版本：**2.0.0-beta.5**。本次仅发布 Windows x64 与 ARM64 安装包。qMusic 是独立维护的 Feishin 分支，Beta 为预发布版本。
+> 当前版本：**2.0.0 正式版**。本次提供 Windows x64 与 ARM64 安装包及 ZIP 压缩包。qMusic 是独立维护的 Feishin 分支。
 
 ![主页](media/screenshots/home.png)
 
@@ -19,13 +19,20 @@ qMusic 基于 Feishin，支持 **Navidrome、Jellyfin 和 Subsonic / OpenSubsoni
 
 - **主页**：保留常听、随机推荐、最近添加和最近播放等内容，以紧凑的本周排行榜查看聆听趋势。
 - **侧栏**：统一图标和导航，聆听统计位于主页下方；向上滚动时显示搜索，播放列表可独立滚动。
-- **悬浮播放条**：歌曲信息、播放控制、进度条与音量集中呈现，播放队列和更多操作通过浮层打开。
+- **悬浮播放条**：在各页面保持悬浮，歌曲信息、播放控制、进度条与音量集中呈现，长标题自动滚动，播放队列和更多操作通过浮层打开。
+- **桌面悬浮播放器**：独立置顶窗口，支持拖动、滚轮调节音量、展开歌词或播放队列；主窗口最小化后仍可控制播放。
 - **全屏播放器**：从播放条展开，显示高清封面、流动背景与同步歌词，关闭时回到播放条。
 - **歌词**：突出当前歌词行，支持手动浏览、偏移调节和多语言显示。可用歌词与语言取决于音乐服务器。
 
 ### 全屏播放器
 
 ![全屏播放器](media/screenshots/player.png)
+
+### 桌面悬浮播放器
+
+在设置的窗口选项中启用桌面悬浮播放器，可展开同步歌词或播放队列。
+
+![桌面悬浮播放器与同步歌词](media/screenshots/floating-player.png)
 
 ### 媒体库
 
@@ -64,14 +71,14 @@ qMusic 基于 Feishin，支持 **Navidrome、Jellyfin 和 Subsonic / OpenSubsoni
 
 ### 桌面端
 
-从[本仓库 Releases](https://github.com/liristy/feishin/releases)下载安装程序或 ZIP 压缩包，按设备选择 x64 或 ARM64。自动接收预发布更新时，在高级设置中将更新通道设为 **Beta**。
+从[本仓库 Releases](https://github.com/liristy/feishin/releases/latest)下载安装程序或 ZIP 压缩包，按设备选择 x64 或 ARM64。接收正式版自动更新时，在高级设置中将发布通道设为 **Latest（最新的）**；希望继续接收预发布版本时可选择 **Beta（测试版）**。
 
 | 架构 | 安装包 | 播放引擎 |
 | --- | --- | --- |
 | Windows x64 | EXE、ZIP | 内置 MPV，也可使用内置播放器 |
 | Windows ARM64 | EXE、ZIP | 使用内置播放器，或自行配置兼容的 MPV |
 
-各次发布提供的文件以 Release 附件为准。macOS 和 Linux 可从源码构建，beta5 不提供这两个平台的安装包。
+各次发布提供的文件以 Release 附件为准。macOS 和 Linux 可从源码构建，本次正式版不提供这两个平台的安装包。
 
 1. 安装或解压应用，在服务器管理中添加 Navidrome、Jellyfin 或 Subsonic / OpenSubsonic 服务器。
 2. 输入完整服务器地址及账号信息。本项目是音乐客户端，需要已有音乐服务器，不提供音乐内容服务。
