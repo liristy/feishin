@@ -72,11 +72,11 @@ app.whenReady().then(async () => {
                 pixel(rect.x + rect.width - 3, rect.y + rect.height - 3),
             ],
             home: pixel(10, 10),
-            shadowEdge: pixel(rect.x + rect.width + 5, rect.y + rect.height / 2),
-            shadowOutside: pixel(rect.x + rect.width + 60, rect.y + rect.height / 2),
             markerRatio: measureMarker
                 ? (marker.right - marker.left + 1) / (marker.bottom - marker.top + 1)
                 : null,
+            shadowEdge: pixel(rect.x + rect.width + 5, rect.y + rect.height / 2),
+            shadowOutside: pixel(rect.x + rect.width + 60, rect.y + rect.height / 2),
         };
     });
     try {
@@ -274,7 +274,11 @@ app.whenReady().then(async () => {
             ),
             'The expanding shadow is visible outside the clipped cover snapshot',
         );
-        assert.equal(result.openingImageWidth, 1600, 'Large artwork replaces the preview after opening starts');
+        assert.equal(
+            result.openingImageWidth,
+            1600,
+            'Large artwork replaces the preview after opening starts',
+        );
         for (const sample of result.loadingCover.samples) {
             assert.deepEqual(
                 sample.center,
