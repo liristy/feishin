@@ -5,7 +5,8 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const release =
-    'https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/20260903/mpv-x86_64-20260903-git-69e63f425a.7z';
+    'https://github.com/liristy/feishin/releases/download/v2.0.0/mpv-x86_64-20260903-git-69e63f425a.7z';
+const releaseAsset = 'https://api.github.com/repos/liristy/feishin/releases/assets/674315109';
 const archiveHash = '418dbfb5feb851cbed33d6c05d8481ba71802621bfd6efe8974522b28d42ac97';
 const binaryHash = '4a0bc712bc98e6f80cd980930b74b6ac202b8ccf2041e887adab69906f82731c';
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
@@ -26,7 +27,14 @@ async function prepare(context) {
     const cache = path.join(root, '.scratch/mpv-download');
     await fs.mkdir(cache, { recursive: true });
     await fs.mkdir(destination, { recursive: true });
-    const response = await fetch(release);
+    // The workflow can read the pinned mirror before the release draft becomes public.
+    const token = process.env.GH_TOKEN;
+    const response = await fetch(token ? releaseAsset : release, {
+        headers: {
+            Accept: 'application/octet-stream',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+    });
     if (!response.ok) throw new Error(`MPV download failed: ${response.status}`);
     const archive = Buffer.from(await response.arrayBuffer());
     if (sha256(archive) !== archiveHash) throw new Error('MPV archive checksum mismatch');
