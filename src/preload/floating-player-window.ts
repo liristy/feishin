@@ -12,14 +12,12 @@ const floatingPlayerWindow = {
             callback(state);
         ipcRenderer.on('floating-player-state', listener);
         ipcRenderer.send('floating-player-ready');
-        return () => ipcRenderer.removeListener('floating-player-state', listener);
+        return () => {
+            ipcRenderer.removeListener('floating-player-state', listener);
+        };
     },
 };
 
 contextBridge.exposeInMainWorld('floatingPlayerWindow', floatingPlayerWindow);
 
-declare global {
-    interface Window {
-        floatingPlayerWindow: typeof floatingPlayerWindow;
-    }
-}
+export type FloatingPlayerWindow = typeof floatingPlayerWindow;

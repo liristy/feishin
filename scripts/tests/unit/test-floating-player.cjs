@@ -27,6 +27,37 @@ function load(file, mocks = {}, globals = {}) {
     return exports;
 }
 
+test('floating preload listeners clean up without returning an Electron emitter to React', () => {
+    const ipcRenderer = new EventEmitter();
+    ipcRenderer.send = () => {};
+    let windowApi;
+    const electron = {
+        contextBridge: {
+            exposeInMainWorld: (_name, api) => {
+                windowApi = api;
+            },
+        },
+        ipcRenderer,
+    };
+    const { floatingPlayer } = load('src/preload/floating-player.ts', { electron });
+    load('src/preload/floating-player-window.ts', { electron });
+    for (const [api, method, channel] of [
+        [floatingPlayer, 'onDisable', 'floating-player-disable'],
+        [floatingPlayer, 'onPanel', 'floating-player-panel'],
+        [floatingPlayer, 'onPlayQueueItem', 'floating-player-play-queue-item'],
+        [windowApi, 'onState', 'floating-player-state'],
+    ]) {
+        let calls = 0;
+        const cleanup = api[method](() => calls++);
+        ipcRenderer.emit(channel, {}, 'value');
+        assert.equal(calls, 1);
+        assert.equal(cleanup(), undefined, method + ' must return a void cleanup');
+        assert.equal(ipcRenderer.listenerCount(channel), 0);
+        ipcRenderer.emit(channel, {}, 'value');
+        assert.equal(calls, 1);
+    }
+});
+
 test('floating player isolates IPC, controls playback and preserves its desktop position', async () => {
     const schema = load('src/shared/types/floating-player.ts');
     const app = new EventEmitter();

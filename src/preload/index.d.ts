@@ -1,8 +1,11 @@
+import type { FloatingPlayerWindow } from './floating-player-window';
+
 import { PreloadApi } from './index';
 
 declare global {
     interface Window {
         api: PreloadApi;
+        floatingPlayerWindow: FloatingPlayerWindow;
         LEGACY_AUTHENTICATION?: boolean;
         queryLocalFonts?: () => Promise<Font[]>;
         REMOTE_URL?: string;
