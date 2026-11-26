@@ -20,14 +20,32 @@ export const useFullscreenToggle = () => {
 
         let timer: ReturnType<typeof setTimeout> | undefined;
         const root = document.documentElement;
-        const showCursor = () => {
+        const showCursor = (event?: Event) => {
             clearTimeout(timer);
             root.classList.remove(styles.idleCursor);
-            if (document.fullscreenElement) {
-                timer = setTimeout(() => root.classList.add(styles.idleCursor), 3000);
+            if (event?.type === 'keydown') root.classList.add(styles.keyboardNavigation);
+            if (event?.type.startsWith('pointer') || event?.type === 'wheel') {
+                root.classList.remove(styles.keyboardNavigation);
             }
+            if (!document.fullscreenElement) return;
+            const target =
+                event?.type === 'pointerout' || event?.type === 'focusout'
+                    ? (event as FocusEvent | PointerEvent).relatedTarget
+                    : event?.target;
+            if ((target as Element | null)?.closest?.('[data-player-toolbar]')) return;
+            timer = setTimeout(() => {
+                if (document.fullscreenElement) root.classList.add(styles.idleCursor);
+            }, 3000);
         };
-        const events = ['pointermove', 'pointerdown', 'keydown', 'wheel'] as const;
+        const events = [
+            'pointermove',
+            'pointerout',
+            'pointerdown',
+            'focusin',
+            'focusout',
+            'keydown',
+            'wheel',
+        ] as const;
 
         showCursor();
         document.addEventListener('fullscreenchange', showCursor);
@@ -36,6 +54,7 @@ export const useFullscreenToggle = () => {
         return () => {
             clearTimeout(timer);
             root.classList.remove(styles.idleCursor);
+            root.classList.remove(styles.keyboardNavigation);
             document.removeEventListener('fullscreenchange', showCursor);
             for (const event of events) window.removeEventListener(event, showCursor);
         };

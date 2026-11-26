@@ -255,22 +255,24 @@ export const FullScreenPlayer = () => {
             dynamicIsImage={dynamicIsImage}
             opacity={opacity}
         >
-            <div className={styles.windowControls}>
-                <WindowControls />
+            <div className={styles.topBar}>
+                <div className={styles.toolbarHotspot} data-player-toolbar>
+                    <Group
+                        className={clsx(
+                            styles.headerControls,
+                            'full-screen-player-controls-container',
+                        )}
+                        gap={4}
+                        wrap="nowrap"
+                    >
+                        <SharedFullscreenPlayerSettings showLyricsSettings />
+                    </Group>
+                </div>
+                <div aria-hidden="true" className={styles.windowDrag} />
+                <div className={styles.windowControls}>
+                    <WindowControls />
+                </div>
             </div>
-            <Group
-                className={clsx(styles.headerControls, 'full-screen-player-controls-container')}
-                gap="sm"
-                p="0.5rem"
-                pos="absolute"
-                style={{
-                    background: `rgb(var(--theme-colors-background-transparent))`,
-                    left: 0,
-                    top: 0,
-                }}
-            >
-                <SharedFullscreenPlayerSettings />
-            </Group>
             <div className={styles.responsiveContainer}>
                 <div
                     className={clsx(styles.imageColumn, {

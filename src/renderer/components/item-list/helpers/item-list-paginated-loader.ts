@@ -11,7 +11,7 @@ import { queryKeys } from '/@/renderer/api/query-keys';
 import { useListContext } from '/@/renderer/context/list-context';
 import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { UserFavoriteEventPayload, UserRatingEventPayload } from '/@/renderer/events/events';
-import { getListRefreshMutationKey } from '/@/renderer/features/shared/components/list-refresh-button';
+import { getListRefreshMutationKey } from '/@/renderer/features/shared/list-refresh-key';
 import { LibraryItem, SortKeyRandom } from '/@/shared/types/domain-types';
 
 const getQueryKeyName = (itemType: LibraryItem): string => {
@@ -103,16 +103,12 @@ export const useItemListPaginatedLoader = ({
     });
 
     const refreshMutation = useMutation({
-        mutationFn: async (force?: boolean) => {
-            const queryKey = queryKeys[getQueryKeyName(itemType)].list(serverId, queryParams);
-
-            if (force) {
-                queryClient.setQueryData(queryKey, {
-                    items: getInitialData(itemsPerPage),
-                });
-            }
-
-            await queryClient.invalidateQueries();
+        mutationFn: async () => {
+            const queryKey = queryKeys[getQueryKeyName(itemType)].list(serverId, query);
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey }),
+                queryClient.invalidateQueries({ exact: true, queryKey: listCountQuery.queryKey }),
+            ]);
         },
         mutationKey: getListRefreshMutationKey(eventKey ?? 'paginated'),
     });
@@ -158,7 +154,7 @@ export const useItemListPaginatedLoader = ({
                 return;
             }
 
-            refreshMutationRef.current.mutate(true);
+            refreshMutationRef.current.mutate();
         };
 
         const handleFavorite = (payload: UserFavoriteEventPayload) => {

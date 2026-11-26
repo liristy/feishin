@@ -53,7 +53,12 @@ export const getOptimizedListCount = async <
     const pageQueryKey = listQueryKeyFn(serverId, pageQuery);
     const cachedPage = client.getQueryData(pageQueryKey);
 
-    if (cachedPage && typeof cachedPage === 'object' && 'totalRecordCount' in cachedPage) {
+    if (
+        cachedPage &&
+        typeof cachedPage === 'object' &&
+        'totalRecordCount' in cachedPage &&
+        !client.getQueryState(pageQueryKey)?.isInvalidated
+    ) {
         return (cachedPage as TResponse).totalRecordCount ?? 0;
     }
 

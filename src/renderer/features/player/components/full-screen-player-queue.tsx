@@ -170,7 +170,7 @@ export const FullScreenPlayerQueue = () => {
                         key="lyrics"
                         variants={moduleContentVariants}
                     >
-                        <Lyrics fadeOutNoLyricsMessage={false} />
+                        <Lyrics fadeOutNoLyricsMessage={false} showSettingsButton={false} />
                     </motion.div>
                 ) : activeTab === 'visualizer' && webAudio ? (
                     <motion.div

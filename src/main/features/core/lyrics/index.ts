@@ -69,7 +69,9 @@ export type LyricsResponse = string | SynchronizedLyricsArray;
 
 export type SynchronizedLyricsArray = Array<[number, string]>;
 
-type CachedLyrics = Record<LyricSource, InternetProviderLyricResponse>;
+type CachedLyrics = Partial<
+    Record<LyricSource, { expiresAt: number; lyrics: InternetProviderLyricResponse }>
+>;
 type GetFetcher = (id: string) => Promise<null | string>;
 type SearchFetcher = (
     params: LyricSearchQuery,
@@ -90,6 +92,7 @@ const GET_FETCHERS: Record<LyricSource, GetFetcher> = {
 };
 
 const MAX_CACHED_ITEMS = 10;
+const REMOTE_LYRICS_TTL_MS = 5 * 60_000;
 
 const lyricCache = new Map<string, CachedLyrics>();
 
@@ -120,12 +123,13 @@ const searchAllSources = async (
 const getRemoteLyrics = async (song: Song) => {
     const sources = store.get('lyrics', []) as LyricSource[];
 
-    const cached = lyricCache.get(song.id.toString());
+    const cacheKey = JSON.stringify([song._serverId, song.id]);
+    const cached = lyricCache.get(cacheKey);
 
     if (cached) {
         for (const source of sources) {
             const data = cached[source];
-            if (data) return data;
+            if (data && data.expiresAt > Date.now()) return data.lyrics;
         }
     }
 
@@ -179,13 +183,6 @@ const getRemoteLyrics = async (song: Song) => {
     }
 
     if (lyricsFromSource) {
-        const newResult = cached
-            ? {
-                  ...cached,
-                  [lyricsFromSource.source]: lyricsFromSource,
-              }
-            : ({ [lyricsFromSource.source]: lyricsFromSource } as CachedLyrics);
-
         if (lyricCache.size === MAX_CACHED_ITEMS && cached === undefined) {
             const toRemove = lyricCache.keys().next().value;
             if (toRemove) {
@@ -193,7 +190,13 @@ const getRemoteLyrics = async (song: Song) => {
             }
         }
 
-        lyricCache.set(song.id.toString(), newResult);
+        lyricCache.set(cacheKey, {
+            ...cached,
+            [lyricsFromSource.source]: {
+                expiresAt: Date.now() + REMOTE_LYRICS_TTL_MS,
+                lyrics: lyricsFromSource,
+            },
+        });
     }
 
     return lyricsFromSource;

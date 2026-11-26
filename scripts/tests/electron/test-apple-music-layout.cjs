@@ -14,6 +14,7 @@ app.setPath('userData', profile);
 app.setPath('music', profile);
 app.requestSingleInstanceLock = () => true;
 process.env.DISABLE_AUTO_UPDATES = 'true';
+delete process.env.OPENAI_API_KEY;
 fs.writeFileSync(
     path.join(profile, 'config.json'),
     JSON.stringify({ window_enable_tray: false, window_window_bar_style: 'web' }),
@@ -184,7 +185,7 @@ const fixtureServer = http.createServer((request, response) => {
 const serverReady = new Promise((resolve) => fixtureServer.listen(0, '127.0.0.1', resolve));
 app.on('before-quit', () => fixtureServer.close());
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const timeout = setTimeout(() => app.exit(1), 90000);
+const timeout = setTimeout(() => app.exit(1), 120000);
 app.once('browser-window-created', (_event, win) => {
     win.show = () => {};
     win.showInactive = () => {};
@@ -312,9 +313,9 @@ app.once('browser-window-created', (_event, win) => {
                 win.webContents.once('did-finish-load', resolve);
                 win.webContents.reload();
             });
-            const waitFor = async (expression) => {
+            const waitFor = async (expression, inspect = evaluate) => {
                 for (let attempt = 0; attempt < 60; attempt++) {
-                    if (await evaluate(expression)) return;
+                    if (await inspect(expression)) return;
                     await delay(200);
                 }
                 throw new Error(`Timed out waiting for ${expression}`);
@@ -857,10 +858,7 @@ app.once('browser-window-created', (_event, win) => {
                 return {loaded:image.complete,width:image.naturalWidth,needed:Math.max(bounds.width,bounds.height)*devicePixelRatio,oldOpacity:getComputedStyle(document.documentElement,'::view-transition-old(player-cover)').opacity,newOpacity:getComputedStyle(document.documentElement,'::view-transition-new(player-cover)').opacity};
             })()`);
             console.log('Opening artwork:', openingCover);
-            assert.ok(
-                openingCover.loaded && openingCover.width >= openingCover.needed,
-                'Large artwork is decoded before the opening snapshot',
-            );
+            assert.ok(openingCover.loaded && openingCover.width > 0, 'Opening has decoded artwork');
             assert.equal(openingCover.oldOpacity, '0', 'The small cover raster is never enlarged');
             assert.equal(openingCover.newOpacity, '1');
             await delay(100);
@@ -874,8 +872,34 @@ app.once('browser-window-created', (_event, win) => {
                 await window.playerOpeningTransition.finished;
                 delete window.playerOpeningTransition;
             })()`);
+            // The compact artwork stays visible until the full-size request finishes decoding.
+            await waitFor(`(() => {
+                const image = document.querySelector('img.full-screen-player-image');
+                const bounds = image.getBoundingClientRect();
+                return image.complete && image.naturalWidth >= Math.max(bounds.width, bounds.height) * devicePixelRatio;
+            })()`);
             await delay(600);
             const windowControls = '[data-fullscreen-player] button[aria-label="Minimize"]';
+            const toolbar = '[data-player-toolbar]';
+            const toolbarButton = toolbar + ' button';
+            const toolbarPoint = await evaluate(`(() => {
+                const r = document.querySelector('${toolbarButton}').getBoundingClientRect();
+                return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) };
+            })()`);
+            // Moving over lyrics or transport must not reveal the top-left controls.
+            win.webContents.sendInputEvent({ type: 'mouseMove', x: 500, y: 400 });
+            await delay(350);
+            assert.equal(await evaluate(`getComputedStyle(document.querySelector('${toolbar}')).opacity`), '0');
+            win.webContents.sendInputEvent({ type: 'mouseMove', x: 3, y: 3 });
+            await waitFor(`getComputedStyle(document.querySelector('${toolbar}')).opacity === '1'`);
+            win.webContents.sendInputEvent({ type: 'mouseMove', ...toolbarPoint });
+            await delay(3300);
+            assert.equal(
+                await evaluate(`getComputedStyle(document.querySelector('${toolbar}')).opacity`),
+                '1',
+            );
+            win.webContents.sendInputEvent({ type: 'mouseMove', x: 500, y: 400 });
+            await waitFor(`getComputedStyle(document.querySelector('${toolbar}')).opacity === '0'`);
             assert.equal(
                 await evaluate(
                     `document.querySelectorAll('button[aria-label="Minimize"]:not([data-player-cover])').length`,

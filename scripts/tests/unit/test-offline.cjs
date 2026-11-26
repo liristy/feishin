@@ -404,9 +404,15 @@ async function main() {
         'idb-keyval': idb,
         'is-electron': () => false,
     });
+    let refreshing = false;
     const cache = load(
         'src/renderer/features/offline/offline-api-cache.ts',
         {
+            '/@/renderer/api/query-keys': { queryKeys: {} },
+            '/@/renderer/events/event-emitter': { eventEmitter: { emit: () => favoriteRefreshes++ } },
+            '/@/renderer/features/shared/list-refresh-key': { getListRefreshMutationKey: key => ['item-list-refresh', key] },
+            '/@/renderer/lib/react-query': { queryClient: { invalidateQueries() {}, isMutating: () => Number(refreshing) } },
+            '/@/shared/types/types': { ItemListKey: { FAVORITE_SONG: 'favoriteSong' } },
             '/@/i18n/i18n': { t: (key) => key },
             '/@/renderer/features/offline/offline-library': library,
             '/@/renderer/utils/logger': { logger: { debug() {}, warn() {} } },
@@ -494,6 +500,50 @@ async function main() {
         cache.offlineRead('getSongDetail', [{ ...args[0], query: { id: 'missing' } }], () => []),
     );
     disconnected = false;
+    let favoriteRefreshes = 0;
+    const favoriteArgs = [{ ...args[0], query: { favorite: true } }];
+    for (const [endpoint, oldValue, newValue] of [
+        ['getSongList', { items: ['old'] }, { items: ['new', 'old'] }],
+        ['getSongListCount', 246, 1200],
+    ]) {
+        await cache.offlineRead(endpoint, favoriteArgs, async () => oldValue);
+        let finish;
+        const result = await cache.offlineRead(endpoint, favoriteArgs, () => new Promise((resolve) => {
+            finish = resolve;
+        }));
+        assert.deepEqual(result, oldValue, 'Show the saved favorites before the server responds');
+        finish(newValue);
+        await new Promise((resolve) => setImmediate(resolve));
+        disconnected = true;
+        assert.deepEqual(await cache.offlineRead(endpoint, favoriteArgs, () => {
+            assert.fail('Offline should use the refreshed snapshot');
+        }), newValue);
+        disconnected = false;
+    }
+    assert.equal(favoriteRefreshes, 2);
+    refreshing = true;
+    for (const requestArgs of [args, favoriteArgs]) {
+        const updated = await cache.offlineRead('getSongList', requestArgs, async () => {
+            await new Promise(resolve => setTimeout(resolve, 20));
+            return { items: [{ id: 'new-addition' }] };
+        });
+        assert.equal(updated.items[0].id, 'new-addition');
+    }
+    refreshing = false;
+    await cache.offlineRead('getSongList', args, async () => ['song']);
+    for (const endpoint of ['getLyrics', 'getStructuredLyrics']) {
+        await cache.offlineRead(endpoint, args, async () => 'old lyrics');
+        const refreshed = await cache.offlineRead(endpoint, args, async () => {
+            await new Promise((resolve) => setTimeout(resolve, 450));
+            return 'updated lyrics';
+        });
+        assert.equal(refreshed, 'updated lyrics', 'A slow response replaces cached lyrics');
+        const fallback = await cache.offlineRead(endpoint, args, async () => {
+            throw new TypeError('Failed to fetch');
+        });
+        assert.equal(fallback, 'updated lyrics', 'A failed request can use the latest saved lyrics');
+        assert.equal(await cache.offlineRead(endpoint, args, async () => 'newest'), 'newest');
+    }
     const unauthorized = Object.assign(new Error('Unauthorized'), {
         isAxiosError: true,
         response: { status: 401 },

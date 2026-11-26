@@ -9,9 +9,9 @@ qMusic 基于 Feishin，支持 **Navidrome、Jellyfin 和 Subsonic / OpenSubsoni
 [![License](https://img.shields.io/github/license/liristy/feishin?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/liristy/feishin?style=flat-square&label=release)](https://github.com/liristy/feishin/releases/latest)
 
-[下载 2.0 正式版](https://github.com/liristy/feishin/releases/tag/v2.0.0) · [更新内容](docs/releases/2.0.0.md) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md)
+[下载 2.1 正式版](https://github.com/liristy/feishin/releases/tag/v2.1.0) · [更新内容](docs/releases/2.1.0.md) · [问题反馈](https://github.com/liristy/feishin/issues) · [下载与离线说明](docs/OFFLINE.md)
 
-> 当前版本：**2.0.0 正式版**。本次提供 Windows x64 与 ARM64 安装包及 ZIP 压缩包。qMusic 是独立维护的 Feishin 分支。
+> 当前版本：**2.1.0 正式版**。本次提供 Windows x64 与 ARM64 安装包及 ZIP 压缩包。qMusic 是独立维护的 Feishin 分支。
 
 ![主页](media/screenshots/home.png)
 

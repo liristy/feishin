@@ -3,7 +3,8 @@ import isElectron from 'is-electron';
 
 import { api } from '/@/renderer/api';
 import { queryKeys } from '/@/renderer/api/query-keys';
-import { getDefaultStructuredIndex } from '/@/renderer/features/lyrics/api/lyrics-utils';
+import { lrcTimestampMs, parseEnhancedLrc } from '/@/renderer/features/lyrics/api/enhanced-lrc';
+import { getSelectedStructuredIndex } from '/@/renderer/features/lyrics/api/lyrics-utils';
 import { queryClient, QueryHookArgs } from '/@/renderer/lib/react-query';
 import { getServerById, useSettingsStore } from '/@/renderer/store';
 import { hasFeature } from '/@/shared/api/utils';
@@ -23,11 +24,14 @@ import {
 import { LyricSource } from '/@/shared/types/domain-types';
 import { LyricsResponse } from '/@/shared/types/domain-types';
 import { ServerFeature } from '/@/shared/types/features-types';
+import { isOffline } from '/@/shared/utils/offline-cache';
 
 const lyricsIpc = isElectron() ? window.api.lyrics : null;
+const LYRICS_REFRESH_MS = 60_000;
 
 export type LyricsQueryResult = {
     local: FullLyricsMetadata | null | StructuredLyric[];
+    manualOffsetMs?: number;
     overrideData: LyricsResponse | null;
     overrideSelection: LyricsOverride | null;
     remoteAuto: FullLyricsMetadata | null;
@@ -40,7 +44,7 @@ export type LyricsQueryResult = {
 
 // Match LRC lyrics format by https://github.com/ustbhuangyi/lyric-parser
 // [mm:ss.SSS] text
-const timeExp = /\[(\d{2,}):(\d{2})(?:\.(\d{2,3}))?]([^\n]+)(\n|$)/g;
+const timeExp = /\[(\d{2,}):([0-5]\d)(?:\.(\d{1,3}))?]([^\r\n]*)/g;
 
 // Match karaoke lyrics format returned by NetEase
 // [SSS,???] text
@@ -52,16 +56,12 @@ const formatLyrics = (lyrics: string) => {
 
     for (const line of synchronizedLines) {
         const [, minute, sec, ms, text] = line;
-        const minutes = parseInt(minute, 10);
-        const seconds = parseInt(sec, 10);
-        const milis = ms?.length === 3 ? parseInt(ms, 10) : parseInt(ms, 10) * 10;
-
-        const timeInMilis = (minutes * 60 + seconds) * 1000 + milis;
+        const timeInMilis = lrcTimestampMs(minute, sec, ms);
 
         formattedLyrics.push({ startMs: timeInMilis, text });
     }
 
-    if (formattedLyrics.length > 0) return formattedLyrics;
+    if (formattedLyrics.length > 0) return parseEnhancedLrc(formattedLyrics);
 
     const alternateSynchronizedLines = lyrics.matchAll(alternateTimeExp);
     for (const line of alternateSynchronizedLines) {
@@ -161,7 +161,11 @@ export async function fetchLocalLyrics(params: {
                 query: { songId: song.id },
             })
             .catch(console.error);
-        if (subsonicLyrics?.length) return subsonicLyrics;
+        if (subsonicLyrics?.length) {
+            return subsonicLyrics.map((lyric) =>
+                lyric.synced ? { ...lyric, lyrics: parseEnhancedLrc(lyric.lyrics) } : lyric,
+            );
+        }
     } else if (hasFeature(server, ServerFeature.LYRICS_SINGLE_STRUCTURED)) {
         const jfLyrics = await api.controller
             .getLyrics({
@@ -172,7 +176,9 @@ export async function fetchLocalLyrics(params: {
         if (jfLyrics) {
             return {
                 artist: song.artists?.[0]?.name,
-                lyrics: jfLyrics,
+                lyrics: Array.isArray(jfLyrics)
+                    ? parseEnhancedLrc(jfLyrics)
+                    : formatLyrics(jfLyrics),
                 name: song.name,
                 remote: false,
                 source: server?.name ?? 'music server',
@@ -278,21 +284,25 @@ export const lyricsQueries = {
                 const prev = queryClient.getQueryData<LyricsQueryResult>(lyricsKey);
                 const overrideSelection = prev?.overrideSelection ?? null;
                 const suppressRemoteAuto = prev?.suppressRemoteAuto ?? false;
-                const selectedOffsetMs = prev?.selectedOffsetMs ?? 0;
                 const preferLocalLyrics = useSettingsStore.getState().lyrics.preferLocalLyrics;
+                const offline = isOffline();
 
                 const remoteAutoPromise =
                     suppressRemoteAuto || !useSettingsStore.getState().lyrics.fetch
                         ? null
-                        : fetchRemoteLyricsAuto(song);
+                        : offline
+                          ? Promise.resolve(prev?.remoteAuto ?? null)
+                          : fetchRemoteLyricsAuto(song);
 
-                const overrideDataPromise = overrideSelection
-                    ? fetchRemoteLyricsById({
-                          remoteSongId: overrideSelection.id,
-                          remoteSource: overrideSelection.source as LyricSource,
-                          song,
-                      })
-                    : null;
+                const overrideDataPromise = !overrideSelection
+                    ? null
+                    : offline
+                      ? Promise.resolve(prev?.overrideData ?? null)
+                      : fetchRemoteLyricsById({
+                            remoteSongId: overrideSelection.id,
+                            remoteSource: overrideSelection.source as LyricSource,
+                            song,
+                        });
 
                 const localPromise = fetchLocalLyrics({ serverId: args.serverId, signal, song });
 
@@ -329,11 +339,12 @@ export const lyricsQueries = {
                     ]);
                 }
 
-                const selectedStructuredIndex =
-                    prev?.selectedStructuredIndex ??
-                    (Array.isArray(local) && local.length > 0
-                        ? getDefaultStructuredIndex(local)
-                        : 0);
+                const latest = queryClient.getQueryData<LyricsQueryResult>(lyricsKey);
+                const manualOffsetMs = latest?.manualOffsetMs;
+                const selectedOffsetMs = latest?.selectedOffsetMs ?? 0;
+                const selectedStructuredIndex = Array.isArray(local)
+                    ? getSelectedStructuredIndex(local, latest?.selectedStructuredIndex)
+                    : (latest?.selectedStructuredIndex ?? 0);
 
                 const partial: Pick<
                     LyricsQueryResult,
@@ -354,16 +365,14 @@ export const lyricsQueries = {
                     preferLocalLyrics,
                     selectedStructuredIndex,
                 );
-                const resultSelectedOffsetMs = getDisplayOffset(
-                    selected,
-                    selectedOffsetMs,
-                    selectedStructuredIndex,
-                    local,
-                );
+                const resultSelectedOffsetMs =
+                    manualOffsetMs ??
+                    getDisplayOffset(selected, selectedOffsetMs, selectedStructuredIndex, local);
 
                 return {
                     ...emptyResult(),
                     ...partial,
+                    manualOffsetMs,
                     selected,
                     selectedOffsetMs: resultSelectedOffsetMs,
                     selectedStructuredIndex,
@@ -372,7 +381,9 @@ export const lyricsQueries = {
                 };
             },
             queryKey: lyricsKey,
-            staleTime: Infinity,
+            refetchInterval: () => (isOffline() ? false : LYRICS_REFRESH_MS),
+            refetchOnWindowFocus: true,
+            staleTime: 0,
             ...args.options,
         });
     },
@@ -389,7 +400,7 @@ export const lyricsQueries = {
                 });
             },
             queryKey: queryKeys.songs.lyricsByRemoteId(args.query),
-            staleTime: Infinity,
+            staleTime: LYRICS_REFRESH_MS,
             ...args.options,
         });
     },

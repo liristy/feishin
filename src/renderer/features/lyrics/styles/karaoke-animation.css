@@ -167,3 +167,45 @@
 .karaoke-word ruby rp {
     display: none;
 }
+
+/* Full-screen word timing follows the audio clock, including pause and seek. */
+[data-fullscreen-player] .karaoke-word:not(.karaoke-overlay-word) {
+    --karaoke-feather: 0.38em;
+
+    color: rgb(from var(--theme-colors-foreground) r g b / 58%);
+    translate: 0 calc(-0.075em * var(--karaoke-lift, 0));
+}
+
+[data-fullscreen-player] .karaoke-word:not(.karaoke-overlay-word) .karaoke-word-highlight {
+    background-image: linear-gradient(
+        90deg,
+        var(--theme-colors-foreground)
+            calc(
+                var(--karaoke-progress, 0) * (100% + var(--karaoke-feather)) -
+                    var(--karaoke-feather)
+            ),
+        #0000 calc(var(--karaoke-progress, 0) * (100% + var(--karaoke-feather)))
+    );
+    opacity: 1;
+    transition: none;
+}
+
+[data-fullscreen-player]
+    .karaoke-word.karaoke-rtl:not(.karaoke-overlay-word)
+    .karaoke-word-highlight {
+    background-image: linear-gradient(
+        270deg,
+        var(--theme-colors-foreground)
+            calc(
+                var(--karaoke-progress, 0) * (100% + var(--karaoke-feather)) -
+                    var(--karaoke-feather)
+            ),
+        #0000 calc(var(--karaoke-progress, 0) * (100% + var(--karaoke-feather)))
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-fullscreen-player] .karaoke-word:not(.karaoke-overlay-word) {
+        translate: none;
+    }
+}

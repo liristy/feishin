@@ -220,6 +220,7 @@ export const KaraokeLyricLine = memo(
                             <div
                                 className={styles.agentLine}
                                 data-agent-role={agent?.role}
+                                data-lyric-cue-index={cueLineIndex}
                                 key={`${cueLine.index}-${cueLineIndex}`}
                             >
                                 <span

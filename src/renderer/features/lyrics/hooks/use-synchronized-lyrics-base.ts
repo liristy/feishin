@@ -92,10 +92,10 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
 
     const scrollToLine = useCallback(
         (_index: number, lineSelector: string, anchorSelector?: string) => {
-            const doc = document.getElementById(LYRICS_SCROLL_CONTAINER_ID) as HTMLElement;
-            const lineElement = document.querySelector(lineSelector) as HTMLElement | null;
+            const doc = containerRef.current;
+            const lineElement = doc?.querySelector<HTMLElement>(lineSelector);
             const anchorElement = anchorSelector
-                ? (document.querySelector(anchorSelector) as HTMLElement | null)
+                ? doc?.querySelector<HTMLElement>(anchorSelector)
                 : null;
             const scrollTarget = anchorElement ?? lineElement;
 
@@ -162,7 +162,7 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
     );
 
     const hideScrollbar = useCallback(() => {
-        const doc = document.getElementById(LYRICS_SCROLL_CONTAINER_ID) as HTMLElement;
+        const doc = containerRef.current;
         doc?.classList.add('hide-scrollbar');
         if (userScrollingRef.current) {
             pauseManualScrollFollow();
@@ -170,7 +170,7 @@ export const useSynchronizedLyricsBase = (settingsKey = 'default', offsetMs?: nu
     }, [pauseManualScrollFollow]);
 
     const showScrollbar = useCallback(() => {
-        const doc = document.getElementById(LYRICS_SCROLL_CONTAINER_ID) as HTMLElement;
+        const doc = containerRef.current;
         doc?.classList.remove('hide-scrollbar');
     }, []);
 

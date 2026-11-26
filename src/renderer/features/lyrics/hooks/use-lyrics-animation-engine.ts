@@ -118,7 +118,7 @@ export const useLyricsAnimationEngine = ({
             }
 
             const scrollContainer =
-                document.getElementById(scrollContainerId) ?? containerRef.current ?? undefined;
+                containerRef.current ?? document.getElementById(scrollContainerId) ?? undefined;
 
             if (!scrollContainer) {
                 return -1;
@@ -176,7 +176,6 @@ export const useLyricsAnimationEngine = ({
         }
 
         const observedElements = new Set<Element>();
-
         const observer = new ResizeObserver(() => {
             recalculatePositions();
         });
@@ -195,7 +194,6 @@ export const useLyricsAnimationEngine = ({
         };
 
         observeLayoutTargets();
-
         const mutationObserver = new MutationObserver(() => {
             observeLayoutTargets();
         });

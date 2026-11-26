@@ -5,12 +5,14 @@ import { controller } from '/@/renderer/api/controller';
 import { queryKeys } from '/@/renderer/api/query-keys';
 import { getOptimizedListCount } from '/@/renderer/api/utils-list-count';
 import { QueryHookArgs } from '/@/renderer/lib/react-query';
+import { getServerById } from '/@/renderer/store';
 import {
     AlbumRadioQuery,
     ArtistRadioQuery,
     GetQueueQuery,
     ListCountQuery,
     RandomSongListQuery,
+    ServerType,
     SimilarSongsQuery,
     SongListQuery,
 } from '/@/shared/types/domain-types';
@@ -72,6 +74,13 @@ export const songsQueries = {
         return queryOptions({
             gcTime: 1000 * 60 * 60,
             queryFn: async ({ client, signal }) => {
+                if (getServerById(args.serverId)?.type === ServerType.NAVIDROME) {
+                    return api.controller.getSongListCount({
+                        apiClientProps: { serverId: args.serverId, signal },
+                        query: args.query,
+                    });
+                }
+
                 const optimizedCount = await getOptimizedListCount<
                     ListCountQuery<SongListQuery>,
                     SongListQuery,

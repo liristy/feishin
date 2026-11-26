@@ -1,13 +1,15 @@
 import clsx from 'clsx';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import styles from './synchronized-lyrics.module.css';
 
 import '/@/renderer/features/lyrics/styles/synchronized-lyrics-animation.css';
 import {
     findOverlayLineByTime,
+    getLyricGaps,
     getLyricLineStartMs,
     getLyricLineText,
+    hasLyricText,
     normalizeLyrics,
 } from '/@/renderer/features/lyrics/api/lyrics-utils';
 import { LyricsScrollContent } from '/@/renderer/features/lyrics/components/lyrics-scroll-content';
@@ -16,7 +18,7 @@ import {
     LYRICS_SCROLL_CONTAINER_ID,
     useSynchronizedLyricsBase,
 } from '/@/renderer/features/lyrics/hooks/use-synchronized-lyrics-base';
-import { LyricLine } from '/@/renderer/features/lyrics/lyric-line';
+import { LyricGap, LyricLine } from '/@/renderer/features/lyrics/lyric-line';
 import { subscribePlayerStatus, usePlayerStoreBase } from '/@/renderer/store';
 import { subscribePlayerProgress, useTimestampStoreBase } from '/@/renderer/store/timestamp.store';
 import {
@@ -79,9 +81,18 @@ export const SynchronizedLyrics = ({
     const effectivePaddingRight = preview ? 0 : settings.paddingRight;
 
     const normalizedLyrics = useMemo(() => normalizeLyrics(lyrics), [lyrics]);
+    const gaps = useMemo(
+        () => (preview ? undefined : getLyricGaps(normalizedLyrics)),
+        [normalizedLyrics, preview],
+    );
     const rafRef = useRef<null | number>(null);
     const statusRef = useRef(usePlayerStoreBase.getState().player.status);
     const lastSyncedTimeRef = useRef(0);
+    const playbackAnchorRef = useRef({
+        // eslint-disable-next-line react-hooks/purity
+        eventCreationTime: Date.now(),
+        timeMs: useTimestampStoreBase.getState().timestamp * 1000,
+    });
 
     const {
         rebuildLyricsData,
@@ -105,17 +116,26 @@ export const SynchronizedLyrics = ({
     });
 
     const syncAtTime = useCallback(
-        (timeInMs: number, isPlaying: boolean, forceReset = false) => {
-            if (forceReset) {
+        (
+            timeInMs: number,
+            isPlaying: boolean,
+            options?: { eventCreationTime?: number; forceReset?: boolean; forceResync?: boolean },
+        ) => {
+            if (options?.forceReset) {
                 reset();
                 rebuildLyricsData();
             }
 
-            tick(timeInMs, isPlaying);
-            lastSyncedTimeRef.current = timeInMs;
+            const eventCreationTime = options?.eventCreationTime ?? Date.now();
+            tick(timeInMs, isPlaying, { eventCreationTime, forceResync: options?.forceResync });
+            lastSyncedTimeRef.current = timeInMs + (isPlaying ? Date.now() - eventCreationTime : 0);
         },
         [rebuildLyricsData, reset, tick],
     );
+
+    const updatePlaybackAnchor = useCallback((timestampSec: number) => {
+        playbackAnchorRef.current = { eventCreationTime: Date.now(), timeMs: timestampSec * 1000 };
+    }, []);
 
     const stopRaf = useCallback(() => {
         if (rafRef.current !== null) {
@@ -133,14 +153,10 @@ export const SynchronizedLyrics = ({
                 return;
             }
 
-            const timestamp = useTimestampStoreBase.getState().timestamp;
-            const timeInMs = timestamp * 1000 + delayMsRef.current;
-
-            if (Math.abs(timeInMs - lastSyncedTimeRef.current) > SEEK_DETECT_THRESHOLD_MS) {
-                syncAtTime(timeInMs, true, true);
-            } else {
-                syncAtTime(timeInMs, true);
-            }
+            const anchor = playbackAnchorRef.current;
+            syncAtTime(anchor.timeMs + delayMsRef.current, true, {
+                eventCreationTime: anchor.eventCreationTime,
+            });
 
             rafRef.current = requestAnimationFrame(runTick);
         };
@@ -150,9 +166,13 @@ export const SynchronizedLyrics = ({
 
     const syncFromCurrentTimestamp = useCallback(() => {
         const timestamp = useTimestampStoreBase.getState().timestamp;
+        updatePlaybackAnchor(timestamp);
         const isPlaying = statusRef.current === PlayerStatus.PLAYING;
-        syncAtTime(timestamp * 1000 + delayMsRef.current, isPlaying, true);
-    }, [delayMsRef, syncAtTime]);
+        syncAtTime(timestamp * 1000 + delayMsRef.current, isPlaying, {
+            forceReset: true,
+            forceResync: true,
+        });
+    }, [delayMsRef, syncAtTime, updatePlaybackAnchor]);
 
     useEffect(() => {
         lyricRef.current = normalizedLyrics;
@@ -199,6 +219,7 @@ export const SynchronizedLyrics = ({
                 return;
             }
 
+            syncFromCurrentTimestamp();
             startRaf();
         });
 
@@ -209,19 +230,27 @@ export const SynchronizedLyrics = ({
         const unsubscribe = subscribePlayerProgress(({ timestamp }) => {
             const timeInMs = timestamp * 1000 + delayMsRef.current;
             const isPlaying = statusRef.current === PlayerStatus.PLAYING;
+            const isSeek =
+                lastSyncedTimeRef.current > 0 &&
+                Math.abs(timeInMs - lastSyncedTimeRef.current) > SEEK_DETECT_THRESHOLD_MS;
+            updatePlaybackAnchor(timestamp);
 
             if (!isPlaying) {
-                syncAtTime(timeInMs, false, true);
+                syncAtTime(timeInMs, false, { forceReset: true, forceResync: true });
                 return;
             }
 
-            if (Math.abs(timeInMs - lastSyncedTimeRef.current) > SEEK_DETECT_THRESHOLD_MS) {
-                syncAtTime(timeInMs, true, true);
+            if (isSeek) {
+                syncAtTime(timeInMs, true, {
+                    eventCreationTime: playbackAnchorRef.current.eventCreationTime,
+                    forceReset: true,
+                    forceResync: true,
+                });
             }
         });
 
         return unsubscribe;
-    }, [delayMsRef, syncAtTime]);
+    }, [delayMsRef, syncAtTime, updatePlaybackAnchor]);
 
     const handleContainerClick = useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
@@ -283,6 +312,16 @@ export const SynchronizedLyrics = ({
                     />
                 )}
                 {normalizedLyrics.map((rawLine, idx) => {
+                    if (!hasLyricText(rawLine)) return null;
+                    const gap = gaps?.get(idx);
+                    const gapRow = gap && (
+                        <LyricGap
+                            alignment={settings.alignment}
+                            beforeIndex={idx}
+                            fontSize={effectiveFontSize}
+                            startMs={gap.startMs}
+                        />
+                    );
                     const lineStartMs = getLyricLineStartMs(rawLine);
                     const lineText = getLyricLineText(rawLine);
                     const pronunciationText = getOverlayText(
@@ -299,17 +338,20 @@ export const SynchronizedLyrics = ({
                     );
 
                     return (
-                        <LyricLine
-                            alignment={settings.alignment}
-                            className="lyric-line synchronized"
-                            data-lyric-time={lineStartMs}
-                            fontSize={effectiveFontSize}
-                            id={`lyric-${idx}`}
-                            key={idx}
-                            romajiText={pronunciationText}
-                            text={lineText}
-                            translatedText={translationText}
-                        />
+                        <Fragment key={idx}>
+                            {gapRow}
+                            <LyricLine
+                                alignment={settings.alignment}
+                                className="lyric-line synchronized"
+                                data-lyric-time={lineStartMs}
+                                fontSize={effectiveFontSize}
+                                id={`lyric-${idx}`}
+                                romajiText={pronunciationText}
+                                text={lineText}
+                                translatedText={translationText}
+                                wave
+                            />
+                        </Fragment>
                     );
                 })}
             </LyricsScrollContent>

@@ -4,7 +4,6 @@ import { sliceUtf8Bytes } from '/@/renderer/utils/utf8-byte-slice';
 import { ssType } from '/@/shared/api/subsonic/subsonic-types';
 import {
     LyricAgent,
-    LyricsKind,
     StructuredLyric,
     SyncedCueLine,
     SyncedWordCue,
@@ -102,6 +101,7 @@ const mapAgents = (agents: ApiStructuredLyric['agents']): LyricAgent[] | undefin
 export const mapStructuredLyric = (lyric: ApiStructuredLyric, source: string): StructuredLyric => {
     const baseLyric = {
         artist: lyric.displayArtist || '',
+        kind: lyric.kind ?? ('main' as const),
         lang: lyric.lang,
         name: lyric.displayTitle || '',
         offsetMs: lyric.offset ?? 0,
@@ -122,7 +122,6 @@ export const mapStructuredLyric = (lyric: ApiStructuredLyric, source: string): S
         return {
             ...baseLyric,
             agents: mapAgents(lyric.agents),
-            kind: (lyric.kind ?? 'main') as LyricsKind,
             lyrics: lines,
             synced: true,
         };

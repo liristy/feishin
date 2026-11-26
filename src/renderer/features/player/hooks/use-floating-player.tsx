@@ -48,7 +48,7 @@ function FloatingPlayerBridge() {
     const radio = useRadioPlayer();
     const isRadio = Boolean(radio.currentStreamUrl);
     const lyricsEnabled = enabled && panel === 'lyrics' && !isRadio && Boolean(song?.id);
-    const { data: lyricsData, isFetching: lyricsLoading } = useQuery(
+    const { data: lyricsData, isLoading: lyricsLoading } = useQuery(
         lyricsQueries.songLyrics(
             {
                 options: { enabled: lyricsEnabled },

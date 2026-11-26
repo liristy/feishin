@@ -3,6 +3,7 @@ import { ComponentPropsWithoutRef, memo, useMemo } from 'react';
 
 import styles from './lyric-line.module.css';
 
+import { prepareFloatingLyric } from '/@/renderer/features/lyrics/api/lyric-glyphs';
 import { sanitize } from '/@/renderer/utils/sanitize';
 import { Box } from '/@/shared/components/box/box';
 import { Stack } from '/@/shared/components/stack/stack';
@@ -13,6 +14,7 @@ interface LyricLineProps extends ComponentPropsWithoutRef<'div'> {
     romajiText?: null | string;
     text?: string;
     translatedText?: null | string;
+    wave?: boolean;
 }
 
 export const LyricLine = memo(
@@ -23,9 +25,16 @@ export const LyricLine = memo(
         romajiText,
         text,
         translatedText,
+        wave = false,
         ...props
     }: LyricLineProps) => {
-        const lines = useMemo(() => (text ?? '').split('_BREAK_'), [text]);
+        const lines = useMemo(
+            () =>
+                (text ?? '')
+                    .split('_BREAK_')
+                    .map((line) => (wave ? prepareFloatingLyric(line) : sanitize(line))),
+            [text, wave],
+        );
 
         const style = useMemo(
             () => ({
@@ -39,7 +48,7 @@ export const LyricLine = memo(
             <Box className={clsx(styles.lyricLine, className)} style={style} {...props}>
                 <Stack gap={0}>
                     {lines.map((line, index) => (
-                        <span dangerouslySetInnerHTML={{ __html: sanitize(line) }} key={index} />
+                        <span dangerouslySetInnerHTML={{ __html: line }} key={index} />
                     ))}
                     {romajiText && (
                         <span
@@ -48,7 +57,10 @@ export const LyricLine = memo(
                         />
                     )}
                     {translatedText && translatedText !== text && (
-                        <span dangerouslySetInnerHTML={{ __html: sanitize(translatedText) }} />
+                        <span
+                            className={styles.translationLine}
+                            dangerouslySetInnerHTML={{ __html: sanitize(translatedText) }}
+                        />
                     )}
                 </Stack>
             </Box>
@@ -57,3 +69,24 @@ export const LyricLine = memo(
 );
 
 LyricLine.displayName = 'LyricLine';
+
+export const LyricGap = ({
+    alignment,
+    beforeIndex,
+    fontSize,
+    startMs,
+}: Pick<LyricLineProps, 'alignment' | 'fontSize'> & { beforeIndex: number; startMs: number }) => (
+    <Box
+        aria-hidden
+        className={styles.lyricLine}
+        data-gap-start={startMs}
+        data-lyric-gap={beforeIndex}
+        style={{ fontSize, textAlign: alignment }}
+    >
+        <span className={styles.gapDots}>
+            <span />
+            <span />
+            <span />
+        </span>
+    </Box>
+);

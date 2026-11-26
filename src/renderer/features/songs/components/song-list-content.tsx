@@ -112,7 +112,7 @@ export const SongListView = ({
                     return (
                         <SongListInfiniteGrid
                             gap={grid.itemGap}
-                            itemsPerPage={itemsPerPage}
+                            itemsPerPage={Math.min(itemsPerPage, 24)}
                             itemsPerRow={grid.itemsPerRowEnabled ? grid.itemsPerRow : undefined}
                             query={mergedQuery}
                             serverId={server.id}
@@ -146,7 +146,7 @@ export const SongListView = ({
                             enableHorizontalBorders={table.enableHorizontalBorders}
                             enableRowHoverHighlight={table.enableRowHoverHighlight}
                             enableVerticalBorders={table.enableVerticalBorders}
-                            itemsPerPage={itemsPerPage}
+                            itemsPerPage={Math.min(itemsPerPage, 24)}
                             query={mergedQuery}
                             serverId={server.id}
                             size={table.size}

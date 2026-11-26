@@ -25,6 +25,14 @@
         'main-content'
         'player';
     grid-template-rows: 0 calc(100dvh - var(--player-bar-height)) var(--player-bar-height);
+
+    /* Electron hit-tests drag rectangles even when the player covers the library. */
+    :global(#main-content) > :not([data-fullscreen-player]) {
+        &,
+        & * {
+            -webkit-app-region: initial;
+        }
+    }
 }
 
 .fullscreen.windows,

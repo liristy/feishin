@@ -196,7 +196,8 @@ async function main() {
         },
         fullscreenElement: null,
     };
-    const fire = (name) => handlers.get(name)?.forEach((fn) => fn({}));
+    const fire = (type, details = {}) =>
+        handlers.get(type)?.forEach((fn) => fn({ type, ...details }));
     const tick = () => {
         const pending = [...timers.values()];
         timers.clear();
@@ -205,7 +206,10 @@ async function main() {
     const fullscreen = load(
         'src/renderer/hooks/use-fullscreen-toggle.ts',
         {
-            './use-fullscreen-toggle.module.css': { idleCursor: 'idle' },
+            './use-fullscreen-toggle.module.css': {
+                idleCursor: 'idle',
+                keyboardNavigation: 'keyboard',
+            },
             '/@/renderer/store/full-screen-player.store': {
                 useFullScreenPlayerStore: (selector) => selector({ expanded }),
             },
@@ -224,7 +228,12 @@ async function main() {
     );
     fullscreen.useFullscreenToggle();
     const cursorCleanups = effects.map((fn) => fn());
-    assert.equal(timers.size, 0, 'Windowed player keeps the cursor visible');
+    tick();
+    assert.equal(classes.size, 0, 'Opening the player does not reveal the toolbar');
+    fire('keydown');
+    assert.ok(classes.has('keyboard'), 'Keyboard navigation can reveal a focused toolbar');
+    fire('pointermove');
+    assert.equal(classes.size, 0, 'Pointer interaction leaves visibility to the hover region');
     doc.fullscreenElement = doc.documentElement;
     fire('fullscreenchange');
     tick();
@@ -237,6 +246,7 @@ async function main() {
     }
     doc.fullscreenElement = null;
     fire('fullscreenchange');
+    tick();
     assert.equal(classes.size, 0, 'Leaving F11 restores the cursor');
     assert.equal(timers.size, 0);
     doc.fullscreenElement = doc.documentElement;

@@ -1,3 +1,7 @@
+.keyboard-navigation :global([data-player-toolbar]):focus-within {
+    opacity: 1;
+}
+
 .idle-cursor,
 .idle-cursor * {
     cursor: none !important;

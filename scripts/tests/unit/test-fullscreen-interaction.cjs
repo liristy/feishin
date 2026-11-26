@@ -159,6 +159,7 @@ for (const name of ['synchronized-lyrics', 'synchronized-karaoke-lyrics']) {
             handlers[event] = fn;
         },
         classList: { add: noop, remove: noop },
+        closest: () => null,
         matches: () => hovered,
         removeAttribute: (name) => attributes.delete(name),
         removeEventListener: noop,

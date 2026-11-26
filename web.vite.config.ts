@@ -137,7 +137,7 @@ export default defineConfig({
                 cleanupOutdatedCaches: true,
                 clientsClaim: true,
                 globIgnores: ['**/kuromoji/**'],
-                maximumFileSizeToCacheInBytes: 1000000 * 5, // 5 MB
+                maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
                 skipWaiting: true,
             },
         }),

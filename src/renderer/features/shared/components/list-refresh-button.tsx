@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 
 import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { RefreshButton } from '/@/renderer/features/shared/components/refresh-button';
+import { getListRefreshMutationKey } from '/@/renderer/features/shared/list-refresh-key';
 import { ItemListKey } from '/@/shared/types/types';
 
 interface ListRefreshButtonProps {
@@ -19,8 +20,3 @@ export const ListRefreshButton = ({ disabled, listKey }: ListRefreshButtonProps)
 
     return <RefreshButton disabled={disabled} loading={isRefreshing} onClick={handleRefresh} />;
 };
-
-export const LIST_REFRESH_MUTATION_KEY = 'item-list-refresh';
-
-export const getListRefreshMutationKey = (listKey: string) =>
-    [LIST_REFRESH_MUTATION_KEY, listKey] as const;

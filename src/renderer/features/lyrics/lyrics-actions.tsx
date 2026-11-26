@@ -7,9 +7,7 @@ import styles from './lyrics-actions.module.css';
 import { useLyricsSettings, usePlayerSong } from '/@/renderer/store';
 import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
 import { Button } from '/@/shared/components/button/button';
-import { DropdownMenu } from '/@/shared/components/dropdown-menu/dropdown-menu';
 import { Group } from '/@/shared/components/group/group';
-import { AppIcon } from '/@/shared/components/icon/icon';
 import { NumberInput } from '/@/shared/components/number-input/number-input';
 import { Popover } from '/@/shared/components/popover/popover';
 import { Stack } from '/@/shared/components/stack/stack';
@@ -20,60 +18,35 @@ import { LyricsKind } from '/@/shared/types/domain-types';
 
 export type OverlayLayerToggle = {
     key: string;
-    kind: LyricsKind;
+    kind: Exclude<LyricsKind, 'translation'>;
     label: string;
 };
 
 interface LyricsActionsProps {
     hasLyrics: boolean;
-    index: number;
-    languages: { label: string; value: string }[];
     offsetMs: number;
     onRemoveLyric: () => void;
     onToggleOverlayLayer?: (key: string) => void;
+    onToggleTranslation?: () => void;
     onTranslateLyric?: () => void;
     onUpdateOffset: (offsetMs: number) => void;
     overlayLayers?: OverlayLayerToggle[];
-    setIndex: (idx: number) => void;
-    settingsKey?: string;
-    synced?: boolean;
+    showEditingControls?: boolean;
+    translationVisible?: boolean;
     visibleOverlayKeys?: Set<string>;
 }
 
-const OVERLAY_KIND_ICONS: Partial<Record<LyricsKind, keyof typeof AppIcon>> = {
-    pronunciation: 'audioLines',
-    translation: 'languages',
-};
-
-const getOverlayTooltip = (
-    layer: OverlayLayerToggle,
-    t: (key: string) => string,
-    isActive: boolean,
-): string => {
-    const action = isActive ? 'Hide' : 'Show';
-
-    if (layer.kind === 'pronunciation') {
-        return `${action} ${t('page.fullscreenPlayer.showPronunciation').toLowerCase()}`;
-    }
-
-    if (layer.kind === 'translation') {
-        return `${action} ${t('page.fullscreenPlayer.showTranslation').toLowerCase()}`;
-    }
-
-    return `${action} ${layer.label}`;
-};
-
 export const LyricsActions = ({
     hasLyrics,
-    index,
-    languages,
     offsetMs,
     onRemoveLyric,
     onToggleOverlayLayer,
+    onToggleTranslation,
     onTranslateLyric,
     onUpdateOffset,
     overlayLayers = [],
-    setIndex,
+    showEditingControls = true,
+    translationVisible = false,
     visibleOverlayKeys = new Set(),
 }: LyricsActionsProps) => {
     const { t } = useTranslation();
@@ -86,20 +59,12 @@ export const LyricsActions = ({
 
     const isActionsDisabled = !currentSong;
     const isDesktop = isElectron();
-    const hasServerTranslationLayer = overlayLayers.some((layer) => layer.kind === 'translation');
-    const hasMultipleLanguages = languages.length > 1;
-
-    const selectedLanguage = useMemo(
-        () => languages.find((language) => language.value === index.toString()),
-        [index, languages],
-    );
-
     const { extraOverlayLayers, quickOverlayLayers } = useMemo(() => {
         const quick: OverlayLayerToggle[] = [];
         const extra: OverlayLayerToggle[] = [];
 
         for (const layer of overlayLayers) {
-            if (layer.kind === 'pronunciation' || layer.kind === 'translation') {
+            if (layer.kind === 'pronunciation') {
                 quick.push(layer);
                 continue;
             }
@@ -117,59 +82,24 @@ export const LyricsActions = ({
         visibleOverlayKeys.has(layer.key),
     );
 
-    const languageTooltip = selectedLanguage
-        ? `${t('page.fullscreenPlayer.lyricLanguage')}: ${selectedLanguage.label}`
-        : t('page.fullscreenPlayer.lyricLanguage');
-
-    const showTopRow =
-        hasMultipleLanguages || quickOverlayLayers.length > 0 || extraOverlayLayers.length > 0;
-
-    const languageMenu = hasMultipleLanguages ? (
-        <DropdownMenu position="top">
-            <DropdownMenu.Target>
-                <ActionIcon
-                    aria-label={languageTooltip}
-                    disabled={isActionsDisabled}
-                    icon="metadata"
-                    iconProps={{ size: 'lg' }}
-                    size="sm"
-                    tooltip={{
-                        label: languageTooltip,
-                        openDelay: 0,
-                    }}
-                    variant="subtle"
-                />
-            </DropdownMenu.Target>
-            <DropdownMenu.Dropdown>
-                {languages.map((language) => (
-                    <DropdownMenu.Item
-                        isSelected={language.value === index.toString()}
-                        key={language.value}
-                        onClick={() => setIndex(parseInt(language.value, 10))}
-                    >
-                        {language.label}
-                    </DropdownMenu.Item>
-                ))}
-            </DropdownMenu.Dropdown>
-        </DropdownMenu>
-    ) : null;
+    const showTopRow = quickOverlayLayers.length > 0 || extraOverlayLayers.length > 0;
 
     const overlayToggleIcons = quickOverlayLayers.map((layer) => {
         const isActive = visibleOverlayKeys.has(layer.key);
-        const icon = OVERLAY_KIND_ICONS[layer.kind] ?? 'list';
+        const tooltip = `${isActive ? 'Hide' : 'Show'} ${t('page.fullscreenPlayer.showPronunciation').toLowerCase()}`;
 
         return onToggleOverlayLayer ? (
             <ActionIcon
-                aria-label={getOverlayTooltip(layer, t, isActive)}
+                aria-label={tooltip}
                 className={isActive ? styles.overlayToggleActive : undefined}
                 disabled={isActionsDisabled}
-                icon={icon}
+                icon="audioLines"
                 iconProps={isActive ? { color: 'primary', size: 'lg' } : { size: 'lg' }}
                 key={layer.key}
                 onClick={() => onToggleOverlayLayer(layer.key)}
                 size="sm"
                 tooltip={{
-                    label: getOverlayTooltip(layer, t, isActive),
+                    label: tooltip,
                     openDelay: 0,
                 }}
                 variant="subtle"
@@ -225,50 +155,53 @@ export const LyricsActions = ({
         <div className={styles.root}>
             {showTopRow ? (
                 <Group className={styles.topRow} gap="xs" justify="center">
-                    {languageMenu}
                     {overlayToggleIcons}
                     {extraLayersPopover}
                 </Group>
             ) : null}
             <Group className={styles.controlsRow} gap="xs" justify="center">
-                <ActionIcon
-                    aria-label="Decrease lyric offset"
-                    disabled={isActionsDisabled}
-                    icon="minus"
-                    iconProps={{ size: 14 }}
-                    onClick={() => handleLyricOffset(offsetMs - 50)}
-                    size={24}
-                    tooltip={{
-                        label: t('common.slower'),
-                        openDelay: 0,
-                    }}
-                    variant="subtle"
-                />
-                <Tooltip label={t('setting.lyricOffset')} openDelay={0}>
-                    <NumberInput
-                        aria-label="Lyric offset"
-                        disabled={isActionsDisabled}
-                        onChange={handleLyricOffset}
-                        size="xs"
-                        styles={{ input: { textAlign: 'center' } }}
-                        value={offsetMs || 0}
-                        width={60}
-                    />
-                </Tooltip>
-                <ActionIcon
-                    aria-label="Increase lyric offset"
-                    disabled={isActionsDisabled}
-                    icon="plus"
-                    iconProps={{ size: 14 }}
-                    onClick={() => handleLyricOffset(offsetMs + 50)}
-                    size={24}
-                    tooltip={{
-                        label: t('common.faster'),
-                        openDelay: 0,
-                    }}
-                    variant="subtle"
-                />
-                {isDesktop && sources.length ? (
+                {showEditingControls && (
+                    <>
+                        <ActionIcon
+                            aria-label="Decrease lyric offset"
+                            disabled={isActionsDisabled}
+                            icon="minus"
+                            iconProps={{ size: 14 }}
+                            onClick={() => handleLyricOffset(offsetMs - 50)}
+                            size={24}
+                            tooltip={{
+                                label: t('common.slower'),
+                                openDelay: 0,
+                            }}
+                            variant="subtle"
+                        />
+                        <Tooltip label={t('setting.lyricOffset')} openDelay={0}>
+                            <NumberInput
+                                aria-label="Lyric offset"
+                                disabled={isActionsDisabled}
+                                onChange={handleLyricOffset}
+                                size="xs"
+                                styles={{ input: { textAlign: 'center' } }}
+                                value={offsetMs || 0}
+                                width={60}
+                            />
+                        </Tooltip>
+                        <ActionIcon
+                            aria-label="Increase lyric offset"
+                            disabled={isActionsDisabled}
+                            icon="plus"
+                            iconProps={{ size: 14 }}
+                            onClick={() => handleLyricOffset(offsetMs + 50)}
+                            size={24}
+                            tooltip={{
+                                label: t('common.faster'),
+                                openDelay: 0,
+                            }}
+                            variant="subtle"
+                        />
+                    </>
+                )}
+                {showEditingControls && isDesktop && sources.length ? (
                     <Button
                         disabled={isActionsDisabled}
                         onClick={onRemoveLyric}
@@ -278,7 +211,26 @@ export const LyricsActions = ({
                         {hasLyrics ? t('common.clear') : t('common.refresh')}
                     </Button>
                 ) : null}
-                {isDesktop && sources.length && onTranslateLyric && !hasServerTranslationLayer ? (
+                {onToggleTranslation && (
+                    <ActionIcon
+                        aria-label={t('common.translation')}
+                        aria-pressed={translationVisible}
+                        disabled={isActionsDisabled}
+                        icon="languages"
+                        iconProps={{
+                            color: translationVisible ? 'primary' : undefined,
+                            size: 'lg',
+                        }}
+                        onClick={onToggleTranslation}
+                        size="sm"
+                        tooltip={{
+                            label: t('common.translation'),
+                            openDelay: 0,
+                        }}
+                        variant="subtle"
+                    />
+                )}
+                {isDesktop && sources.length && onTranslateLyric ? (
                     <Button
                         disabled={isActionsDisabled}
                         onClick={onTranslateLyric}

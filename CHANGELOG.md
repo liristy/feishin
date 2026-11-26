@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-11-26
+
+- 曲目和收藏在刷新期间保留已显示的歌曲。连续滚动列表按小批次加载，减少重复传输。
+- Navidrome 曲目和收藏通过轻量请求更新总数。
+- 改进逐字歌词的时间解析、合唱声部显示和滚动过渡。
+
 ## [2.0.0] - 2026-10-25
 
 ### Added

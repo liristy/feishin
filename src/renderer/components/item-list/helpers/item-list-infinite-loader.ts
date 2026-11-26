@@ -12,7 +12,7 @@ import { queryKeys } from '/@/renderer/api/query-keys';
 import { useListContext } from '/@/renderer/context/list-context';
 import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { UserFavoriteEventPayload, UserRatingEventPayload } from '/@/renderer/events/events';
-import { getListRefreshMutationKey } from '/@/renderer/features/shared/components/list-refresh-button';
+import { getListRefreshMutationKey } from '/@/renderer/features/shared/list-refresh-key';
 import { LibraryItem, SortKeyRandom } from '/@/shared/types/domain-types';
 
 export const getListQueryKeyName = (itemType: LibraryItem): string => {
@@ -110,8 +110,8 @@ export const useItemListInfiniteLoader = ({
     const isRandomSort = query?.sortBy === SortKeyRandom;
 
     const fetchPage = useCallback(
-        async (pageNumber: number) => {
-            if (isRandomSort) {
+        async (pageNumber: number, replace = false) => {
+            if (isRandomSort && !replace) {
                 const existingData =
                     queryClient.getQueryData<InfiniteLoaderCacheData>(dataQueryKey);
                 if (existingData?.pagesLoaded?.[pageNumber]) {
@@ -143,8 +143,8 @@ export const useItemListInfiniteLoader = ({
 
             // Update the query data with the fetched page
             queryClient.setQueryData(dataQueryKey, (oldData: InfiniteLoaderCacheData) => {
-                const nextDataMap = new Map(oldData.dataMap);
-                const nextIdToIndexMap = new Map(oldData.idToIndexMap);
+                const nextDataMap = new Map(replace ? undefined : oldData.dataMap);
+                const nextIdToIndexMap = new Map(replace ? undefined : oldData.idToIndexMap);
 
                 result.items.forEach((item, offset) => {
                     const index = startIndex + offset;
@@ -158,7 +158,9 @@ export const useItemListInfiniteLoader = ({
                 return {
                     dataMap: nextDataMap,
                     idToIndexMap: nextIdToIndexMap,
-                    pagesLoaded: { ...oldData.pagesLoaded, [pageNumber]: true },
+                    pagesLoaded: replace
+                        ? { [pageNumber]: true }
+                        : { ...oldData.pagesLoaded, [pageNumber]: true },
                     version: oldData.version + 1,
                 };
             });
@@ -324,55 +326,18 @@ export const useItemListInfiniteLoader = ({
     );
 
     const refreshMutation = useMutation({
-        mutationFn: async (force?: boolean) => {
-            // Invalidate all queries to ensure fresh data
-            queryClient.invalidateQueries();
-
-            // Reset the infinite list data
-            const currentData = queryClient.getQueryData<{
-                dataMap: Map<number, unknown>;
-                pagesLoaded: Record<string, boolean>;
-            }>(dataQueryKey);
-
-            if (force || currentData) {
-                // Reset data to initial state and clear all loaded pages
-                await queryClient.setQueryData(dataQueryKey, (oldData: any) => {
-                    if (!oldData) return getInitialData();
-                    return {
-                        ...oldData,
-                        dataMap: new Map(),
-                        idToIndexMap: new Map(),
-                        pagesLoaded: {},
-                        version: (oldData?.version ?? 0) + 1,
-                    };
-                });
-                lastFetchedPageRef.current = -1;
-            }
-
-            // Add a delay to make the refresh visually clear
-            // await new Promise((resolve) => setTimeout(resolve, 150));
-
-            // Determine which page to refetch based on current visible range
-            let pageToFetch = 0;
-            if (currentVisibleRangeRef.current) {
-                // Calculate the page from the current visible range
-                pageToFetch = Math.floor(currentVisibleRangeRef.current.startIndex / itemsPerPage);
-            } else if (lastFetchedPageRef.current >= 0) {
-                // Fallback to last fetched page if no visible range is tracked
-                pageToFetch = lastFetchedPageRef.current;
-            }
-
-            // Refetch the current page
-            await fetchPage(pageToFetch);
-
-            // Trigger range changed to ensure adjacent pages are prefetched if needed
-            const startIndex = pageToFetch * itemsPerPage;
-            const stopIndex = Math.min((pageToFetch + 1) * itemsPerPage, totalItemCount);
-
-            await onRangeChangedBase({
-                startIndex,
-                stopIndex,
-            });
+        mutationFn: async () => {
+            const range = currentVisibleRangeRef.current;
+            const page = Math.floor((range?.startIndex ?? 0) / itemsPerPage);
+            const listKey = queryKeys[getListQueryKeyName(itemType)].list(serverId, query);
+            await queryClient.invalidateQueries({ queryKey: listKey, refetchType: 'none' });
+            await Promise.all([
+                queryClient.invalidateQueries({ exact: true, queryKey: listCountQuery.queryKey }),
+                fetchPage(page, true).then(async () => {
+                    const lastPage = Math.floor((range?.stopIndex ?? 0) / itemsPerPage);
+                    for (let next = page + 1; next <= lastPage; next++) await fetchPage(next);
+                }),
+            ]);
         },
         mutationKey: getListRefreshMutationKey(eventKey),
     });
@@ -380,10 +345,7 @@ export const useItemListInfiniteLoader = ({
     const refreshMutationRef = useRef(refreshMutation);
     refreshMutationRef.current = refreshMutation;
 
-    const refresh = useCallback(
-        async (force?: boolean) => refreshMutationRef.current.mutateAsync(force),
-        [],
-    );
+    const refresh = useCallback(async () => refreshMutationRef.current.mutateAsync(), []);
 
     const updateItems = useCallback(
         (indexes: number[], value: object) => {
@@ -414,7 +376,7 @@ export const useItemListInfiniteLoader = ({
                 return;
             }
 
-            refreshMutationRef.current.mutate(true);
+            refreshMutationRef.current.mutate();
         };
 
         eventEmitter.on('ITEM_LIST_REFRESH', handleRefresh);

@@ -1,14 +1,17 @@
 import clsx from 'clsx';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import styles from './synchronized-karaoke-lyrics.module.css';
 
 import '/@/renderer/features/lyrics/styles/karaoke-animation.css';
+import '/@/renderer/features/lyrics/styles/synchronized-lyrics-animation.css';
 import {
     findOverlayLineByTime,
+    getLyricGaps,
     getLyricLineStartMs,
     getLyricLineText,
     getOverlayCueLinesForLine,
+    hasLyricText,
     normalizeLyrics,
 } from '/@/renderer/features/lyrics/api/lyrics-utils';
 import { LyricsScrollContent } from '/@/renderer/features/lyrics/components/lyrics-scroll-content';
@@ -19,7 +22,7 @@ import {
     useSynchronizedLyricsBase,
 } from '/@/renderer/features/lyrics/hooks/use-synchronized-lyrics-base';
 import { KaraokeLyricLine } from '/@/renderer/features/lyrics/karaoke-lyric-line';
-import { LyricLine } from '/@/renderer/features/lyrics/lyric-line';
+import { LyricGap, LyricLine } from '/@/renderer/features/lyrics/lyric-line';
 import { subscribePlayerStatus, usePlayerStoreBase } from '/@/renderer/store';
 import { subscribePlayerProgress, useTimestampStoreBase } from '/@/renderer/store/timestamp.store';
 import {
@@ -88,6 +91,10 @@ export const SynchronizedKaraokeLyrics = ({
     const effectivePaddingRight = preview ? 0 : settings.paddingRight;
 
     const normalizedLyrics = useMemo(() => normalizeLyrics(lyrics), [lyrics]);
+    const gaps = useMemo(
+        () => (preview ? undefined : getLyricGaps(normalizedLyrics)),
+        [normalizedLyrics, preview],
+    );
     const rafRef = useRef<null | number>(null);
     const statusRef = useRef(usePlayerStoreBase.getState().player.status);
     const lastSyncedTimeRef = useRef(0);
@@ -371,6 +378,16 @@ export const SynchronizedKaraokeLyrics = ({
                     />
                 )}
                 {normalizedLyrics.map((rawLine, idx) => {
+                    if (!hasLyricText(rawLine)) return null;
+                    const gap = gaps?.get(idx);
+                    const gapRow = gap && (
+                        <LyricGap
+                            alignment={settings.alignment}
+                            beforeIndex={idx}
+                            fontSize={effectiveFontSize}
+                            startMs={gap.startMs}
+                        />
+                    );
                     const lineStartMs = getLyricLineStartMs(rawLine);
                     const pronunciationCueLines = getOverlayCueLinesForLine(
                         pronunciationLyrics,
@@ -403,45 +420,45 @@ export const SynchronizedKaraokeLyrics = ({
                         text: getOverlayText(overlayLyrics, lineStartMs, idx),
                     }));
 
-                    if (!rawLine.cueLines?.length) {
-                        return (
-                            <LyricLine
-                                alignment={settings.alignment}
-                                className="lyric-line synchronized"
-                                data-lyric-time={lineStartMs}
-                                fontSize={effectiveFontSize}
-                                id={`karaoke-line-${idx}`}
-                                key={idx}
-                                romajiText={pronunciationText}
-                                text={getLyricLineText(rawLine)}
-                                translatedText={translationText}
-                            />
-                        );
-                    }
-
                     return (
-                        <KaraokeLyricLine
-                            agents={agents}
-                            alignment={settings.alignment}
-                            className="synchronized"
-                            cueLines={rawLine.cueLines}
-                            data-lyric-time={lineStartMs}
-                            extraOverlays={extraOverlays}
-                            fontSize={effectiveFontSize}
-                            id={`karaoke-line-${idx}`}
-                            key={idx}
-                            lineIndex={idx}
-                            pronunciationCueLines={pronunciationCueLines}
-                            pronunciationText={pronunciationText}
-                            romajiCueLines={
-                                syncedRomajiLyrics != null
-                                    ? (syncedRomajiLyrics[idx] ?? null)
-                                    : undefined
-                            }
-                            text={getLyricLineText(rawLine)}
-                            translatedText={translationText}
-                            translationCueLines={translationCueLines}
-                        />
+                        <Fragment key={idx}>
+                            {gapRow}
+                            {!rawLine.cueLines?.length ? (
+                                <LyricLine
+                                    alignment={settings.alignment}
+                                    className="lyric-line synchronized"
+                                    data-lyric-time={lineStartMs}
+                                    fontSize={effectiveFontSize}
+                                    id={`karaoke-line-${idx}`}
+                                    romajiText={pronunciationText}
+                                    text={getLyricLineText(rawLine)}
+                                    translatedText={translationText}
+                                    wave
+                                />
+                            ) : (
+                                <KaraokeLyricLine
+                                    agents={agents}
+                                    alignment={settings.alignment}
+                                    className="synchronized"
+                                    cueLines={rawLine.cueLines}
+                                    data-lyric-time={lineStartMs}
+                                    extraOverlays={extraOverlays}
+                                    fontSize={effectiveFontSize}
+                                    id={`karaoke-line-${idx}`}
+                                    lineIndex={idx}
+                                    pronunciationCueLines={pronunciationCueLines}
+                                    pronunciationText={pronunciationText}
+                                    romajiCueLines={
+                                        syncedRomajiLyrics != null
+                                            ? (syncedRomajiLyrics[idx] ?? null)
+                                            : undefined
+                                    }
+                                    text={getLyricLineText(rawLine)}
+                                    translatedText={translationText}
+                                    translationCueLines={translationCueLines}
+                                />
+                            )}
+                        </Fragment>
                     );
                 })}
             </LyricsScrollContent>

@@ -60,3 +60,9 @@
         transform: translateY(-16px);
     }
 }
+
+.fullscreen:has(:global(.media-player)) {
+    --theme-colors-foreground: white;
+    --theme-colors-primary: white;
+    --theme-colors-primary-filled: white;
+}

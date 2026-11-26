@@ -33,6 +33,7 @@ pnpm exec electron scripts/tests/electron/test-text-scrolling.cjs
 pnpm exec electron scripts/tests/electron/test-offline-electron.cjs
 pnpm exec electron scripts/tests/electron/test-player-button-transition.cjs
 pnpm exec electron scripts/tests/electron/test-button-focus.cjs
+pnpm exec electron scripts/tests/electron/test-karaoke-lyrics.cjs
 ```
 
 完整界面检查需要先构建桌面应用：

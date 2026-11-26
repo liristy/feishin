@@ -15,3 +15,10 @@
 .preview {
     padding: 0 !important;
 }
+
+:global([data-fullscreen-player])
+    :global(:is(.synchronized-lyrics, .synchronized-karaoke-lyrics))
+    .content:not(.preview) {
+    padding-top: var(--lyric-reading-inset, 10vh) !important;
+    padding-bottom: 85vh !important;
+}

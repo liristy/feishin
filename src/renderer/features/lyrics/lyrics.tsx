@@ -16,11 +16,14 @@ import {
     type LyricsQueryResult,
 } from '/@/renderer/features/lyrics/api/lyrics-api';
 import {
+    alignTranslationLyrics,
     formatStructuredLyricLabel,
     getLyricLineText,
     getLyricsLayers,
     getOverlayLayerKey,
+    getSelectedStructuredIndex,
     lyricsHasWordCues,
+    splitInlineLyricsTranslation,
 } from '/@/renderer/features/lyrics/api/lyrics-utils';
 import {
     useFuriganaLyrics,
@@ -49,13 +52,19 @@ import { Group } from '/@/shared/components/group/group';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 import { Text } from '/@/shared/components/text/text';
 import { useLocalStorage } from '/@/shared/hooks/use-local-storage';
+import { LyricsResponse } from '/@/shared/types/domain-types';
 
 type LyricsProps = {
     fadeOutNoLyricsMessage?: boolean;
     settingsKey?: string;
+    showSettingsButton?: boolean;
 };
 
-export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' }: LyricsProps) => {
+export const Lyrics = ({
+    fadeOutNoLyricsMessage = true,
+    settingsKey = 'default',
+    showSettingsButton = true,
+}: LyricsProps) => {
     const currentSong = usePlayerSong();
     const isRadioActive = useIsRadioActive();
 
@@ -71,9 +80,12 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
         translationTargetLanguage,
     } = useLyricsSettings();
     const { t } = useTranslation();
-    const [index, setIndexState] = useState(0);
-    const [translatedLyrics, setTranslatedLyrics] = useState<null | string>(null);
-    const [showTranslation, setShowTranslation] = useState(false);
+    const [generatedTranslation, setGeneratedTranslation] = useState<null | {
+        lyrics: LyricsResponse;
+        text: string;
+    }>(null);
+    const [showTranslation, setShowTranslation] = useState(true);
+    const translationRequestRef = useRef(0);
     const [visibleOverlayLayerKeys, setVisibleOverlayLayerKeys] = useLocalStorage<string[]>({
         defaultValue: [],
         key: `lyrics:visible-overlay-layers:${settingsKey}`,
@@ -115,12 +127,11 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
     const shouldFetchLyrics = !isLyricsDisabled && !!currentSong?._serverId && !!currentSong?.id;
     const isWaitingToFetchLyrics = shouldFetchLyrics && pendingSongId !== currentSong?.id;
 
-    const { data, isLoading, isRefetching } = useQuery(
+    const { data, isLoading } = useQuery(
         lyricsQueries.songLyrics(
             {
                 options: {
-                    enabled:
-                        !!pendingSongId && pendingSongId === currentSong?.id && !isLyricsDisabled,
+                    enabled: shouldFetchLyrics && !isWaitingToFetchLyrics,
                 },
                 query: { songId: currentSong?.id || '' },
                 serverId: currentSong?._serverId || '',
@@ -147,41 +158,42 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
         };
     }, [data]);
 
-    const indexToUse = data?.selectedStructuredIndex ?? index;
-    useEffect(() => {
-        if (data != null) setIndexState(data.selectedStructuredIndex);
-    }, [data]);
+    const indexToUse = Array.isArray(data?.local)
+        ? getSelectedStructuredIndex(data.local, data.selectedStructuredIndex)
+        : (data?.selectedStructuredIndex ?? 0);
 
     const { selected: lyrics, selectedSynced: synced } = useMemo(() => {
         if (!data) return { selected: null, selectedSynced: false };
         return computeSelectedFromResult(data, preferLocalLyrics, indexToUse);
     }, [data, indexToUse, preferLocalLyrics]);
 
-    const { data: furiganaConvertedLyrics } = useFuriganaLyrics(lyrics?.lyrics, !!enableFurigana);
+    const inlineTranslation = useMemo(
+        () => (lyrics ? splitInlineLyricsTranslation(lyrics.lyrics) : null),
+        [lyrics],
+    );
+    const originalLyrics = inlineTranslation?.lyrics ?? lyrics?.lyrics;
+    const { data: furiganaConvertedLyrics } = useFuriganaLyrics(originalLyrics, !!enableFurigana);
     const { data: romajiConvertedLyrics, isFetching: isFetchingRomaji } = useRomajiLyrics(
-        lyrics?.lyrics,
+        originalLyrics,
         !!enableRomaji,
     );
 
-    const rawSyncedLyrics = useMemo(() => {
-        if (!synced || !lyrics || !('lyrics' in lyrics) || !Array.isArray(lyrics.lyrics)) {
-            return null;
-        }
-
-        return lyrics.lyrics;
-    }, [lyrics, synced]);
+    const rawSyncedLyrics = synced && Array.isArray(originalLyrics) ? originalLyrics : null;
 
     const displayLyrics = useMemo(() => {
-        if (isLyricsDisabled || !lyrics) return null;
-        if (enableFurigana && furiganaConvertedLyrics) {
-            return { ...lyrics, lyrics: furiganaConvertedLyrics };
-        }
-        return lyrics;
-    }, [enableFurigana, isLyricsDisabled, lyrics, furiganaConvertedLyrics]);
+        if (isLyricsDisabled || !lyrics || originalLyrics === undefined) return null;
+        return {
+            ...lyrics,
+            lyrics: (enableFurigana && furiganaConvertedLyrics) || originalLyrics,
+        };
+    }, [enableFurigana, furiganaConvertedLyrics, isLyricsDisabled, lyrics, originalLyrics]);
 
     const currentOffsetMs = useMemo(() => {
         if (!data) return 0;
-        return getDisplayOffset(lyrics, data.selectedOffsetMs, indexToUse, data.local);
+        return (
+            data.manualOffsetMs ??
+            getDisplayOffset(lyrics, data.selectedOffsetMs, indexToUse, data.local)
+        );
     }, [data, indexToUse, lyrics]);
 
     const layers = useMemo(() => {
@@ -191,18 +203,6 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
 
         return getLyricsLayers(data.local);
     }, [data]);
-
-    const overlayLayerToggles = useMemo(() => {
-        if (!layers?.overlayLayers.length) {
-            return [];
-        }
-
-        return layers.overlayLayers.map((layer) => ({
-            key: getOverlayLayerKey(layer),
-            kind: layer.synced ? (layer.kind ?? 'main') : 'main',
-            label: formatStructuredLyricLabel(layer),
-        }));
-    }, [layers]);
 
     const visibleOverlayKeys = useMemo(
         () => new Set(visibleOverlayLayerKeys),
@@ -227,13 +227,65 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
         return layer?.synced ? layer.lyrics : null;
     }, [visibleOverlayLayers]);
 
-    const translationLyricsOverlay = useMemo(() => {
-        const layer = visibleOverlayLayers.find(
-            (entry) => entry.synced && entry.kind === 'translation',
-        );
+    const translationLayers = useMemo(() => {
+        if (!lyrics || !('synced' in lyrics) || !layers?.main.includes(lyrics)) {
+            return [];
+        }
 
-        return layer?.synced ? layer.lyrics : null;
-    }, [visibleOverlayLayers]);
+        return layers.others.filter(
+            (layer) =>
+                layer.kind === 'translation' &&
+                layer.synced === synced &&
+                (layer.synced
+                    ? layer.lyrics.some((line) => getLyricLineText(line).trim())
+                    : !!layer.lyrics.trim()),
+        );
+    }, [layers, lyrics, synced]);
+
+    const overlayLayerToggles = useMemo(
+        () =>
+            layers?.overlayLayers.flatMap((layer) => {
+                const kind = layer.kind ?? 'main';
+                if (kind === 'translation') return [];
+
+                return [
+                    {
+                        key: getOverlayLayerKey(layer),
+                        kind,
+                        label: formatStructuredLyricLabel(layer),
+                    },
+                ];
+            }) ?? [],
+        [layers],
+    );
+
+    const activeTranslationLayer = translationLayers.find((layer) =>
+        visibleOverlayKeys.has(getOverlayLayerKey(layer)),
+    );
+    const translationLayer = activeTranslationLayer ?? translationLayers[0];
+    const timedTranslation = useMemo(
+        () =>
+            rawSyncedLyrics && translationLayer?.synced
+                ? alignTranslationLyrics(rawSyncedLyrics, translationLayer.lyrics)
+                : null,
+        [rawSyncedLyrics, translationLayer],
+    );
+    const plainTranslation = translationLayer?.synced === false ? translationLayer.lyrics : null;
+    const hasServerTranslation = !!(timedTranslation || plainTranslation);
+    const providedTranslation = hasServerTranslation || !!inlineTranslation;
+    const generatedText =
+        generatedTranslation && generatedTranslation.lyrics === originalLyrics
+            ? generatedTranslation.text
+            : null;
+    const hasTranslation = providedTranslation || !!generatedText;
+    const isTranslationVisible = hasServerTranslation
+        ? !!activeTranslationLayer
+        : hasTranslation && showTranslation;
+    const translationText = hasServerTranslation
+        ? plainTranslation
+        : (inlineTranslation?.translation ?? generatedText);
+    const visibleTranslatedText = isTranslationVisible ? translationText : null;
+    const translationLyricsOverlay = isTranslationVisible ? timedTranslation : null;
 
     const extraOverlayLyrics = useMemo(() => {
         return visibleOverlayLayers
@@ -291,8 +343,7 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
                     : null,
             settingsKey,
             syncedRomajiLyrics: shouldGenerateSyncedRomaji ? (syncedRomajiLyrics ?? null) : null,
-            translatedLyrics:
-                showTranslation && !translationLyricsOverlay ? translatedLyrics : null,
+            translatedLyrics: visibleTranslatedText,
             translationLyrics: translationLyricsOverlay,
         };
     }, [
@@ -306,10 +357,9 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
         shouldGenerateSyncedRomaji,
         syncedRomajiLyrics,
         settingsKey,
-        showTranslation,
-        translatedLyrics,
         translationLyricsOverlay,
         useServerPronunciation,
+        visibleTranslatedText,
     ]);
 
     const handleUpdateOffset = useCallback(
@@ -318,7 +368,7 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
 
             queryClient.setQueryData<LyricsQueryResult>(lyricsKey, (prev) => {
                 if (!prev) return prev;
-                const updated = { ...prev, selectedOffsetMs: offsetMs };
+                const updated = { ...prev, manualOffsetMs: offsetMs, selectedOffsetMs: offsetMs };
                 if (Array.isArray(prev.local) && prev.local.length > 0) {
                     const idx = Math.min(indexToUse, prev.local.length - 1);
                     updated.local = [...prev.local];
@@ -331,33 +381,6 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
             });
         },
         [currentSong, indexToUse, lyricsKey],
-    );
-
-    const setIndex = useCallback(
-        (newIndex: number) => {
-            setIndexState(newIndex);
-            if (!lyricsKey || !data) return;
-            const { selected: nextSelected, selectedSynced: nextSynced } =
-                computeSelectedFromResult(data, preferLocalLyrics, newIndex);
-            const nextOffset = getDisplayOffset(
-                nextSelected,
-                data.selectedOffsetMs,
-                newIndex,
-                data.local,
-            );
-            queryClient.setQueryData<LyricsQueryResult>(lyricsKey, (prev) =>
-                prev
-                    ? {
-                          ...prev,
-                          selected: nextSelected,
-                          selectedOffsetMs: nextOffset,
-                          selectedStructuredIndex: newIndex,
-                          selectedSynced: nextSynced,
-                      }
-                    : prev,
-            );
-        },
-        [data, lyricsKey, preferLocalLyrics],
     );
 
     const handleOnRemoveLyric = useCallback(async () => {
@@ -378,33 +401,44 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
     }, [currentSong, lyricsKey]);
 
     const fetchTranslation = useCallback(async () => {
-        if (!lyrics || isLyricsDisabled) return;
-        const originalLyrics = Array.isArray(lyrics.lyrics)
-            ? lyrics.lyrics.map((line) => getLyricLineText(line)).join('\n')
-            : lyrics.lyrics;
-        const TranslatedText: null | string = await translateLyrics(
-            originalLyrics,
+        if (!originalLyrics || isLyricsDisabled || !translationApiProvider || !translationApiKey)
+            return;
+        const request = ++translationRequestRef.current;
+        const originalText = Array.isArray(originalLyrics)
+            ? originalLyrics.map(getLyricLineText).join('\n')
+            : originalLyrics;
+        const translatedText = await translateLyrics(
+            originalText,
             translationApiKey,
             translationApiProvider,
             translationTargetLanguage,
         );
-        setTranslatedLyrics(TranslatedText);
-        setShowTranslation(true);
+        if (request === translationRequestRef.current && translatedText?.trim()) {
+            setGeneratedTranslation({ lyrics: originalLyrics, text: translatedText });
+            setShowTranslation(true);
+        }
     }, [
         isLyricsDisabled,
-        lyrics,
+        originalLyrics,
         translationApiKey,
         translationApiProvider,
         translationTargetLanguage,
     ]);
 
-    const handleOnTranslateLyric = useCallback(async () => {
-        if (translatedLyrics) {
-            setShowTranslation(!showTranslation);
+    const handleToggleTranslation = () => {
+        if (!hasServerTranslation || !translationLayer) {
+            setShowTranslation(!isTranslationVisible);
             return;
         }
-        await fetchTranslation();
-    }, [translatedLyrics, showTranslation, fetchTranslation]);
+
+        setVisibleOverlayLayerKeys((current) => {
+            if (!activeTranslationLayer) {
+                return [...current, getOverlayLayerKey(translationLayer)];
+            }
+            const translationKeys = new Set(translationLayers.map(getOverlayLayerKey));
+            return current.filter((key) => !translationKeys.has(key));
+        });
+    };
 
     const handleToggleOverlayLayer = useCallback(
         (key: string) => {
@@ -424,33 +458,19 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
     usePlayerEvents(
         {
             onCurrentSongChange: () => {
-                setIndexState(0);
-                setShowTranslation(false);
-                setTranslatedLyrics(null);
+                translationRequestRef.current++;
+                setShowTranslation(true);
+                setGeneratedTranslation(null);
             },
         },
         [],
     );
 
     useEffect(() => {
-        if (displayLyrics && !translatedLyrics && enableAutoTranslation) {
-            fetchTranslation();
+        if (displayLyrics && !hasTranslation && enableAutoTranslation) {
+            void fetchTranslation();
         }
-    }, [displayLyrics, translatedLyrics, enableAutoTranslation, fetchTranslation]);
-
-    const languages = useMemo(() => {
-        const local = data?.local;
-        if (Array.isArray(local)) {
-            return local.map((lyric, idx) => ({
-                label: formatStructuredLyricLabel(lyric),
-                value: idx.toString(),
-            }));
-        }
-        if (local && !Array.isArray(local) && 'lyrics' in local) {
-            return [{ label: 'xxx', value: '0' }];
-        }
-        return [];
-    }, [data?.local]);
+    }, [displayLyrics, enableAutoTranslation, fetchTranslation, hasTranslation]);
 
     const isWaitingForRomaji =
         !!enableRomaji &&
@@ -458,8 +478,7 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
         (isFetchingRomaji || (shouldGenerateSyncedRomaji && isFetchingSyncedRomaji));
 
     const isLoadingLyrics =
-        shouldFetchLyrics &&
-        (isWaitingToFetchLyrics || isLoading || isRefetching || isWaitingForRomaji);
+        shouldFetchLyrics && (isWaitingToFetchLyrics || isLoading || isWaitingForRomaji);
     const hasNoLyrics = !displayLyrics;
     const [shouldFadeOut, setShouldFadeOut] = useState(false);
 
@@ -490,16 +509,20 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
     return (
         <ComponentErrorBoundary>
             <div className={styles.lyricsContainer}>
-                <ActionIcon
-                    className={styles.settingsIcon}
-                    icon="settings2"
-                    iconProps={{ size: 'lg' }}
-                    onClick={handleOpenSettings}
-                    pos="absolute"
-                    right={0}
-                    top={0}
-                    variant="subtle"
-                />
+                {showSettingsButton && (
+                    <ActionIcon
+                        aria-label={
+                            t('page.fullscreenPlayer.lyrics') +
+                            ' · ' +
+                            t('common.setting', { count: 2 })
+                        }
+                        className={styles.settingsIcon}
+                        icon="settings2"
+                        iconProps={{ size: 'lg' }}
+                        onClick={handleOpenSettings}
+                        variant="subtle"
+                    />
+                )}
                 {isLoadingLyrics ? (
                     <Spinner container />
                 ) : (
@@ -543,7 +566,7 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
                                                 : null
                                         }
                                         settingsKey={settingsKey}
-                                        translatedLyrics={showTranslation ? translatedLyrics : null}
+                                        translatedLyrics={visibleTranslatedText}
                                     />
                                 )}
                             </motion.div>
@@ -553,20 +576,20 @@ export const Lyrics = ({ fadeOutNoLyricsMessage = true, settingsKey = 'default' 
                 <div className={styles.actionsContainer}>
                     <LyricsActions
                         hasLyrics={!!displayLyrics}
-                        index={indexToUse}
-                        languages={languages}
                         offsetMs={displayOffsetMs}
                         onRemoveLyric={handleOnRemoveLyric}
                         onToggleOverlayLayer={handleToggleOverlayLayer}
+                        onToggleTranslation={
+                            displayLyrics && hasTranslation ? handleToggleTranslation : undefined
+                        }
                         onTranslateLyric={
-                            translationApiProvider && translationApiKey
-                                ? handleOnTranslateLyric
+                            !hasTranslation && translationApiProvider && translationApiKey
+                                ? fetchTranslation
                                 : undefined
                         }
                         onUpdateOffset={handleUpdateOffset}
                         overlayLayers={overlayLayerToggles}
-                        setIndex={setIndex}
-                        settingsKey={settingsKey}
+                        translationVisible={isTranslationVisible}
                         visibleOverlayKeys={visibleOverlayKeys}
                     />
                 </div>

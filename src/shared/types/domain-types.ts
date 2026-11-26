@@ -1992,6 +1992,7 @@ export type StreamQuery = {
 };
 
 export type StructuredLyric = (StructuredSyncedLyric | StructuredUnsyncedLyric) & {
+    kind?: LyricsKind;
     lang: string;
 };
 
@@ -2001,7 +2002,6 @@ export type StructuredLyricsArgs = BaseEndpointArgs & {
 
 export type StructuredSyncedLyric = Omit<FullLyricsMetadata, 'lyrics'> & {
     agents?: LyricAgent[];
-    kind?: LyricsKind;
     lyrics: SynchronizedLyrics;
     synced: true;
 };

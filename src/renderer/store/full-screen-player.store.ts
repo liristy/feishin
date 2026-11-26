@@ -39,7 +39,11 @@ export const useFullScreenPlayerStore = createWithEqualityFn<FullScreenPlayerSli
             immer((set, get) => ({
                 actions: {
                     setStore: (data) => {
-                        const update = () => set({ ...get(), ...data });
+                        const update = () =>
+                            set({
+                                ...get(),
+                                ...data,
+                            });
                         if (data.expanded !== undefined && data.expanded !== get().expanded) {
                             transitionPlayerCover(update);
                         } else {
